@@ -21,6 +21,7 @@ function setToken(token) {
   else localStorage.setItem('bme_token', token);
 }
 
+
 function clearToken() {
   localStorage.removeItem('bme_token');
 }
