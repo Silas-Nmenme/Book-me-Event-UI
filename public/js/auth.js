@@ -19,6 +19,7 @@ function requireAuth(redirectTo = '/Frontend/pages/auth-login.html') {
   return true;
 }
 
+
 async function loginUser({ email, password }) {
   return apiFetch('/api/v1/auth/login', {
     method: 'POST',
