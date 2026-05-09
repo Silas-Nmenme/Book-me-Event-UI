@@ -1,4 +1,16 @@
-const API_BASE = 'https://book-me-events.vercel.app';
+const API_BASE = (() => {
+  // Preferred: meta tag injected at build/deploy time
+  const meta = document.querySelector('meta[name="API_BASE"]');
+  if (meta?.content) return meta.content;
+
+  // Fallback: allow manual override without redeploy
+  const ls = localStorage.getItem('bme_api_base');
+  if (ls) return ls;
+
+  // Last resort default (kept for backward compatibility)
+  // Netlify frontend should call the Vercel backend deployed API
+  return 'https://book-me-events.vercel.app';
+})();
 
 function getToken() {
   return localStorage.getItem('bme_token') || '';
