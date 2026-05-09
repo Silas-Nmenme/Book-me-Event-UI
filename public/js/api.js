@@ -48,18 +48,32 @@ async function apiFetch(path, options = {}) {
   });
 
   const text = await res.text();
+
   let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = { message: text };
+  let parseError = null;
+  if (!text) {
+    data = null;
+  } else {
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      parseError = e;
+      // Keep raw text so we can see HTML/plain-text error bodies
+      data = { message: text };
+    }
   }
 
   if (!res.ok) {
-    const msg = data?.message || data?.error || `Request failed (${res.status})`;
+    const msg =
+      data?.message ||
+      data?.error ||
+      (typeof text === 'string' ? text.slice(0, 500) : `Request failed (${res.status})`);
+
     const err = new Error(msg);
     err.status = res.status;
     err.data = data;
+    err.raw = text;
+    err.parseError = parseError ? String(parseError) : undefined;
     throw err;
   }
 
