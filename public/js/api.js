@@ -29,6 +29,10 @@ function clearToken() {
 async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
 
+  // Better fetch error visibility for production debugging.
+  // (toast is handled at callsites for UX; this ensures we at least surface details) 
+
+
   const headers = new Headers(options.headers || {});
   headers.set('Accept', 'application/json');
 
@@ -64,6 +68,9 @@ async function apiFetch(path, options = {}) {
   }
 
   if (!res.ok) {
+    const msg =
+      data?.message ||
+      data?.error ||
     const msg =
       data?.message ||
       data?.error ||

@@ -35,8 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setToken(token);
         toast({ title: 'Welcome!', message: 'Login successful.', variant: 'success' });
 
-        // Send user to dashboard; role-specific landing is handled later.
+        // Redirect to profile/dashboard
         window.location.href = 'profile.html';
+
+
       } catch (err) {
         toast({ title: 'Login failed', message: err.message || 'Check credentials and try again.', variant: 'danger' });
       } finally {

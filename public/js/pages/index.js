@@ -1,14 +1,15 @@
 function setAuthNav() {
+  // Kept for backward compatibility; actual CTA logic is handled in Frontend/js/landing.js
   const link = document.getElementById('navAuthLink');
   if (!link) return;
-  const token = localStorage.getItem('bme_token');
-  if (!token) return;
 
-  // Best effort: we don't know role yet without calling /me.
-  // We'll send to profile page.
-  link.href = 'profile.html';
-  link.textContent = 'Dashboard';
+  const token = localStorage.getItem('bme_token');
+  if (token) {
+    link.href = 'profile.html';
+    link.textContent = 'Dashboard';
+  }
 }
+
 
 async function loadHomeServices() {
   const grid = document.getElementById('homeServicesGrid');
@@ -107,6 +108,13 @@ function initPreview() {
 function init() {
   document.getElementById('year').textContent = new Date().getFullYear();
   setAuthNav();
+
+  // Landing CTA behavior is handled by Frontend/js/landing.js
+
+
+
+
+
   initPreview();
   loadHomeServices();
 }

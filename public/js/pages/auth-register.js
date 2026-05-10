@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         window.location.href = token ? 'profile.html' : 'auth-login.html';
+
       } catch (err) {
         toast({ title: 'Registration failed', message: err.message || 'Try again.', variant: 'danger' });
+
       } finally {
         setLoading(btn, false);
       }

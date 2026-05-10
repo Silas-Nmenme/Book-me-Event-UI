@@ -74,7 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
       toast({ title: 'Uploaded', message: 'KYC upload successful.', variant: 'success' });
       setHint('Done. You can upload another file anytime.');
     } catch (err) {
-      toast({ title: 'Upload failed', message: err.message || 'Try again.', variant: 'danger' });
+      toast({
+        title: 'Upload failed',
+        message: err?.data?.message || err.message || 'Try again.',
+        variant: 'danger',
+      });
       setHint('Upload failed. Please try again.');
     } finally {
       setLoading(btn, false);
@@ -83,7 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function apiBaseOrFallback() {
     // Frontend/js/api.js defines const API_BASE.
+
     // In case script load order changes, we fallback to deployed base.
+
     try {
       // eslint-disable-next-line no-undef
       return typeof API_BASE !== 'undefined' ? API_BASE : 'https://book-me-events.vercel.app';

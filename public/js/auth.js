@@ -11,13 +11,14 @@ function clearToken() {
   localStorage.removeItem('bme_token');
 }
 
-function requireAuth(redirectTo = '/Frontend/pages/auth-login.html') {
+function requireAuth(redirectTo = 'auth-login.html') {
   if (!getToken()) {
     window.location.href = redirectTo;
     return false;
   }
   return true;
 }
+
 
 
 async function loginUser({ email, password }) {
