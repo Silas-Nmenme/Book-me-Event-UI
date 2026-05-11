@@ -34,8 +34,13 @@ export async function apiFetch(path, options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+  if (options.body && !headers.has('Content-Type')) {
+    const isJsonObjectBody = typeof options.body === 'object' && !(options.body instanceof FormData);
+    const isJsonStringBody = typeof options.body === 'string' && /^[\s\[{]/.test(options.body);
+
+    if (isJsonObjectBody || isJsonStringBody) {
+      headers.set('Content-Type', 'application/json');
+    }
   }
 
   const res = await fetch(url, {
