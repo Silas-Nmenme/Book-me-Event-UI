@@ -13,7 +13,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top navbar-glass">
       <div class="container">
-        <a class="navbar-brand" href="index.html">
+        <a class="navbar-brand" href="admin-dashboard.html">
           <span class="brand-pill">
             <span class="brand-dot"></span>
             <span class="fw-bold">Book Me Events</span>
@@ -105,7 +105,8 @@
     <script type="module">
       import { fetchMe, logoutUser, clearToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
-
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      initThemeToggle();
       setYear('year');
 
       function getAvatarInitials(name) {

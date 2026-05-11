@@ -107,6 +107,19 @@ export async function fetchMe() {
   return apiFetch('/api/v1/auth/me', { method: 'GET' });
 }
 
+export async function sendVerificationEmail() {
+  return apiFetch('/api/v1/auth/send-verification-email', { method: 'POST' });
+}
+
+export async function verifyEmail({ token } = {}) {
+  const q = token ? `?token=${encodeURIComponent(token)}` : '';
+  return apiFetch(`/api/v1/auth/verify-email${q}`, {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  });
+}
+
+
 // =====================
 // Requests
 // =====================

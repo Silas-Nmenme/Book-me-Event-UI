@@ -13,7 +13,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top">
       <div class="container">
-        <a class="navbar-brand" href="index.html">
+        <a class="navbar-brand" href="vendor-dashboard.html">
           <span class="brand-pill">
             <span class="brand-dot"></span>
             <span class="fw-bold">Book Me Events</span>
@@ -51,12 +51,30 @@
               <hr style="border-color: rgba(255,255,255,0.12)" />
 
               <div class="d-flex gap-3 align-items-center">
-                <div id="avatar" class="rounded-circle border" style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;">BME</div>
+                <div class="d-flex flex-column align-items-center">
+                  <div
+                    id="avatar"
+                    class="rounded-circle border"
+                    style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;"
+                    aria-label="Profile picture"
+                  >BME</div>
+                  <div class="mt-2">
+                    <label class="btn btn-soft btn-sm" style="cursor:pointer;" for="profilePictureInput">Change</label>
+                    <input
+                      id="profilePictureInput"
+                      class="d-none"
+                      type="file"
+                      name="image"
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                    />
+                  </div>
+                </div>
                 <div>
                   <div class="small text-muted-soft">Role</div>
                   <div class="fw-bold" id="meRole">VENDOR</div>
                 </div>
               </div>
+
             </div>
 
             <div class="mt-4 card card-glass p-4 fade-slide">
@@ -130,10 +148,33 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
 
       setYear('year');
+      initThemeToggle();
+
+
+      const avatarEl = document.getElementById('avatar');
+      const avatarFileInput = document.getElementById('profilePictureInput');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+        // fallback shows initials
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = 'BME';
+        avatarEl.style.fontWeight = '900';
+      }
+
 
       function getAvatarInitials(name) {
         return (name || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
@@ -145,13 +186,48 @@
           const me = res?.data || res;
           document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
           document.getElementById('meEmail').textContent = me?.email || '—';
-          document.getElementById('avatar').textContent = getAvatarInitials(me?.firstName || 'BME');
+
+          if (me?.profilePicture) {
+            setAvatarUrl(me.profilePicture);
+          } else {
+            avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
+            avatarEl.style.backgroundImage = '';
+            avatarEl.style.background = 'rgba(124,92,255,0.12)';
+          }
+
         } catch {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
           window.location.href = 'auth-login.html';
         }
       }
+
+      if (avatarFileInput) {
+        avatarFileInput.addEventListener('change', async () => {
+          const file = avatarFileInput.files?.[0];
+          if (!file) return;
+
+          try {
+            avatarFileInput.disabled = true;
+            toast({ title: 'Uploading', message: 'Updating profile picture…', variant: 'warning' });
+
+            const fd = new FormData();
+            fd.append('image', file);
+
+            const res = await apiFetch('/api/v1/uploads/profile-picture', { method: 'POST', body: fd });
+            const data = res?.data || res;
+
+            if (data?.url) setAvatarUrl(data.url);
+            toast({ title: 'Updated', message: 'Profile picture updated.', variant: 'success' });
+          } catch (e) {
+            toast({ title: 'Upload failed', message: e?.message || 'Try again.', variant: 'danger' });
+          } finally {
+            avatarFileInput.disabled = false;
+            avatarFileInput.value = '';
+          }
+        });
+      }
+
 
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
