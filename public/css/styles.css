@@ -1,13 +1,60 @@
 /* Basic theme for Book Me Events */
 
 :root{
+  /* Default: Dark theme */
   --brand:#7c5cff;
   --brand2:#31d0aa;
+
   --bg:#070A12;
+  --bg2:#0B1020;
+
   --card:rgba(255,255,255,.06);
-  --cardBorder:rgba(255,255,255,.12);
+  --cardBorder:rgba(255,255,255,.14);
+
   --text:#e9eaf2;
+  --mutedText: rgba(233,234,242,.72);
+
+  --shadow: rgba(0,0,0,.35);
+
+  /* Forms / surfaces */
+  --surface: rgba(16,20,35,.65);
+  --surfaceBorder: rgba(255,255,255,.12);
+
+  --inputBg: rgba(255,255,255,.06);
+  --inputBorder: rgba(255,255,255,.16);
+  --inputText: var(--text);
+  --inputPlaceholder: rgba(233,234,242,.55);
+
+  --link: #b9afff;
+
+  color-scheme: dark;
 }
+
+:root[data-theme="light"]{
+  --bg:#F6F7FF;
+  --bg2:#EEF1FF;
+
+  --card: rgba(15,23,42,.04);
+  --cardBorder: rgba(15,23,42,.12);
+
+  --text:#111827;
+  --mutedText: rgba(17,24,39,.68);
+
+  --shadow: rgba(17,24,39,.16);
+
+  --surface: rgba(255,255,255,.72);
+  --surfaceBorder: rgba(15,23,42,.12);
+
+  --inputBg: rgba(17,24,39,.04);
+  --inputBorder: rgba(17,24,39,.16);
+  --inputText: var(--text);
+  --inputPlaceholder: rgba(17,24,39,.48);
+
+  --link: #5b46ff;
+
+  color-scheme: light;
+}
+
 
 body{
   background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.25), transparent 60%),
@@ -16,13 +63,115 @@ body{
   color:var(--text);
 }
 
+:root[data-theme="light"] body{
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.16), transparent 60%),
+              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.14), transparent 55%),
+              var(--bg);
+}
+
+
 .navbar-glass,
 .card-glass{
   background: rgba(16,20,35,.65) !important;
-  border: 1px solid var(--cardBorder) !important;
+  border: 1px solid var(--surfaceBorder) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+:root[data-theme="light"] .navbar-glass,
+:root[data-theme="light"] .card-glass{
+  background: rgba(255,255,255,.72) !important;
+}
+
+:root[data-theme="light"] .navbar-dark{
+  color: var(--text);
+}
+
+:root[data-theme="light"] .navbar-dark .nav-link{
+  color: var(--mutedText) !important;
+}
+
+:root[data-theme="light"] .navbar-dark .nav-link:hover{
+  color: var(--text) !important;
+}
+
+/* Ensure readable text across themes */
+:root[data-theme="light"] .text-muted-soft{
+  color: var(--mutedText) !important;
+}
+
+/* Ensure dark mode (default) readable text when pages rely on bootstrap text classes */
+:root:not([data-theme="light"]) .text-muted-soft{
+  color: var(--mutedText) !important;
+}
+
+
+/* Theme toggle button */
+.bme-theme-toggle{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.bme-theme-toggle [data-icon]{
+  font-size: 16px;
+  transform: translateY(1px);
+}
+
+
+:root[data-theme="light"] .footer{
+  color: rgba(17,24,39,.68);
+}
+
+:root[data-theme="light"] .btn-soft{
+  background: rgba(17,24,39,.04);
+  border: 1px solid rgba(17,24,39,.16);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .btn-soft:hover{
+  background: rgba(17,24,39,.07);
+}
+
+:root[data-theme="light"] .dropdown-menu{
+  background: rgba(255,255,255,.92);
+  border-color: rgba(15,23,42,.12);
+}
+
+:root[data-theme="light"] .dropdown-item{
+  color: var(--text);
+}
+
+:root[data-theme="light"] .dropdown-item:hover{
+  background: rgba(124,92,255,.12);
+}
+
+:root[data-theme="light"] .form-control,
+:root[data-theme="light"] .form-text{
+  color: var(--text);
+}
+
+:root[data-theme="light"] .form-control{
+  background: rgba(17,24,39,.04);
+  border-color: rgba(17,24,39,.16);
+}
+
+:root[data-theme="light"] .form-control::placeholder{
+  color: var(--inputPlaceholder);
+}
+
+:root[data-theme="light"] code{
+  background: rgba(124,92,255,.10) !important;
+  border: 1px solid rgba(124,92,255,.18) !important;
+}
+
+
+
 
 
 .brand-pill{
@@ -48,7 +197,62 @@ body{
   color:transparent;
 }
 
-.text-muted-soft{color: rgba(233,234,242,.72) !important;}
+.text-muted-soft{color: var(--mutedText) !important;}
+
+/* Default Bootstrap text utilities sometimes end up inheriting incorrect colors in dark mode */
+:root:not([data-theme="light"]) .text-muted,
+:root:not([data-theme="light"]) .text-body,
+:root:not([data-theme="light"]) .lead,
+:root:not([data-theme="light"]) .text-muted-soft{
+  color: var(--text) !important;
+}
+
+
+/* Some pages may use Bootstrap default text colors that can become dark in dark mode.
+   Force any element that does not explicitly opt out to inherit readable theme color. */
+:root:not([data-theme="light"]) .text-dark,
+:root:not([data-theme="light"]) .text-body,
+:root:not([data-theme="light"]) .text-muted{
+  color: var(--text) !important;
+}
+
+.navbar .nav-link,
+.navbar-brand,
+.navbar .dropdown-item{
+  color: inherit;
+}
+
+.card-glass,
+.navbar-glass{
+  color: var(--text);
+}
+
+.card-glass * ,
+.navbar-glass *{
+  color: inherit;
+}
+
+.footer{
+  color: inherit;
+}
+
+.footer *{
+  color: inherit;
+}
+
+.form-control,
+.form-select{
+  color: inherit;
+}
+
+.form-text,
+.form-label{
+  color: inherit;
+}
+
+.text-muted-soft{color: var(--mutedText) !important;}
+
+.text-white{color: #fff !important;}
 
 .btn-brand{
   background: linear-gradient(135deg, var(--brand), var(--brand2));
@@ -56,7 +260,7 @@ body{
   color:#0b0f1c;
   font-weight:800;
 }
-.btn-brand:hover{filter: brightness(1.05); color:#0b0f1c;}
+.btn-brand:hover{filter: brightness(1.05); color: #0b0f1c;}
 
 .btn-soft{
   background: rgba(255,255,255,.06);
@@ -80,4 +284,56 @@ body{
 }
 
 .section{padding: 64px 0;}
+
+/* ==============================
+   Readability: enforce text color by theme
+   Default requirement:
+   - dark theme: white-ish text
+   - light theme: black text
+   Exceptions are handled by existing explicit colors (e.g. .text-white).
+   ============================== */
+
+/* Base text color for all pages */
+:root:not([data-theme="light"]) body{
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] body{
+  color: var(--text) !important;
+}
+
+/* Bootstrap utility classes that may override readability */
+:root:not([data-theme="light"]) .text-body,
+:root:not([data-theme="light"]) .lead,
+:root:not([data-theme="light"]) .text-muted{
+  color: var(--text) !important;
+}
+
+:root[data-theme="light"] .text-body,
+:root[data-theme="light"] .lead,
+:root[data-theme="light"] .text-muted{
+  color: var(--mutedText) !important;
+}
+
+/* Ensure form labels / plain paragraphs / headings follow theme */
+:root body p,
+:root body h1,
+:root body h2,
+:root body h3,
+:root body h4,
+:root body h5,
+:root body h6,
+:root body label,
+:root body div,
+:root body span{
+  color: inherit;
+}
+
+/* Inputs already have their own styling; keep them readable */
+:root body input,
+:root body textarea,
+:root body select{
+  color: var(--inputText);
+}
+
 
