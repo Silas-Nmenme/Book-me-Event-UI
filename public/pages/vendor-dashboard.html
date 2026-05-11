@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor Dashboard - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <div class="ms-auto d-flex gap-2">
+          <a class="btn btn-soft" href="services.html">Services</a>
+          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section" style="padding-top:72px; padding-bottom:64px;">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="badge badge-glow mb-3">Vendor dashboard</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+              <hr style="border-color: rgba(255,255,255,0.12)" />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div id="avatar" class="rounded-circle border" style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;">BME</div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">VENDOR</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 card card-glass p-4 fade-slide">
+              <div class="fw-bold mb-2">Vendor workflow</div>
+              <div class="small text-muted-soft">Manage services and respond to requests quickly.</div>
+              <div class="mt-3 d-grid gap-2">
+                <a class="btn btn-brand" href="services.html">Manage services</a>
+                <a class="btn btn-soft" href="requests.html">Incoming requests</a>
+                <a class="btn btn-soft" href="messages.html">Messages</a>
+                <a class="btn btn-soft" href="vendor-kyc.html">Vendor KYC</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="card card-glass p-4 fade-slide" style="min-height: 340px;">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">Professional vendor ops</div>
+                  <h3 class="h5 fw-bold mb-0">Turn requests into bookings</h3>
+                </div>
+                <a class="btn btn-soft" href="profile.html">Refresh session</a>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <div class="card card-glass p-3 card-hover h-100">
+                    <div class="fw-bold mb-2">1) Configure services</div>
+                    <div class="text-muted-soft small">Create or update service listings so organizers can find you.</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card card-glass p-3 card-hover h-100">
+                    <div class="fw-bold mb-2">2) Respond fast</div>
+                    <div class="text-muted-soft small">Accept/decline requests and keep communication timely.</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card card-glass p-3 card-hover h-100">
+                    <div class="fw-bold mb-2">3) Chat & confirm</div>
+                    <div class="text-muted-soft small">Use in-app messages to confirm availability and details.</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="card card-glass p-3 card-hover h-100">
+                    <div class="fw-bold mb-2">4) Complete bookings</div>
+                    <div class="text-muted-soft small">Mark bookings completed when services are delivered.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 text-muted-soft small">
+                Note: KYC and vendor verification are handled by admin flows in the backend.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Dashboard</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+
+      setYear('year');
+
+      function getAvatarInitials(name) {
+        return (name || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
+      }
+
+      async function loadMe() {
+        try {
+          const res = await fetchMe();
+          const me = res?.data || res;
+          document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
+          document.getElementById('meEmail').textContent = me?.email || '—';
+          document.getElementById('avatar').textContent = getAvatarInitials(me?.firstName || 'BME');
+        } catch {
+          clearToken();
+          toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
+          window.location.href = 'auth-login.html';
+        }
+      }
+
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      loadMe();
+    </script>
+  </body>
+</html>
+

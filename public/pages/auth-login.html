@@ -4,65 +4,117 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login - Book Me Events</title>
-    <meta name="API_BASE" content="https://book-me-events.vercel.app" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
 
   <body>
-    <div id="toastHost"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
-    <div class="container" style="padding-top: 72px; padding-bottom: 64px;">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-7 col-lg-5">
-          <div class="card card-glass p-4 p-md-5 fade-slide">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <span class="brand-pill">
-                <span class="brand-dot"></span>
-                <span class="fw-bold">Book Me Events</span>
-              </span>
-              <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Secure</span>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <div class="ms-auto d-flex gap-2">
+          <a class="btn btn-soft" href="index.html">Home</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section" style="padding-top:72px; padding-bottom:64px;">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-7 col-lg-5">
+            <div class="card card-glass p-4 p-md-5 fade-slide">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="brand-pill">
+                  <span class="brand-dot"></span>
+                  <span class="fw-bold">Login</span>
+                </span>
+                <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Secure</span>
+              </div>
+
+              <h1 class="h4 fw-bold mb-1">Welcome back</h1>
+              <div class="text-muted-soft small mb-4">Log in to request services, chat vendors, and book confidently.</div>
+
+              <form id="loginForm" class="row g-3" autocomplete="on">
+                <div class="col-12">
+                  <label class="form-label" for="email">Email</label>
+                  <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="password">Password</label>
+                  <input class="form-control" id="password" name="password" type="password" placeholder="Your password" required />
+                </div>
+
+                <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                  <a class="text-muted-soft small" href="auth-register.html">Create account</a>
+                  <a class="text-muted-soft small" href="forgot-password.html">Forgot password?</a>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-brand w-100" id="btnLogin">Log in</button>
+                </div>
+
+                <div class="col-12 text-center">
+                  <div class="small text-muted-soft">By continuing you agree to platform guidelines.</div>
+                </div>
+              </form>
+
+              <div class="mt-2 small text-muted-soft" id="loginHint"></div>
             </div>
-
-            <h1 class="h4 fw-bold mb-1">Welcome back</h1>
-            <div class="text-muted-soft small mb-4">Log in to request services, chat vendors, and book.</div>
-
-            <form id="loginForm" class="row g-3" autocomplete="on">
-              <div class="col-12">
-                <label class="form-label" for="email">Email</label>
-                <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label" for="password">Password</label>
-                <input class="form-control" id="password" name="password" type="password" placeholder="Your password" required />
-              </div>
-
-              <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                <a class="text-muted-soft small" href="auth-register.html">Create account</a>
-                <a class="text-muted-soft small" href="#" id="forgotPasswordLink">Forgot password?</a>
-              </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-brand w-100" id="btnLogin">Log in</button>
-              </div>
-
-              <div class="col-12 text-center">
-                <div class="small text-muted-soft">By continuing you agree to platform guidelines.</div>
-              </div>
-            </form>
-
-            <div class="mt-3 small text-muted-soft" id="loginHint"></div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Login</div>
+        </div>
+      </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/api.js"></script>
-    <script src="../js/ui.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/pages/auth-login.js"></script>
+
+    <script type="module">
+      import { loginUser, setToken } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+
+      setYear('year');
+
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        const btn = document.getElementById('btnLogin');
+        btn.disabled = true;
+        const hint = document.getElementById('loginHint');
+        hint.textContent = '';
+
+        try {
+          const res = await loginUser({ email, password });
+          if (res?.token) setToken(res.token);
+
+          toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
+          window.location.href = 'profile.html';
+        } catch (err) {
+          hint.textContent = err?.message || 'Login failed';
+          toast({ title: 'Login failed', message: err?.message || 'Check your credentials and try again.', variant: 'danger' });
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>
 

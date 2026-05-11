@@ -1,75 +1,48 @@
-function toast({ title = 'Notification', message = '', variant = 'info', timeout = 3200 } = {}) {
+export function toast({ title = 'Notice', message = '', variant = 'success' } = {}) {
+  // Minimal toast using Bootstrap
   const host = document.getElementById('toastHost');
   if (!host) return;
 
-  const bg =
-    variant === 'success' ? 'border-success' :
-    variant === 'danger' ? 'border-danger' :
-    variant === 'warning' ? 'border-warning' :
-    'border-info';
+  const id = `t_${Math.random().toString(16).slice(2)}`;
+  const bg = variant === 'danger' ? 'bg-danger' : variant === 'warning' ? 'bg-warning' : 'bg-success';
 
   const el = document.createElement('div');
-  el.className = `toast toast-glass show ${bg} mb-2`;
-  el.style.minWidth = '280px';
-
-  const icon =
-    variant === 'success' ? '✅' :
-    variant === 'danger' ? '⛔' :
-    variant === 'warning' ? '⚠️' :
-    'ℹ️';
-
+  el.className = `toast align-items-center text-bg-dark border-0 show position-relative ${bg}`;
+  el.style.marginBottom = '12px';
+  el.id = id;
+  el.setAttribute('role', 'alert');
+  el.setAttribute('aria-live', 'assertive');
+  el.setAttribute('aria-atomic', 'true');
   el.innerHTML = `
-    <div class="toast-header" style="background: transparent; border-bottom: 1px solid rgba(255,255,255,0.10);">
-      <strong class="me-auto">${icon} ${title}</strong>
-      <small class="text-muted-soft">just now</small>
-      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    <div class="d-flex">
+      <div class="toast-body">
+        <div class="fw-bold">${escapeHtml(title)}</div>
+        <div style="opacity:.95">${escapeHtml(message)}</div>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
-    <div class="toast-body" style="color: rgba(255,255,255,0.9)">${message}</div>
   `;
 
   host.appendChild(el);
 
-  const bsToast = new bootstrap.Toast(el, { delay: timeout });
-  bsToast.show();
-
-  el.addEventListener('hidden.bs.toast', () => el.remove());
+  // auto hide
+  setTimeout(() => {
+    try {
+      el.classList.remove('show');
+      el.remove();
+    } catch {}
+  }, 3000);
 }
 
-function setLoading(btn, loading, text = 'Loading...') {
-  if (!btn) return;
-  btn.disabled = !!loading;
-  const old = btn.dataset.originalText || btn.innerText;
-  if (!btn.dataset.originalText) btn.dataset.originalText = old;
-
-  btn.innerHTML = loading
-    ? `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${text}`
-    : btn.dataset.originalText;
+function escapeHtml(s) {
+  return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+    const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+    return m[c] || c;
+  });
 }
 
-function setSkeleton(el, count = 6) {
-  if (!el) return;
-  el.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    const d = document.createElement('div');
-    d.className = 'skeleton p-3 mb-3';
-    d.style.height = '120px';
-    el.appendChild(d);
-  }
+export function setYear(elId = 'year') {
+  const el = document.getElementById(elId);
+  if (el) el.textContent = new Date().getFullYear();
 }
-
-async function readForm(formEl) {
-  const fd = new FormData(formEl);
-  const obj = {};
-  for (const [k, v] of fd.entries()) obj[k] = v;
-  return obj;
-}
-
-function getAvatarInitials(name = '') {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return 'BME';
-  const a = parts[0][0] || '';
-  const b = parts.length > 1 ? parts[parts.length - 1][0] : '';
-  return (a + b).toUpperCase();
-}
-
 

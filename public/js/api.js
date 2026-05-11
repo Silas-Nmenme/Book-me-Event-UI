@@ -1,37 +1,30 @@
-const API_BASE = (() => {
-  // Preferred: meta tag injected at build/deploy time
-  const meta = document.querySelector('meta[name="API_BASE"]');
-  if (meta?.content) return meta.content;
+import { BACKEND_URL, TOKEN_KEY } from '../constant.js';
 
-  // Fallback: allow manual override without redeploy
-  const ls = localStorage.getItem('bme_api_base');
-  if (ls) return ls;
-
-  // Last resort default (kept for backward compatibility)
-  // Netlify frontend should call the Vercel backend deployed API
-  return 'https://book-me-events.vercel.app';
-})();
-
-function getToken() {
-  return localStorage.getItem('bme_token') || '';
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
 }
 
-function setToken(token) {
-  if (!token) localStorage.removeItem('bme_token');
-  else localStorage.setItem('bme_token', token);
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
 }
 
-
-function clearToken() {
-  localStorage.removeItem('bme_token');
+export function setToken(token) {
+  if (!token) clearToken();
+  else localStorage.setItem(TOKEN_KEY, token);
 }
 
-async function apiFetch(path, options = {}) {
-  const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+export function qs(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
 
-  // Better fetch error visibility for production debugging.
-  // (toast is handled at callsites for UX; this ensures we at least surface details) 
+function buildUrl(path) {
+  if (!path) return BACKEND_URL;
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${BACKEND_URL}${p}`;
+}
 
+export async function apiFetch(path, options = {}) {
+  const url = buildUrl(path);
 
   const headers = new Headers(options.headers || {});
   headers.set('Accept', 'application/json');
@@ -41,8 +34,7 @@ async function apiFetch(path, options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // If body is an object (not FormData), assume JSON
-  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -54,58 +46,340 @@ async function apiFetch(path, options = {}) {
   const text = await res.text();
 
   let data = null;
-  let parseError = null;
-  if (!text) {
-    data = null;
-  } else {
+  if (text) {
     try {
       data = JSON.parse(text);
-    } catch (e) {
-      parseError = e;
-      // Keep raw text so we can see HTML/plain-text error bodies
+    } catch {
       data = { message: text };
     }
   }
 
   if (!res.ok) {
-    const msg =
-      data?.message ||
-      data?.error ||
-    const msg =
-      data?.message ||
-      data?.error ||
-      (typeof text === 'string' ? text.slice(0, 500) : `Request failed (${res.status})`);
-
+    const msg = data?.message || data?.error || `Request failed (${res.status})`;
     const err = new Error(msg);
     err.status = res.status;
     err.data = data;
-    err.raw = text;
-    err.parseError = parseError ? String(parseError) : undefined;
     throw err;
   }
 
   return data;
 }
 
-function qs(name) {
-  return new URLSearchParams(window.location.search).get(name);
+export async function loginUser({ email, password }) {
+  return apiFetch('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
 }
 
-function safeText(v) {
-  return (v ?? '').toString();
+export async function registerUser({ firstName, lastName, email, phone, password, passwordConfirm, role }) {
+  return apiFetch('/api/v1/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ firstName, lastName, email, phone, password, passwordConfirm, role }),
+  });
 }
 
-function formatMoneyNaira(value) {
-  const n = Number(value);
-  if (Number.isNaN(n)) return safeText(value);
-  return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
+export async function forgotPassword({ email }) {
+  return apiFetch('/api/v1/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 }
 
-function formatDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return safeText(iso);
-  return d.toLocaleString('en-NG', { year: 'numeric', month: 'short', day: '2-digit' });
+export async function resetPassword({ token, password, passwordConfirm }) {
+  return apiFetch(`/api/v1/auth/reset-password/${encodeURIComponent(token)}`, {
+    method: 'POST',
+    body: JSON.stringify({ password, passwordConfirm }),
+  });
+}
+
+export async function logoutUser() {
+  clearToken();
+  return apiFetch('/api/v1/auth/logout', { method: 'POST' });
+}
+
+export async function fetchMe() {
+  return apiFetch('/api/v1/auth/me', { method: 'GET' });
+}
+
+// =====================
+// Requests
+// =====================
+export async function getRequests({ status, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/requests${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getRequest(id) {
+  return apiFetch(`/api/v1/requests/${id}`, { method: 'GET' });
+}
+
+export async function createRequest(payload) {
+  return apiFetch('/api/v1/requests', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function acceptRequest(id) {
+  return apiFetch(`/api/v1/requests/${id}/accept`, { method: 'PUT' });
+}
+
+export async function declineRequest(id) {
+  return apiFetch(`/api/v1/requests/${id}/decline`, { method: 'PUT' });
+}
+
+export async function cancelRequest(id, payload = {}) {
+  return apiFetch(`/api/v1/requests/${id}/cancel`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateRequest(id, payload) {
+  return apiFetch(`/api/v1/requests/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+// =====================
+// Bookings
+// =====================
+export async function getBookings({ status, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/bookings${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getBooking(id) {
+  return apiFetch(`/api/v1/bookings/${id}`, { method: 'GET' });
+}
+
+export async function createBooking(payload) {
+  return apiFetch('/api/v1/bookings', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateBooking(id, payload) {
+  return apiFetch(`/api/v1/bookings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function cancelBooking(id, payload = {}) {
+  return apiFetch(`/api/v1/bookings/${id}/cancel`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function completeBooking(id) {
+  return apiFetch(`/api/v1/bookings/${id}/complete`, { method: 'PUT' });
+}
+
+export async function deleteBooking(id) {
+  return apiFetch(`/api/v1/bookings/${id}`, { method: 'DELETE' });
+}
+
+// =====================
+// Messages
+// =====================
+export async function getMessages({ conversation, page = 1, limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  if (conversation) params.set('conversation', conversation);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/messages${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getUnreadCount() {
+  return apiFetch('/api/v1/messages/unread/count', { method: 'GET' });
+}
+
+export async function getConversation(userId, { page = 1, limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/messages/conversation/${userId}${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getMessage(id) {
+  return apiFetch(`/api/v1/messages/${id}`, { method: 'GET' });
+}
+
+export async function sendMessage(payload) {
+  return apiFetch('/api/v1/messages', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function markMessageAsRead(id) {
+  return apiFetch(`/api/v1/messages/${id}/read`, { method: 'PUT' });
+}
+
+export async function deleteMessage(id) {
+  return apiFetch(`/api/v1/messages/${id}`, { method: 'DELETE' });
+}
+
+// =====================
+// Payments
+// =====================
+export async function getPayments({ status, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/payments${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getPayment(id) {
+  return apiFetch(`/api/v1/payments/${id}`, { method: 'GET' });
+}
+
+export async function getPaymentByRef(ref) {
+  return apiFetch(`/api/v1/payments/ref/${encodeURIComponent(ref)}`, { method: 'GET' });
+}
+
+export async function createPayment(payload) {
+  return apiFetch('/api/v1/payments', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function refundPayment(id, payload = {}) {
+  return apiFetch(`/api/v1/payments/${id}/refund`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+// =====================
+// Reviews
+// =====================
+export async function getReviews({ vendor, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (vendor) params.set('vendor', vendor);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/reviews${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+export async function getReview(id) {
+  return apiFetch(`/api/v1/reviews/${id}`, { method: 'GET' });
+}
+
+export async function createReview(payload) {
+  return apiFetch('/api/v1/reviews', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateReview(id, payload) {
+  return apiFetch(`/api/v1/reviews/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteReview(id) {
+  return apiFetch(`/api/v1/reviews/${id}`, { method: 'DELETE' });
+}
+
+export async function addVendorResponse(id, payload) {
+  return apiFetch(`/api/v1/reviews/${id}/vendor-response`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function markReviewHelpful(id) {
+  return apiFetch(`/api/v1/reviews/${id}/helpful`, { method: 'PUT' });
+}
+
+export async function markReviewUnhelpful(id) {
+  return apiFetch(`/api/v1/reviews/${id}/unhelpful`, { method: 'PUT' });
+}
+
+// =====================
+// Admin
+// =====================
+export async function getAdminDashboard() {
+  return apiFetch('/api/v1/admin/dashboard', { method: 'GET' });
+}
+
+export async function getPendingVendors({ page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  return apiFetch(`/api/v1/admin/vendors/pending?${params.toString()}`, { method: 'GET' });
+}
+
+export async function verifyVendor(vendorId) {
+  return apiFetch(`/api/v1/admin/vendors/${vendorId}/verify`, { method: 'PUT' });
+}
+
+export async function rejectVendor(vendorId, payload = {}) {
+  return apiFetch(`/api/v1/admin/vendors/${vendorId}/reject`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAdminUsers({ role, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (role) params.set('role', role);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  return apiFetch(`/api/v1/admin/users?${params.toString()}`, { method: 'GET' });
+}
+
+export async function toggleUserStatus(userId) {
+  return apiFetch(`/api/v1/admin/users/${userId}/toggle-status`, { method: 'PUT' });
+}
+
+export async function getAdminBookings({ status, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  return apiFetch(`/api/v1/admin/bookings?${params.toString()}`, { method: 'GET' });
+}
+
+export async function getAdminPayments({ status, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  return apiFetch(`/api/v1/admin/payments?${params.toString()}`, { method: 'GET' });
+}
+
+export async function getAdminStats() {
+  return apiFetch('/api/v1/admin/stats', { method: 'GET' });
+}
+
+export async function sendAnnouncement(payload) {
+  return apiFetch('/api/v1/admin/announcements', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 

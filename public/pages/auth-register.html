@@ -3,73 +3,152 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Register - Book Me Events</title>
+    <title>Sign up - Book Me Events</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
 
   <body>
-    <div id="toastHost"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
-    <div class="container" style="padding-top: 72px; padding-bottom: 64px;">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-7 col-lg-5">
-          <div class="card card-glass p-4 p-md-5 fade-slide">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <span class="brand-pill">
-                <span class="brand-dot"></span>
-                <span class="fw-bold">Book Me Events</span>
-              </span>
-              <span class="badge badge-glow">New</span>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <div class="ms-auto d-flex gap-2">
+          <a class="btn btn-soft" href="index.html">Home</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section" style="padding-top:72px; padding-bottom:64px;">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-8 col-lg-6">
+            <div class="card card-glass p-4 p-md-5 fade-slide">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="brand-pill">
+                  <span class="brand-dot"></span>
+                  <span class="fw-bold">Create account</span>
+                </span>
+                <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Secure</span>
+              </div>
+
+              <h1 class="h4 fw-bold mb-1">Join Book Me Events</h1>
+              <div class="text-muted-soft small mb-4">Create your profile as a user, vendor, or admin.</div>
+
+              <form id="registerForm" class="row g-3" autocomplete="on">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="firstName">First name</label>
+                  <input class="form-control" id="firstName" name="firstName" type="text" placeholder="John" required />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="lastName">Last name</label>
+                  <input class="form-control" id="lastName" name="lastName" type="text" placeholder="Doe" required />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="email">Email</label>
+                  <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="phone">Phone (optional)</label>
+                  <input class="form-control" id="phone" name="phone" type="tel" placeholder="080XXXXXXXX" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="password">Password</label>
+                  <input class="form-control" id="password" name="password" type="password" placeholder="Create a password" required />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="passwordConfirm">Confirm password</label>
+                  <input class="form-control" id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Confirm password" required />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="role">Account type</label>
+                  <select class="form-select" id="role" name="role" required>
+                    <option value="USER" selected>User (Organizer)</option>
+                    <option value="VENDOR">Vendor (Service provider)</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-brand w-100" id="btnRegister">Create account</button>
+                </div>
+
+                <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                  <a class="text-muted-soft small" href="auth-login.html">I already have an account</a>
+                </div>
+
+                <div class="col-12 text-center">
+                  <div class="small text-muted-soft">You’ll be redirected to your dashboard after signup.</div>
+                </div>
+
+                <div class="col-12 small text-muted-soft" id="registerHint"></div>
+              </form>
             </div>
-
-            <h1 class="h4 fw-bold mb-1">Create your account</h1>
-            <div class="text-muted-soft small mb-4">Organizer accounts can request services. Vendors can also register and complete KYC.</div>
-
-            <form id="registerForm" class="row g-3" autocomplete="on">
-              <div class="col-12">
-                <label class="form-label" for="name">Full name</label>
-                <input class="form-control" id="name" name="name" placeholder="e.g. Ada Okeke" required />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label" for="email">Email</label>
-                <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label" for="password">Password</label>
-                <input class="form-control" id="password" name="password" type="password" placeholder="Create a password" required minlength="6" />
-              </div>
-
-              <div class="col-12">
-                <label class="form-label" for="role">Account type</label>
-                <select class="form-select" id="role" name="role" aria-label="Account type" required>
-                  <option value="USER">Organizer (User)</option>
-                  <option value="VENDOR">Vendor</option>
-                </select>
-              </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-brand w-100" id="btnRegister">Create account</button>
-              </div>
-
-              <div class="col-12 text-center">
-                <a class="text-muted-soft small" href="auth-login.html">Already have an account? Log in</a>
-              </div>
-            </form>
-
-            <div class="mt-3 small text-muted-soft" id="registerHint"></div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Sign up</div>
+        </div>
+      </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/api.js"></script>
-    <script src="../js/ui.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/pages/auth-register.js"></script>
+
+    <script type="module">
+      import { registerUser, setToken } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+
+      setYear('year');
+
+      document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const password = document.getElementById('password').value;
+        const passwordConfirm = document.getElementById('passwordConfirm').value;
+        const role = document.getElementById('role').value;
+
+        const btn = document.getElementById('btnRegister');
+        btn.disabled = true;
+
+        const hint = document.getElementById('registerHint');
+        hint.textContent = '';
+
+        try {
+          const res = await registerUser({ firstName, lastName, email, phone, password, passwordConfirm, role });
+          if (res?.token) setToken(res.token);
+
+          toast({ title: 'Account created', message: 'Redirecting…', variant: 'success' });
+          window.location.href = 'profile.html';
+        } catch (err) {
+          hint.textContent = err?.message || 'Signup failed';
+          toast({ title: 'Signup failed', message: err?.message || 'Try again with valid details.', variant: 'danger' });
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>
 

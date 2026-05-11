@@ -1,50 +1,46 @@
-function getToken() {
-  return localStorage.getItem('bme_token') || '';
-}
+import { fetchMe, loginUser, logoutUser, registerUser, resetPassword, forgotPassword, setToken, clearToken } from './api.js';
 
-function setToken(token) {
-  if (!token) localStorage.removeItem('bme_token');
-  else localStorage.setItem('bme_token', token);
-}
-
-function clearToken() {
-  localStorage.removeItem('bme_token');
-}
-
-function requireAuth(redirectTo = 'auth-login.html') {
-  if (!getToken()) {
+export function requireAuth(redirectTo = 'auth-login.html') {
+  const token = localStorage.getItem('bme_token');
+  if (!token) {
     window.location.href = redirectTo;
     return false;
   }
   return true;
 }
 
-
-
-async function loginUser({ email, password }) {
-  return apiFetch('/api/v1/auth/login', {
-    method: 'POST',
-    body: { email, password },
-  });
+export async function loginFlow({ email, password }) {
+  const res = await loginUser({ email, password });
+  if (res?.token) setToken(res.token);
+  return res;
 }
 
-async function registerUser(payload) {
-  return apiFetch('/api/v1/auth/register', {
-    method: 'POST',
-    body: payload,
-  });
+export async function registerFlow(payload) {
+  const res = await registerUser(payload);
+  if (res?.token) setToken(res.token);
+  return res;
 }
 
-async function logoutUser() {
+export async function forgotPasswordFlow({ email }) {
+  return forgotPassword({ email });
+}
+
+export async function resetPasswordFlow({ token, password, passwordConfirm }) {
+  return resetPassword({ token, password, passwordConfirm });
+}
+
+export async function logoutFlow() {
   try {
-    await apiFetch('/api/v1/auth/logout', { method: 'POST' });
+    await logoutUser();
   } finally {
     clearToken();
+    window.location.href = 'index.html';
   }
 }
 
-async function fetchMe() {
-  return apiFetch('/api/v1/auth/me', { method: 'GET' });
+export async function getRole() {
+  const meRes = await fetchMe();
+  const me = meRes?.data || meRes;
+  return (me?.role || '').toString().toUpperCase();
 }
-
 
