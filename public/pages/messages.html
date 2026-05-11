@@ -11,7 +11,8 @@
   <body>
     <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top bme-navbar">
+
       <div class="container">
         <a class="navbar-brand" href="index.html">
           <span class="brand-pill">
@@ -142,8 +143,14 @@
       import { fetchMe, logoutUser, clearToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initMessagesPage } from '../js/pages/messages.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
 
       setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+
 
       function getAvatarInitials(name) {
         return (name || 'BME')
