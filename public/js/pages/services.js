@@ -1,4 +1,4 @@
-import { fetchMe, logoutUser, clearToken } from '../api.js';
+import { apiFetch } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -12,9 +12,64 @@ function escapeHtml(s) {
   });
 }
 
+function formatPrice(svc) {
+  const price = typeof svc?.basePrice === 'number' ? svc.basePrice : Number(svc?.basePrice);
+  if (!Number.isFinite(price)) return '—';
+  const currency = svc?.priceCurrency || 'NGN';
+  return `${currency} ${price.toLocaleString()}`;
+}
+
+function getPreselectServiceId() {
+  return qs('preselectServiceId') || null;
+}
+
+
+function buildServiceCard(svc) {
+  const id = svc?._id || svc?.id;
+  const vendor = svc?.vendor;
+  const vendorName = vendor?.businessName || 'Vendor';
+  const category = svc?.serviceCategory || 'Service';
+  const title = svc?.serviceName || 'Untitled';
+  const image = Array.isArray(svc?.images) && svc.images[0] ? svc.images[0] : '';
+  const price = formatPrice(svc);
+
+  const href = `requests.html?prefillServiceId=${encodeURIComponent(id)}&prefillVendorId=${encodeURIComponent(vendor?._id || vendor?.id || '')}`;
+
+  return `
+    <div class="col-12 col-md-6">
+      <div class="card card-glass p-3 h-100">
+        <div class="d-flex gap-3">
+          <div
+            class="rounded"
+            style="width:84px;height:84px;background: rgba(124,92,255,0.12);background-image:url('${image}');background-size:cover;background-position:center;"
+            aria-hidden="true"
+          ></div>
+          <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <div class="fw-bold">${escapeHtml(title)}</div>
+              <span class="badge text-bg-secondary">${escapeHtml(category)}</span>
+            </div>
+            <div class="small text-muted-soft mt-1">${escapeHtml(vendorName)}</div>
+            <div class="small mt-2"><strong>Price:</strong> ${escapeHtml(price)}</div>
+          </div>
+        </div>
+
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          <a class="btn btn-brand btn-sm" href="${href}">Create request</a>
+          <button
+            class="btn btn-soft btn-sm"
+            type="button"
+            data-action="loadServiceDetails"
+            data-service-id="${escapeHtml(id || '')}"
+          >Details</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export async function initServicesPage({ me, role } = {}) {
   const shell = document.getElementById('servicesShell');
-  const content = document.getElementById('contentArea');
   const authzError = document.getElementById('authzError');
   const roleNotice = document.getElementById('roleNotice');
   const serviceList = document.getElementById('serviceList');
@@ -24,8 +79,6 @@ export async function initServicesPage({ me, role } = {}) {
   const linkMessages = document.getElementById('linkMessages');
   const linkBookings = document.getElementById('linkBookings');
 
-  // These pages are UX only right now; CRUD may be restricted by backend.
-  // Keep the UI responsive and guide users to requests/messages/bookings.
   if (!shell || !serviceList || !authzError) return;
 
   shell.classList.remove('d-none');
@@ -33,22 +86,17 @@ export async function initServicesPage({ me, role } = {}) {
   const myRole = (role || qs('role') || 'USER').toString().toUpperCase();
 
   if (myRole === 'VENDOR') {
-    if (linkRequests) linkRequests.classList.remove('btn-soft');
-    if (linkMessages) linkMessages.classList.remove('btn-soft');
-    if (linkBookings) linkBookings.classList.remove('btn-soft');
-    // Vendor can typically act on requests/bookings/messages.
+    linkRequests?.classList.remove('btn-soft');
+    linkMessages?.classList.remove('btn-soft');
+    linkBookings?.classList.remove('btn-soft');
+
     roleNotice?.classList.remove('d-none');
-    if (roleNotice) roleNotice.textContent = 'Vendor mode: manage your services indirectly via requests, messages, and bookings.';
+    if (roleNotice) roleNotice.textContent = 'Vendor mode: respond to incoming requests created from your services.';
   } else {
     roleNotice?.classList.remove('d-none');
-    if (roleNotice) roleNotice.textContent = 'User mode: browse services, then create requests and message vendors.';
+    if (roleNotice) roleNotice.textContent = 'User mode: browse services, then create requests for a specific vendor.';
   }
 
-  // Placeholder service list (since service CRUD endpoints may be restricted/not yet wired).
-  serviceList.innerHTML = '';
-  noServices?.classList.remove('d-none');
-
-  // Ensure quick actions still work
   const btnGoCreateRequest = document.getElementById('btnGoCreateRequest');
   const btnGoIncoming = document.getElementById('btnGoIncoming');
 
@@ -60,12 +108,40 @@ export async function initServicesPage({ me, role } = {}) {
     window.location.href = 'requests.html?status=pending';
   });
 
-  // If backend returns a service list endpoint later, we can wire it here.
+  // Load services for everyone (public listing).
+  serviceList.innerHTML = '';
+  noServices?.classList.add('d-none');
+
   try {
-    // no-op: reserved for future endpoint wiring
+    const res = await apiFetch('/api/v1/services', { method: 'GET' });
+    const data = res?.data || res;
+    const services = Array.isArray(data)
+      ? data
+      : data?.data || data?.services || data || [];
+
+    if (!Array.isArray(services) || services.length === 0) {
+      noServices?.classList.remove('d-none');
+      return;
+    }
+
+    serviceList.innerHTML = services.map(buildServiceCard).join('');
+
+    // Optional: if a preselectServiceId exists, focus user on it (simple approach: toast).
+    const preselectServiceId = getPreselectServiceId();
+    if (preselectServiceId) {
+      toast({ title: 'Pick a request', message: `Selected service: ${preselectServiceId}`, variant: 'info' });
+    }
+
+    serviceList.querySelectorAll('[data-action="loadServiceDetails"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const serviceId = btn.getAttribute('data-service-id');
+        if (!serviceId) return;
+        toast({ title: 'Service details', message: `Service ID: ${serviceId}`, variant: 'info' });
+      });
+    });
   } catch (e) {
     authzError?.classList.remove('d-none');
-    if (authzError) authzError.textContent = 'Could not load services right now.';
+    if (authzError) authzError.textContent = e?.message || 'Could not load services right now.';
   }
 }
 

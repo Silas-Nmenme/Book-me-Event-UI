@@ -60,7 +60,7 @@ function escapeHtml(s) {
   });
 }
 
-function buildCard(req) {
+function buildCard(req, { myRole } = {}) {
   const id = req?._id || req?.id;
 
   const title =
@@ -74,6 +74,10 @@ function buildCard(req) {
   const createdAt = req?.createdAt
     ? new Date(req.createdAt).toLocaleString()
     : '';
+
+  const myRoleNorm = (myRole || '').toString().toUpperCase();
+  const statusNorm = (req?.status || '').toString().toLowerCase();
+  const isPending = statusNorm === 'pending';
 
   return `
     <div class="col-12">
@@ -147,14 +151,37 @@ function buildCard(req) {
             Bookings
           </button>
 
-          <button
-            class="btn btn-danger btn-sm"
-            data-action="cancelRequest"
-            type="button"
-            data-id="${escapeHtml(id || '')}"
-          >
-            Cancel
-          </button>
+          ${
+            myRoleNorm === 'VENDOR' && isPending
+              ? `
+            <button
+              class="btn btn-success btn-sm"
+              data-action="acceptRequest"
+              type="button"
+              data-id="${escapeHtml(id || '')}"
+            >
+              Accept
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              data-action="declineRequest"
+              type="button"
+              data-id="${escapeHtml(id || '')}"
+            >
+              Decline
+            </button>
+          `
+              : `
+            <button
+              class="btn btn-danger btn-sm"
+              data-action="cancelRequest"
+              type="button"
+              data-id="${escapeHtml(id || '')}"
+            >
+              Cancel
+            </button>
+          `
+          }
 
         </div>
 
@@ -206,8 +233,29 @@ export async function initRequestsPage({ me, role } = {}) {
   }
 
   btnCreateRequest?.addEventListener('click', () => {
+    // If we have a prefill request from a service card, keep it.
     requestModal?.show();
   });
+
+  // Prefill from services.html: requests.html?prefillServiceId=...&prefillVendorId=...
+  const prefillServiceId = qs('prefillServiceId');
+  const prefillVendorId = qs('prefillVendorId');
+  const prefillShouldOpen = !!prefillServiceId;
+
+  if (prefillServiceId && document.getElementById('service')) {
+    const serviceEl = document.getElementById('service');
+    serviceEl.value = prefillServiceId;
+  }
+
+  if (prefillVendorId && document.getElementById('vendor')) {
+    const vendorEl = document.getElementById('vendor');
+    vendorEl.value = prefillVendorId;
+  }
+
+  if (prefillShouldOpen) {
+    // Ensure modal opens after bootstrap init.
+    setTimeout(() => requestModal?.show(), 0);
+  }
 
   requestForm?.addEventListener('submit', async (e) => {
 
@@ -366,7 +414,7 @@ export async function initRequestsPage({ me, role } = {}) {
       }
 
       requestList.innerHTML =
-        items.map((r) => buildCard(r)).join('');
+        items.map((r) => buildCard(r, { myRole })).join('');
 
       requestList
         .querySelectorAll('[data-action]')
