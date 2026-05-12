@@ -125,13 +125,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { registerUser, setToken } from '../js/api.js';
+      import { registerUser, setToken, apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
 
       setYear('year');
       initThemeToggle();
-
 
       document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -144,6 +143,7 @@
         const passwordConfirm = document.getElementById('passwordConfirm').value;
         const role = document.getElementById('role').value;
 
+
         const btn = document.getElementById('btnRegister');
         btn.disabled = true;
 
@@ -153,6 +153,29 @@
         try {
           const res = await registerUser({ firstName, lastName, email, phone, password, passwordConfirm, role });
           if (res?.token) setToken(res.token);
+
+          // If user selected VENDOR, create vendor profile immediately to prevent
+          // "Only vendors can create services" errors.
+          if ((role || '').toUpperCase() === 'VENDOR') {
+            const vendorRes = await apiFetch('/api/v1/auth/register/vendor', {
+              method: 'POST',
+              body: JSON.stringify({
+                businessName: 'Default business name',
+                businessRegistrationNumber: '',
+                taxId: '',
+                bankAccountNumber: '',
+                bankCode: '',
+                businessDescription: '',
+                serviceCategories: [],
+                coverageAreas: [],
+                responseTimeHours: 0,
+              }),
+            });
+
+            if (!vendorRes?.success) {
+              throw new Error(vendorRes?.message || 'Vendor profile creation failed');
+            }
+          }
 
           toast({ title: 'Account created', message: 'Redirecting…', variant: 'success' });
           window.location.href = 'profile.html';
