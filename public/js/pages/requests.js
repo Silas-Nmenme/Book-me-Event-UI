@@ -237,20 +237,16 @@ export async function initRequestsPage({ me, role } = {}) {
     requestModal?.show();
   });
 
-  // Prefill from services.html: requests.html?prefillServiceId=...&prefillVendorId=...
+  // Prefill from services.html: requests.html?prefillServiceId=...
   const prefillServiceId = qs('prefillServiceId');
-  const prefillVendorId = qs('prefillVendorId');
   const prefillShouldOpen = !!prefillServiceId;
+
 
   if (prefillServiceId && document.getElementById('service')) {
     const serviceEl = document.getElementById('service');
     serviceEl.value = prefillServiceId;
   }
 
-  if (prefillVendorId && document.getElementById('vendor')) {
-    const vendorEl = document.getElementById('vendor');
-    vendorEl.value = prefillVendorId;
-  }
 
   if (prefillShouldOpen) {
     // Ensure modal opens after bootstrap init.
@@ -261,11 +257,9 @@ export async function initRequestsPage({ me, role } = {}) {
 
     e.preventDefault();
 
-    const vendor =
-      document.getElementById('vendor')?.value.trim();
-
     const service =
       document.getElementById('service')?.value.trim();
+
 
     const eventDateRaw =
       document.getElementById('eventDate')?.value;
@@ -285,21 +279,11 @@ export async function initRequestsPage({ me, role } = {}) {
     const notes =
       document.getElementById('notes')?.value.trim();
 
-    const attachmentsRaw =
-      document.getElementById('attachments')?.value.trim();
-
     const eventDate = new Date(eventDateRaw);
 
-    const attachments = attachmentsRaw
-      ? attachmentsRaw
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : undefined;
-
     const payload = {
-      vendor: vendor || undefined,
       service: service || undefined,
+
       eventDate: Number.isNaN(eventDate.getTime())
         ? undefined
         : eventDate,
@@ -312,17 +296,17 @@ export async function initRequestsPage({ me, role } = {}) {
         ? Number(budgetAmountRaw)
         : undefined,
       notes: notes || undefined,
-      attachments,
     };
 
-    if (!payload.vendor) {
+    if (!payload.service) {
       toast({
-        title: 'Vendor required',
-        message: 'Please provide a vendor ID.',
+        title: 'Service required',
+        message: 'Please provide a service ID.',
         variant: 'danger',
       });
       return;
     }
+
 
     if (!payload.eventDate) {
       toast({

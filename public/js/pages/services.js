@@ -33,7 +33,8 @@ function buildServiceCard(svc) {
   const image = Array.isArray(svc?.images) && svc.images[0] ? svc.images[0] : '';
   const price = formatPrice(svc);
 
-  const href = `requests.html?prefillServiceId=${encodeURIComponent(id)}&prefillVendorId=${encodeURIComponent(vendor?._id || vendor?.id || '')}`;
+  const href = `requests.html?prefillServiceId=${encodeURIComponent(id)}`;
+
 
   return `
     <div class="col-12 col-md-6">
