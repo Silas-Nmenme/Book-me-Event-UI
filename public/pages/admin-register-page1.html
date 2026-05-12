@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sign up - Book Me Events</title>
+    <title>Admin registration - Page 1</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
@@ -19,24 +19,11 @@
             <span class="fw-bold">Book Me Events</span>
           </span>
         </a>
-
         <div class="ms-auto d-flex gap-2">
-          <a class="btn btn-soft" href="index.html">Home</a>
-
-          <button
-            id="themeToggleBtn"
-            class="btn btn-soft btn-sm bme-theme-toggle"
-            type="button"
-            aria-label="Toggle dark/light theme"
-            title="Toggle theme"
-          >
-            <span data-icon="sun" style="display:none;">☀️</span>
-            <span data-icon="moon" style="display:inline-flex;">🌙</span>
-          </button>
+          <a class="btn btn-soft" href="auth-login.html">Login</a>
         </div>
       </div>
     </nav>
-
 
     <section class="section" style="padding-top:72px; padding-bottom:64px;">
       <div class="container">
@@ -46,16 +33,15 @@
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <span class="brand-pill">
                   <span class="brand-dot"></span>
-                  <span class="fw-bold">Create account</span>
+                  <span class="fw-bold">Admin signup</span>
                 </span>
-                <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Secure</span>
+                <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Step 1</span>
               </div>
 
-              <h1 class="h4 fw-bold mb-1">Join Book Me Events</h1>
-              <div class="text-muted-soft small mb-4">Create your profile as a user.</div>
+              <h1 class="h4 fw-bold mb-1">Create your admin account</h1>
+              <div class="text-muted-soft small mb-4">We will send a 6-digit OTP to your email.</div>
 
-              <form id="registerForm" class="row g-3" autocomplete="on">
-
+              <form id="adminRegisterForm" class="row g-3" autocomplete="on">
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="firstName">First name</label>
                   <input class="form-control" id="firstName" name="firstName" type="text" placeholder="John" required />
@@ -71,8 +57,8 @@
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label" for="phone">Phone (optional)</label>
-                  <input class="form-control" id="phone" name="phone" type="tel" placeholder="080XXXXXXXX" />
+                  <label class="form-label" for="phone">Phone</label>
+                  <input class="form-control" id="phone" name="phone" type="tel" placeholder="080XXXXXXXX" required />
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -85,25 +71,15 @@
                   <input class="form-control" id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Confirm password" required />
                 </div>
 
-                <div class="col-12 text-center">
-                  <div class="small text-muted-soft">This form registers normal users only.</div>
-                  <input type="hidden" id="role" value="USER" />
-                </div>
-
-
                 <div class="col-12">
-                  <button type="submit" class="btn btn-brand w-100" id="btnRegister">Create account</button>
+                  <button type="submit" class="btn btn-brand w-100" id="btnAdminNext">Next</button>
                 </div>
+
+                <div class="col-12 small text-muted-soft" id="adminHint"></div>
 
                 <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                  <a class="text-muted-soft small" href="auth-login.html">I already have an account</a>
+                  <a class="text-muted-soft small" href="auth-register.html">Register as user</a>
                 </div>
-
-                <div class="col-12 text-center">
-                  <div class="small text-muted-soft">You’ll be redirected to your dashboard after signup.</div>
-                </div>
-
-                <div class="col-12 small text-muted-soft" id="registerHint"></div>
               </form>
             </div>
           </div>
@@ -115,7 +91,7 @@
       <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div>© <span id="year"></span> Book Me Events</div>
-          <div class="text-muted-soft small">Sign up</div>
+          <div class="text-muted-soft small">Admin signup</div>
         </div>
       </div>
     </footer>
@@ -123,42 +99,42 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { registerUser, setToken, apiFetch } from '../js/api.js';
+      import { apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
 
       setYear('year');
       initThemeToggle();
 
-      document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      document.getElementById('adminRegisterForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const password = document.getElementById('password').value;
-        const passwordConfirm = document.getElementById('passwordConfirm').value;
-        const role = document.getElementById('role').value;
+        const payload = {
+          firstName: document.getElementById('firstName').value.trim(),
+          lastName: document.getElementById('lastName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          password: document.getElementById('password').value,
+          passwordConfirm: document.getElementById('passwordConfirm').value,
+        };
 
-
-        const btn = document.getElementById('btnRegister');
+        const btn = document.getElementById('btnAdminNext');
         btn.disabled = true;
 
-        const hint = document.getElementById('registerHint');
+        const hint = document.getElementById('adminHint');
         hint.textContent = '';
 
         try {
-          const res = await registerUser({ firstName, lastName, email, phone, password, passwordConfirm });
+          await apiFetch('/api/v1/admin/register/page1', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
 
-          toast({ title: 'OTP sent', message: 'Verify your email OTP to continue.', variant: 'success' });
-          // save email temporarily so user can verify OTP
-          sessionStorage.setItem('bme_pending_verify_email', email);
-          window.location.href = 'auth-verify-otp.html';
-
+          toast({ title: 'OTP sent', message: 'Continue to OTP verification.', variant: 'success' });
+          window.location.href = 'admin-register-page2.html';
         } catch (err) {
-          hint.textContent = err?.message || 'Signup failed';
-          toast({ title: 'Signup failed', message: err?.message || 'Try again with valid details.', variant: 'danger' });
+          hint.textContent = err?.message || 'Admin signup failed';
+          toast({ title: 'Failed', message: err?.message || 'Try again.', variant: 'danger' });
         } finally {
           btn.disabled = false;
         }

@@ -120,8 +120,12 @@
           const res = await loginUser({ email, password });
           if (res?.token) setToken(res.token);
 
+          const role = res?.data?.role || '';
+          const roleUpper = (role || '').toString().toUpperCase();
+          const next = roleUpper === 'ADMIN' ? 'admin-dashboard.html' : roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html';
           toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
-          window.location.href = 'profile.html';
+          window.location.href = next;
+
         } catch (err) {
           hint.textContent = err?.message || 'Login failed';
           toast({ title: 'Login failed', message: err?.message || 'Check your credentials and try again.', variant: 'danger' });
