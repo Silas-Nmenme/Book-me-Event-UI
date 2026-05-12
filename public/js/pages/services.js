@@ -23,9 +23,9 @@ function getPreselectServiceId() {
   return qs('preselectServiceId') || null;
 }
 
-
-function buildServiceCard(svc) {
+function buildServiceCard(svc, { hideCreateRequest = false } = {}) {
   const id = svc?._id || svc?.id;
+
   const vendor = svc?.vendor;
   const vendorName = vendor?.businessName || 'Vendor';
   const category = svc?.serviceCategory || 'Service';
@@ -35,6 +35,9 @@ function buildServiceCard(svc) {
 
   const href = `requests.html?prefillServiceId=${encodeURIComponent(id)}`;
 
+  const createRequestHtml = hideCreateRequest
+    ? ''
+    : `<a class="btn btn-brand btn-sm" href="${href}">Create request</a>`;
 
   return `
     <div class="col-12 col-md-6">
@@ -56,7 +59,7 @@ function buildServiceCard(svc) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <a class="btn btn-brand btn-sm" href="${href}">Create request</a>
+          ${createRequestHtml}
           <button
             class="btn btn-soft btn-sm"
             type="button"
@@ -109,7 +112,6 @@ export async function initServicesPage({ me, role } = {}) {
     window.location.href = 'requests.html?status=pending';
   });
 
-  // Load services for everyone (public listing).
   serviceList.innerHTML = '';
   noServices?.classList.add('d-none');
 
@@ -125,9 +127,10 @@ export async function initServicesPage({ me, role } = {}) {
       return;
     }
 
-    serviceList.innerHTML = services.map(buildServiceCard).join('');
+    serviceList.innerHTML = services
+      .map((s) => buildServiceCard(s, { hideCreateRequest: myRole === 'VENDOR' }))
+      .join('');
 
-    // Optional: if a preselectServiceId exists, focus user on it (simple approach: toast).
     const preselectServiceId = getPreselectServiceId();
     if (preselectServiceId) {
       toast({ title: 'Pick a request', message: `Selected service: ${preselectServiceId}`, variant: 'info' });

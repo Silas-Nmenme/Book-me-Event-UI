@@ -133,6 +133,8 @@ export async function initVendorDashboard({ me, role } = {}) {
   const inpBasePrice = document.getElementById('vendorBasePrice');
   const inpPriceCurrency = document.getElementById('vendorPriceCurrency');
   const inpImages = document.getElementById('vendorImages');
+  const inpImagesFiles = document.getElementById('vendorImagesFiles');
+
 
   if (!shell || !serviceList || !formEl) return;
 
@@ -173,13 +175,43 @@ export async function initVendorDashboard({ me, role } = {}) {
   }
 
   function parseImages(imagesRaw) {
-    // Accept comma-separated URLs.
+    // Backwards compatible: accept comma-separated URLs if provided.
     const arr = (imagesRaw || '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
     return arr;
   }
+
+  function getSelectedImageFiles() {
+    const files = inpImagesFiles?.files;
+    if (!files || files.length === 0) return [];
+    return Array.from(files);
+  }
+
+  async function uploadSelectedImages() {
+    const files = getSelectedImageFiles();
+    if (!files.length) return [];
+
+    const urls = [];
+
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('image', file);
+
+      // Uses existing generic upload route (Cloudinary) for images.
+      const res = await apiFetch('/api/v1/uploads/generic', {
+        method: 'POST',
+        body: fd,
+      });
+
+      const data = res?.data || res;
+      if (data?.url) urls.push(data.url);
+    }
+
+    return urls;
+  }
+
 
   async function load() {
     serviceList.innerHTML = '';
@@ -280,7 +312,9 @@ export async function initVendorDashboard({ me, role } = {}) {
 
     const images = parseImages(inpImages.value);
 
+    // For create flow, prefer uploaded images.
     const values = {
+
       serviceName: inpServiceName.value.trim(),
       serviceCategory: inpServiceCategory.value.trim(),
       description: inpDescription.value.trim(),
@@ -310,7 +344,23 @@ export async function initVendorDashboard({ me, role } = {}) {
     }
 
     try {
-      const payload = getServiceFormPayload({ mode, values });
+      const selectedFiles = getSelectedImageFiles();
+      let uploadedUrls = [];
+
+      if (selectedFiles.length) {
+        toast({ title: 'Uploading', message: 'Uploading service images…', variant: 'warning' });
+        uploadedUrls = await uploadSelectedImages();
+      }
+
+      // If user uploaded images, use those URLs; otherwise fall back to any existing URLs.
+      const finalImages = uploadedUrls.length
+        ? uploadedUrls
+        : parseImages(inpImages.value);
+
+      const payload = getServiceFormPayload({
+        mode,
+        values: { ...values, images: finalImages },
+      });
 
       if (mode === 'create') {
         await apiFetch('/api/v1/services', {
@@ -327,6 +377,8 @@ export async function initVendorDashboard({ me, role } = {}) {
         toast({ title: 'Updated', message: 'Service updated successfully.', variant: 'success' });
       }
 
+      // Clear file input after submit.
+      if (inpImagesFiles) inpImagesFiles.value = '';
       resetForm();
       hideForm();
       await load();

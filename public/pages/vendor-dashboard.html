@@ -189,10 +189,10 @@
                     </div>
 
                     <div class="col-12">
-                      <label class="form-label">Images (comma-separated URLs)</label>
-                      <input class="form-control" type="text" id="vendorImages" placeholder="https://.../img1.jpg, https://.../img2.png" title="Images" />
-
-                      <div class="small text-muted-soft mt-1">If your backend expects uploads, replace this with your upload picker later.</div>
+                      <label class="form-label">Service pictures</label>
+                      <input class="form-control" type="file" id="vendorImagesFiles" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" multiple title="Service pictures" />
+                      <div class="small text-muted-soft mt-1">Upload one or more images. We will save the Cloudinary URLs automatically.</div>
+                      <input type="hidden" id="vendorImages" value="" />
                     </div>
                   </div>
 
