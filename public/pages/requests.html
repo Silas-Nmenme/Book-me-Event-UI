@@ -386,6 +386,23 @@ setYear('year');
 initThemeToggle();
 initNavbarBrandRoleRedirect();
 
+const avatarEl = document.getElementById('avatar');
+
+function setAvatarUrl(url) {
+  if (!avatarEl) return;
+  if (url) {
+    avatarEl.style.backgroundImage = `url(${url})`;
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+    avatarEl.style.fontWeight = 'normal';
+    return;
+  }
+  avatarEl.style.backgroundImage = '';
+  avatarEl.textContent = 'BME';
+  avatarEl.style.fontWeight = '900';
+}
+
 function getAvatarInitials(name) {
   return (name || 'BME')
     .split(' ')
@@ -396,6 +413,7 @@ function getAvatarInitials(name) {
 }
 
 async function loadMe() {
+
   try {
     const res = await fetchMe();
     const me = res?.data || res;
@@ -406,8 +424,15 @@ async function loadMe() {
         : '—';
 
     document.getElementById('meEmail').textContent = me?.email || '—';
-    document.getElementById('avatar').textContent =
-      getAvatarInitials(me?.firstName || 'BME');
+
+    if (me?.profilePicture) {
+      setAvatarUrl(me.profilePicture);
+    } else {
+      avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
+      avatarEl.style.backgroundImage = '';
+      avatarEl.style.background = 'rgba(124,92,255,0.12)';
+    }
+
 
     const role = (me?.role || me?.user?.role || 'USER')
       .toString()

@@ -83,7 +83,14 @@ body{
   background: rgba(255,255,255,.72) !important;
 }
 
+/* Fix: prevent glass/backdrop-filter layers from visually covering modal form.
+   Ensure modal + content sit above Bootstrap's backdrop overlay. */
+.modal{ z-index: 1080; }
+.modal-backdrop{ z-index: 1075; }
+.modal .modal-content{ position: relative; z-index: 1081; }
+
 :root[data-theme="light"] .navbar-dark{
+
   color: var(--text);
 }
 
