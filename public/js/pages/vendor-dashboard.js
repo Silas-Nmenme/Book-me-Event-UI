@@ -345,35 +345,47 @@ export async function initVendorDashboard({ me, role } = {}) {
 
     try {
       const selectedFiles = getSelectedImageFiles();
-      let uploadedUrls = [];
 
-      if (selectedFiles.length) {
-        toast({ title: 'Uploading', message: 'Uploading service images…', variant: 'warning' });
-        uploadedUrls = await uploadSelectedImages();
-      }
-
-      // If user uploaded images, use those URLs; otherwise fall back to any existing URLs.
-      const finalImages = uploadedUrls.length
-        ? uploadedUrls
-        : parseImages(inpImages.value);
-
-      const payload = getServiceFormPayload({
-        mode,
-        values: { ...values, images: finalImages },
-      });
-
+      // Always upload+create in a single multipart request so the backend
+      // can accept images via `upload.array('images', 6)`.
+      // For updates, do the same with PUT.
       if (mode === 'create') {
+        const fd = new FormData();
+        fd.append('serviceName', values.serviceName);
+        fd.append('serviceCategory', values.serviceCategory);
+        fd.append('description', values.description);
+        fd.append('basePrice', values.basePrice);
+        fd.append('priceCurrency', values.priceCurrency || 'NGN');
+
+        for (const file of selectedFiles) {
+          fd.append('images', file);
+        }
+
         await apiFetch('/api/v1/services', {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: fd,
         });
+
         toast({ title: 'Created', message: 'Service created successfully.', variant: 'success' });
       } else {
         if (!id) throw new Error('Missing service id for update.');
+
+        const fd = new FormData();
+        fd.append('serviceName', values.serviceName);
+        fd.append('serviceCategory', values.serviceCategory);
+        fd.append('description', values.description);
+        fd.append('basePrice', values.basePrice);
+        fd.append('priceCurrency', values.priceCurrency || 'NGN');
+
+        for (const file of selectedFiles) {
+          fd.append('images', file);
+        }
+
         await apiFetch(`/api/v1/services/${encodeURIComponent(id)}`, {
           method: 'PUT',
-          body: JSON.stringify(payload),
+          body: fd,
         });
+
         toast({ title: 'Updated', message: 'Service updated successfully.', variant: 'success' });
       }
 
