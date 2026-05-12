@@ -100,9 +100,6 @@
                     accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                     required
                   />
-                  <div class="form-text text-muted-soft">
-                    Field name must be <code>image</code> to match the backend endpoint.
-                  </div>
                 </div>
 
                 <div class="col-12">
@@ -125,10 +122,6 @@
                   </div>
                 </div>
               </form>
-            </div>
-
-            <div class="mt-4 text-muted-soft small">
-              Endpoint used: <code>POST /api/v1/uploads/vendor-kyc</code>
             </div>
           </div>
         </div>
@@ -167,16 +160,44 @@
           .join('');
       }
 
+      const avatarEl = document.getElementById('avatar');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+
+        // fallback shows initials
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = getAvatarInitials(avatarEl?.dataset?.name || 'BME');
+        avatarEl.style.fontWeight = '900';
+      }
+
       async function loadMe() {
         try {
           const res = await fetchMe();
           const me = res?.data || res;
+
           document.getElementById('meName').textContent = me?.firstName
             ? `${me.firstName} ${me.lastName || ''}`.trim()
             : '—';
           document.getElementById('meEmail').textContent = me?.email || '—';
-          document.getElementById('avatar').textContent = getAvatarInitials(me?.firstName || 'BME');
           document.getElementById('meRole').textContent = (me?.role || 'VENDOR').toString().toUpperCase();
+
+          // Vendor profile picture (User.profilePicture)
+          if (me?.profilePicture) {
+            avatarEl.dataset.name = me?.firstName || 'BME';
+            setAvatarUrl(me.profilePicture);
+          } else {
+            avatarEl.dataset.name = me?.firstName || 'BME';
+            setAvatarUrl(null);
+          }
         } catch {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
