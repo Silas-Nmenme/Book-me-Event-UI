@@ -72,32 +72,25 @@ body{
 
 .navbar-glass,
 .card-glass{
-  background: rgba(16,20,35,.65) !important;
+  /* Remove glass effect: no backdrop blur */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  /* Keep the solid surface look */
+  background: rgba(16,20,35,.92) !important;
   border: 1px solid var(--surfaceBorder) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 :root[data-theme="light"] .navbar-glass,
 :root[data-theme="light"] .card-glass{
-  background: rgba(255,255,255,.72) !important;
+  background: rgba(255,255,255,.92) !important;
 }
 
-/* Fix: prevent glass/backdrop-filter layers from visually covering modal form.
-   Ensure modal + content sit above Bootstrap's backdrop overlay. */
+/* Ensure modal + content are on top of the backdrop overlay */
 .modal{ z-index: 1080; }
 .modal-backdrop{ z-index: 1075; }
 .modal .modal-content{ position: relative; z-index: 1081; }
-/* Disable blur/glass effect inside modals so form fields are always readable and usable */
-.modal .card-glass{
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: rgba(16,20,35,.92) !important;
-}
 
-:root[data-theme="light"] .modal .card-glass{
-  background: rgba(255,255,255,.92) !important;
-}
 
 :root[data-theme="light"] .navbar-dark{
 
