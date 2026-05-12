@@ -88,8 +88,19 @@ body{
 .modal{ z-index: 1080; }
 .modal-backdrop{ z-index: 1075; }
 .modal .modal-content{ position: relative; z-index: 1081; }
+/* Disable blur/glass effect inside modals so form fields are always readable and usable */
+.modal .card-glass{
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(16,20,35,.92) !important;
+}
+
+:root[data-theme="light"] .modal .card-glass{
+  background: rgba(255,255,255,.92) !important;
+}
 
 :root[data-theme="light"] .navbar-dark{
+
 
   color: var(--text);
 }
