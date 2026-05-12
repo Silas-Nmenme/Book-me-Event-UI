@@ -121,6 +121,34 @@ export async function verifyEmail({ token } = {}) {
 
 
 // =====================
+// Users (profile + related resources)
+// =====================
+export async function getUser(id) {
+
+  return apiFetch(`/api/v1/users/${id}`, { method: 'GET' });
+}
+
+export async function updateUser(id, payload) {
+  return apiFetch(`/api/v1/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteUser(id) {
+  return apiFetch(`/api/v1/users/${id}`, { method: 'DELETE' });
+}
+
+export async function getUserBookings(id) {
+  return apiFetch(`/api/v1/users/${id}/bookings`, { method: 'GET' });
+}
+
+export async function getUserRequests(id) {
+  return apiFetch(`/api/v1/users/${id}/requests`, { method: 'GET' });
+}
+
+
+// =====================
 // Requests
 // =====================
 export async function getRequests({ status, page = 1, limit = 10 } = {}) {
@@ -135,6 +163,7 @@ export async function getRequests({ status, page = 1, limit = 10 } = {}) {
 export async function getRequest(id) {
   return apiFetch(`/api/v1/requests/${id}`, { method: 'GET' });
 }
+
 
 export async function createRequest(payload) {
   return apiFetch('/api/v1/requests', {

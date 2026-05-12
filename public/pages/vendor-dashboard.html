@@ -127,9 +127,86 @@
                 </div>
               </div>
 
+              <div class="mt-4 text-muted-soft small" id="vendorRoleNotice">
+                Manage your services: create, edit, and delete service listings.
+              </div>
+
+              <div class="mt-3 alert alert-danger d-none" id="vendorAuthzError" role="alert"></div>
+
+              <div id="vendorServicesShell" class="mt-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                  <div>
+                    <div class="fw-bold">Your services</div>
+                    <div class="small text-muted-soft">Only vendor role can modify services.</div>
+                  </div>
+                  <button class="btn btn-brand" type="button" id="btnVendorAddService">Create service</button>
+                </div>
+
+                <div class="row g-3" id="vendorServiceList"></div>
+
+                <div id="vendorNoServices" class="text-muted-soft small d-none" style="margin-top:12px;">
+                  No services found.
+                </div>
+
+                <form id="vendorServiceForm" class="card card-glass p-3 mt-4 d-none" autocomplete="off">
+                  <input type="hidden" id="vendorServiceMode" value="create" />
+                  <input type="hidden" id="vendorServiceId" value="" />
+
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                      <div class="fw-bold" id="vendorFormTitle">Service editor</div>
+                      <div class="small text-muted-soft">Create or update the service listing.</div>
+                    </div>
+                    <button type="button" class="btn btn-soft btn-sm" id="btnVendorCancelEdit">Cancel</button>
+                  </div>
+
+                  <div class="row g-3 mt-1">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Service name</label>
+                      <input class="form-control" type="text" id="vendorServiceName" required title="Service name" />
+
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Service category</label>
+                      <input class="form-control" type="text" id="vendorServiceCategory" required title="Service category" />
+
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label">Description</label>
+                      <textarea class="form-control" id="vendorServiceDescription" rows="3" required title="Description"></textarea>
+
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Base price</label>
+                      <input class="form-control" type="number" step="0.01" id="vendorBasePrice" required title="Base price" />
+
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label">Price currency</label>
+                      <input class="form-control" type="text" id="vendorPriceCurrency" value="NGN" />
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label">Images (comma-separated URLs)</label>
+                      <input class="form-control" type="text" id="vendorImages" placeholder="https://.../img1.jpg, https://.../img2.png" title="Images" />
+
+                      <div class="small text-muted-soft mt-1">If your backend expects uploads, replace this with your upload picker later.</div>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-brand" id="btnVendorSubmit">Save</button>
+                    <button type="button" class="btn btn-soft" id="btnVendorToggle" disabled style="display:none;">—</button>
+                  </div>
+                </form>
+              </div>
+              
               <div class="mt-4 text-muted-soft small">
                 Note: KYC and vendor verification are handled by admin flows in the backend.
               </div>
+
             </div>
           </div>
         </div>
@@ -148,15 +225,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initVendorDashboard } from '../js/pages/vendor-dashboard.js';
 
       setYear('year');
       initThemeToggle();
 
 
       const avatarEl = document.getElementById('avatar');
+
       const avatarFileInput = document.getElementById('profilePictureInput');
 
       function setAvatarUrl(url) {
@@ -186,6 +265,15 @@
           const me = res?.data || res;
           document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
           document.getElementById('meEmail').textContent = me?.email || '—';
+
+          // Start vendor service CRUD UI
+          try {
+            const role = me?.role || me?.user?.role;
+            await initVendorDashboard({ me, role });
+          } catch {}
+
+          return me;
+
 
           if (me?.profilePicture) {
             setAvatarUrl(me.profilePicture);
