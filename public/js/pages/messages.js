@@ -22,7 +22,7 @@ function escapeHtml(s) {
 function renderMessage(m, { meId } = {}) {
   const sender = m?.sender || m?.senderId || m?.from || null;
   const senderId = (typeof sender === 'string' ? sender : sender?._id) || '';
-  const text = m?.messageContent ?? m?.message || m?.text || '';
+  const text = m?.messageContent ?? (m?.message || m?.text || '');
   const createdAt = m?.createdAt ? new Date(m.createdAt).toLocaleString() : '';
   const isSystem = m?.type === 'system';
 
