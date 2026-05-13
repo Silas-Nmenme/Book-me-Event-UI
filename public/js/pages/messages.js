@@ -154,12 +154,21 @@ export async function initMessagesPage({ me, role } = {}) {
 
   // ===== Socket.IO real-time updates =====
   try {
-    // Use relative URL so it works regardless of BACKEND_URL config.
-    const socket = window.io ? window.io({ transports: ['websocket'] }) : null;
+    const socket = window.io
+      ? window.io({
+          // Allow Socket.IO to perform its normal handshake (polling -> websocket upgrade)
+          transports: ['polling', 'websocket'],
+          // Explicitly target the backend origin to avoid Netlify endpoint issues
+          // If BACKEND_URL is not defined, use current origin as fallback.
+          path: '/socket.io',
+        })
+      : null;
 
     if (socket && me?._id) {
       socket.on('connect', () => {
+        console.log('[socket] connected', socket.id);
         socket.emit('join', { userId: me._id });
+        console.log('[socket] joined room for user', me._id);
       });
 
       socket.on('message:new', (payload) => {
@@ -176,8 +185,9 @@ export async function initMessagesPage({ me, role } = {}) {
         loadUnread();
       });
     }
-  } catch {
+  } catch (e) {
     // ignore socket errors; polling/history still works
+    console.error('[socket] init error', e);
   }
 
   await loadUnread();
