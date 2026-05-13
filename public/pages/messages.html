@@ -48,7 +48,9 @@
               <div class="badge badge-glow mb-3" id="roleBadge">Messages</div>
               <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
               <div class="text-muted-soft" id="meEmail">—</div>
+
               <hr style="border-color: rgba(255,255,255,0.12)" />
+
 
               <div class="d-flex gap-3 align-items-center">
                 <div
@@ -182,9 +184,13 @@
         try {
           const res = await fetchMe();
           const me = res?.data || res;
-          document.getElementById('meName').textContent = me?.firstName
-            ? `${me.firstName} ${me.lastName || ''}`.trim()
-            : '—';
+          // Prefer server-returned display name; fall back to whatever the backend provides.
+          const firstName = me?.firstName || me?.user?.firstName;
+          const lastName = me?.lastName || me?.user?.lastName;
+          document.getElementById('meName').textContent = firstName
+            ? `${firstName} ${lastName || ''}`.trim()
+            : me?.name || me?.fullName || '—';
+
           document.getElementById('meEmail').textContent = me?.email || '—';
 
           if (me?.profilePicture) {
