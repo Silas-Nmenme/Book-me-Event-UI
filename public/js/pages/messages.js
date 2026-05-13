@@ -3,11 +3,9 @@ import {
   getMessages,
   getUnreadCount,
   sendMessage,
-  markMessageAsRead,
-  deleteMessage,
-  fetchMe,
   getConversation,
 } from '../api.js';
+
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -41,9 +39,8 @@ function renderMessage(m) {
 
 export async function initMessagesPage({ me, role } = {}) {
   const authzError = document.getElementById('authzError');
+
   const roleNotice = document.getElementById('roleNotice');
-  const shellPartner = document.getElementById('partnerUserId');
-  const btnLoad = document.getElementById('btnLoadConversation');
   const messagesList = document.getElementById('messagesList');
   const messageText = document.getElementById('messageText');
   const btnSendMessage = document.getElementById('btnSendMessage');
@@ -54,9 +51,8 @@ export async function initMessagesPage({ me, role } = {}) {
   const myRole = (role || qs('role') || 'USER').toString().toUpperCase();
   roleNotice?.classList.remove('d-none');
   roleNotice.textContent =
-    myRole === 'VENDOR'
-      ? 'Vendor mode: open a conversation with an organizer userId, then send messages.'
-      : 'User mode: open a conversation with a vendor userId, then send messages.';
+    myRole === 'VENDOR' ? 'Chat with the organizer (auto-selected).' : 'Chat with the vendor (auto-selected).';
+
 
   async function loadUnread() {
     try {
@@ -98,16 +94,29 @@ export async function initMessagesPage({ me, role } = {}) {
     }
   }
 
-  btnLoad?.addEventListener('click', () => {
-    const uid = shellPartner?.value?.trim();
-    loadConversation(uid);
-  });
+  let partnerId = qs('userId') || qs('partnerId') || qs('recipient');
+
+  async function resolvePartnerFromUrlOrData() {
+    // Frontend: vendor incoming flow should open messages.html?userId=<request.userId>
+    // User incoming flow should open messages.html?userId=<vendorId>
+    if (partnerId) return partnerId;
+
+    const requestId = qs('requestId');
+    if (requestId) {
+      // Best-effort: keep UI functional even if backend needs conversation mapping.
+      // Current backend requires recipient for send; so we can’t resolve partner without it.
+      return '';
+    }
+
+    return '';
+  }
 
   btnSendMessage?.addEventListener('click', async () => {
-    const partner = shellPartner?.value?.trim();
+    partnerId = await resolvePartnerFromUrlOrData();
+
     const text = messageText?.value?.trim();
-    if (!partner) {
-      toast({ title: 'Missing partner', message: 'Enter partner userId.', variant: 'warning' });
+    if (!partnerId) {
+      toast({ title: 'Missing recipient', message: 'No partner selected for this chat.', variant: 'warning' });
       return;
     }
     if (!text) {
@@ -116,15 +125,16 @@ export async function initMessagesPage({ me, role } = {}) {
     }
 
     try {
-      await sendMessage({ recipient: partner, messageContent: text });
+      await sendMessage({ recipient: partnerId, messageContent: text });
       messageText.value = '';
       toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
-      await loadConversation(partner);
+      await loadConversation(partnerId);
       await loadUnread();
     } catch (e) {
       toast({ title: 'Send failed', message: e?.message || 'Try again.', variant: 'danger' });
     }
   });
+
 
   messageText?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') btnSendMessage?.click();
@@ -133,9 +143,10 @@ export async function initMessagesPage({ me, role } = {}) {
   // Auto-load if URL provides userId
   const initialUserId = qs('userId');
   if (initialUserId) {
-    if (shellPartner) shellPartner.value = initialUserId;
+    partnerId = initialUserId;
     await loadConversation(initialUserId);
   }
+
 
   await loadUnread();
 

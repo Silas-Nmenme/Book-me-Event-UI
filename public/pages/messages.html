@@ -94,19 +94,16 @@
                     <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
                     <div id="roleNotice" class="alert alert-info d-none" role="alert"></div>
 
-                    <div class="row g-3 align-items-end">
-                      <div class="col-12 col-md-8">
-                        <label class="form-label fw-bold">Conversation partner userId</label>
-                        <input id="partnerUserId" class="form-control" placeholder="e.g. 123" />
-                      </div>
-                      <div class="col-12 col-md-4">
-                        <button id="btnLoadConversation" class="btn btn-brand w-100" type="button">Load</button>
+                    <hr />
+
+                    <div class="row g-2 mb-2" id="conversationHeaderRow">
+                      <div class="col-12">
+                        <div class="small text-muted-soft" id="conversationHeader">Chat</div>
                       </div>
                     </div>
 
-                    <hr />
-
                     <div class="d-flex flex-column" style="max-height: 420px; overflow:auto;" id="messagesList"></div>
+
 
                     <div class="mt-3">
                       <label class="form-label fw-bold">Send a message</label>
