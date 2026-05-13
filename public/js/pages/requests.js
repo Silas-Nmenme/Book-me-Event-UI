@@ -435,12 +435,20 @@ export async function initRequestsPage({ me, role } = {}) {
             if (!id) return;
 
             if (action === 'openMessages') {
+              // messages.html requires the chat partner userId
+              // For USER role requests: chat with the vendor -> partner = req.vendor._id
+              const reqObj = items.find((x) => (x?._id || x?.id)?.toString() === id.toString());
+              const partnerUserId = reqObj?.vendor?._id || reqObj?.vendor?._id || reqObj?.vendor?.id || '';
 
-              window.location.href =
-                `messages.html?requestId=${encodeURIComponent(id)}`;
-
+              if (partnerUserId) {
+                window.location.href = `messages.html?userId=${encodeURIComponent(partnerUserId)}`;
+              } else {
+                // Fallback for unexpected response shapes
+                window.location.href = `messages.html?userId=${encodeURIComponent('')}`;
+              }
               return;
             }
+
 
             if (action === 'viewBookings') {
 

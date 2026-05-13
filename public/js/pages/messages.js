@@ -19,23 +19,26 @@ function escapeHtml(s) {
   });
 }
 
-function renderMessage(m) {
-  const senderId = m?.senderId || m?.from || m?.userId || '';
-  const text = m?.text || m?.message || '';
+function renderMessage(m, { meId } = {}) {
+  const sender = m?.sender || m?.senderId || m?.from || null;
+  const senderId = (typeof sender === 'string' ? sender : sender?._id) || '';
+  const text = m?.messageContent ?? m?.message || m?.text || '';
   const createdAt = m?.createdAt ? new Date(m.createdAt).toLocaleString() : '';
   const isSystem = m?.type === 'system';
 
-  const dir = isSystem ? 'justify-content-center' : 'justify-content-start';
+  const isMe = meId && senderId && senderId.toString() === meId.toString();
+  const dir = isSystem ? 'justify-content-center' : isMe ? 'justify-content-end' : 'justify-content-start';
 
   return `
     <div class="d-flex ${dir} mb-2">
       <div class="card card-glass p-2" style="max-width: 85%;">
-        <div class="small text-muted-soft mb-1">${escapeHtml(senderId || '')}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
+        <div class="small text-muted-soft mb-1">${escapeHtml(isMe ? 'You' : senderId)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
         <div style="white-space: pre-wrap;">${escapeHtml(text)}</div>
       </div>
     </div>
   `;
 }
+
 
 export async function initMessagesPage({ me, role } = {}) {
   const authzError = document.getElementById('authzError');
@@ -68,6 +71,7 @@ export async function initMessagesPage({ me, role } = {}) {
     authzError?.classList.add('d-none');
     messagesList.innerHTML = '';
 
+
     if (!userId) {
       authzError?.classList.remove('d-none');
       if (authzError) authzError.textContent = 'Enter a partner userId first.';
@@ -81,7 +85,7 @@ export async function initMessagesPage({ me, role } = {}) {
       const items = data?.messages || data?.results || data?.items || data || [];
 
       if (Array.isArray(items) && items.length) {
-        messagesList.innerHTML = items.map(renderMessage).join('');
+        messagesList.innerHTML = items.map((x) => renderMessage(x, { meId: me?._id || me?.id })).join('');
       } else {
         messagesList.innerHTML = `<div class="small text-muted-soft">No messages yet.</div>`;
       }
@@ -148,6 +152,34 @@ export async function initMessagesPage({ me, role } = {}) {
   }
 
 
+  // ===== Socket.IO real-time updates =====
+  try {
+    // Use relative URL so it works regardless of BACKEND_URL config.
+    const socket = window.io ? window.io({ transports: ['websocket'] }) : null;
+
+    if (socket && me?._id) {
+      socket.on('connect', () => {
+        socket.emit('join', { userId: me._id });
+      });
+
+      socket.on('message:new', (payload) => {
+        // Only render if it matches current open conversation
+        if (!partnerId) return;
+        const matches =
+          (payload?.sender?.toString?.() === partnerId?.toString?.()) ||
+          (payload?.recipient?.toString?.() === partnerId?.toString?.());
+        if (!matches) return;
+
+        const el = renderMessage(payload, { meId: me?._id || me?.id });
+        messagesList.insertAdjacentHTML('beforeend', el);
+        messagesList.scrollTop = messagesList.scrollHeight;
+        loadUnread();
+      });
+    }
+  } catch {
+    // ignore socket errors; polling/history still works
+  }
+
   await loadUnread();
 
   // Conversation via requestId could be supported later; reserved for future.
@@ -156,4 +188,6 @@ export async function initMessagesPage({ me, role } = {}) {
     toast({ title: 'Tip', message: 'Conversation partner userId may be required by backend.', variant: 'warning' });
   }
 }
+
+
 
