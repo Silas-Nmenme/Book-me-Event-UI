@@ -108,9 +108,11 @@ export async function initMessagesPage({ me, role } = {}) {
     }
   }
 
-  let partnerId = qs('userId') || qs('partnerId') || qs('recipient');
+
+  // partnerId already declared once at the top; do not redeclare (prevents SyntaxError)
 
   async function resolvePartnerFromUrlOrData() {
+
     // We must have a recipient/userId to send.
     if (partnerId) return partnerId;
 
