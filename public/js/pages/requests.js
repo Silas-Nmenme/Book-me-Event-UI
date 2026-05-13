@@ -69,14 +69,23 @@ function buildCard(req, { myRole } = {}) {
     req?.eventDescription ||
     `Request ${id || ''}`.trim();
 
-  const { text, variant } = statusLabel(req?.status);
+  const normalizedStatus = req?.status
+    ? normalizeReqStatus(req.status)
+    : req?.status;
+
+  const { text, variant } = statusLabel(normalizedStatus);
 
   const createdAt = req?.createdAt
     ? new Date(req.createdAt).toLocaleString()
     : '';
 
   const myRoleNorm = (myRole || '').toString().toUpperCase();
-  const statusNorm = (req?.status || '').toString().toLowerCase();
+  const normalizedStatusForActions = req?.status
+    ? normalizeReqStatus(req.status)
+    : req?.status;
+  const statusNorm = (normalizedStatusForActions || '')
+    .toString()
+    .toLowerCase();
   const isPending = statusNorm === 'pending';
 
   return `
@@ -216,6 +225,14 @@ export async function initRequestsPage({ me, role } = {}) {
     qs('role') ||
     'USER'
   ).toString().toUpperCase();
+
+  // Requests statuses are stored in backend as: PENDING/ACCEPTED/DECLINED/CANCELLED
+  // but this UI uses lowercase: pending/accepted/declined/canceled.
+  const normalizeReqStatus = (s) => {
+    const v = (s ?? '').toString().toLowerCase();
+    if (v === 'cancelled') return 'canceled';
+    return v;
+  };
 
   shell?.classList.remove('d-none');
 
@@ -470,7 +487,18 @@ export async function initRequestsPage({ me, role } = {}) {
     }
   }
 
+  // Optional UX hint when coming from dashboard.
+  if (qs('from') === 'user-dashboard') {
+    toast({
+      title: 'Loading your requests',
+      message: 'Showing the latest from the backend.',
+      variant: 'info',
+    });
+  }
+
   await load();
 
-  // Vendor accept/decline buttons reserved for future use
+  // Vendor accept/decline buttons are handled by the card action buttons.
+  // (Accept/decline only render for vendor + pending requests).
 }
+
