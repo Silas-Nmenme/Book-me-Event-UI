@@ -60,8 +60,15 @@ function escapeHtml(s) {
   });
 }
 
+function normalizeReqStatus(s) {
+  const v = (s ?? '').toString().toLowerCase();
+  if (v === 'cancelled') return 'canceled';
+  return v;
+}
+
 function buildCard(req, { myRole } = {}) {
   const id = req?._id || req?.id;
+
 
   const title =
     req?.service?.title ||
@@ -228,11 +235,7 @@ export async function initRequestsPage({ me, role } = {}) {
 
   // Requests statuses are stored in backend as: PENDING/ACCEPTED/DECLINED/CANCELLED
   // but this UI uses lowercase: pending/accepted/declined/canceled.
-  const normalizeReqStatus = (s) => {
-    const v = (s ?? '').toString().toLowerCase();
-    if (v === 'cancelled') return 'canceled';
-    return v;
-  };
+  // (normalizeReqStatus is defined at module scope)
 
   shell?.classList.remove('d-none');
 
@@ -393,7 +396,7 @@ export async function initRequestsPage({ me, role } = {}) {
     try {
 
       const res = await getRequests({
-        status,
+        status: status ? status.toString().toUpperCase() : undefined,
         page: 1,
         limit: 20,
       });
