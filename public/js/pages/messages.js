@@ -51,7 +51,17 @@ export async function initMessagesPage({ me, role } = {}) {
 
   if (!messagesList) return;
 
+  // Always render something in the conversation box (prevents blank UI)
+  messagesList.innerHTML = `<div class="small text-muted-soft">Select a conversation to start messaging.</div>`;
+
+  // Ensure we always have the right partner on page load.
+  // (Older links may use ?userId or another param.)
+  // partnerId must only be declared once; used for loadConversation() and sendMessage()
+  let partnerId = qs('userId') || qs('partnerId') || qs('recipient');
+
   const myRole = (role || qs('role') || 'USER').toString().toUpperCase();
+
+
   roleNotice?.classList.remove('d-none');
   roleNotice.textContent =
     myRole === 'VENDOR' ? 'Chat with the organizer (auto-selected).' : 'Chat with the vendor (auto-selected).';
@@ -101,19 +111,16 @@ export async function initMessagesPage({ me, role } = {}) {
   let partnerId = qs('userId') || qs('partnerId') || qs('recipient');
 
   async function resolvePartnerFromUrlOrData() {
-    // Frontend: vendor incoming flow should open messages.html?userId=<request.userId>
-    // User incoming flow should open messages.html?userId=<vendorId>
+    // We must have a recipient/userId to send.
     if (partnerId) return partnerId;
 
-    const requestId = qs('requestId');
-    if (requestId) {
-      // Best-effort: keep UI functional even if backend needs conversation mapping.
-      // Current backend requires recipient for send; so we can’t resolve partner without it.
-      return '';
-    }
+    // Fallbacks for older/incorrect links.
+    const alt = qs('user') || qs('recipientUserId') || qs('partnerUserId');
+    if (alt) return alt;
 
     return '';
   }
+
 
   btnSendMessage?.addEventListener('click', async () => {
     partnerId = await resolvePartnerFromUrlOrData();

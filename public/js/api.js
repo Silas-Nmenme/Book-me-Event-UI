@@ -99,8 +99,17 @@ export async function resetPassword({ token, password, passwordConfirm }) {
 }
 
 export async function logoutUser() {
+  // Clear locally first so the app cannot keep an auth header on subsequent calls.
+  // The backend logout endpoint may return 401 if the token is already gone/expired,
+  // which should not block client-side logout.
   clearToken();
-  return apiFetch('/api/v1/auth/logout', { method: 'POST' });
+
+  try {
+    return await apiFetch('/api/v1/auth/logout', { method: 'POST' });
+  } catch (err) {
+    // Swallow auth-related failures (e.g., 401 Unauthorized) since we already cleared the session.
+    return { message: 'Logged out' };
+  }
 }
 
 export async function fetchMe() {

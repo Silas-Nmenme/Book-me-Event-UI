@@ -215,10 +215,17 @@
 
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try {
+          // logoutUser() already clears the token locally and swallows 401s.
           await logoutUser();
+        } catch {
+          // ignore any logout errors; we will still clear local session.
         } finally {
           clearToken();
+          // In-app session cleanup to ensure all pages require login again.
+          sessionStorage.clear();
+          localStorage.clear();
         }
+
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
         window.location.href = 'auth-login.html';
       });
