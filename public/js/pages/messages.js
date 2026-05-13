@@ -116,7 +116,7 @@ export async function initMessagesPage({ me, role } = {}) {
     }
 
     try {
-      await sendMessage({ conversation: partner, text });
+      await sendMessage({ recipient: partner, messageContent: text });
       messageText.value = '';
       toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
       await loadConversation(partner);
