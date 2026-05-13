@@ -112,7 +112,6 @@ export async function initMessagesPage({ me, role } = {}) {
   // partnerId already declared once at the top; do not redeclare (prevents SyntaxError)
 
   async function resolvePartnerFromUrlOrData() {
-
     // We must have a recipient/userId to send.
     if (partnerId) return partnerId;
 
@@ -123,11 +122,28 @@ export async function initMessagesPage({ me, role } = {}) {
     return '';
   }
 
+  // Best-effort auto-select: if the page was opened without partnerId, pick the first other participant
+  // from the user's latest conversation.
+  async function autoSelectPartnerId() {
+    // Without a “list conversations / find counterpart” endpoint, we can’t infer the partnerId safely.
+    // So we only auto-select from explicit URL params.
+    const explicit = qs('userId') || qs('partnerId') || qs('recipient');
+    return explicit || '';
+  }
+
+
+
+
+  // Ensure partnerId is set on load for real-time rendering + sending.
+  if (!partnerId) {
+    partnerId = await autoSelectPartnerId();
+  }
 
   btnSendMessage?.addEventListener('click', async () => {
     partnerId = await resolvePartnerFromUrlOrData();
 
     const text = messageText?.value?.trim();
+
     if (!partnerId) {
       toast({ title: 'Missing recipient', message: 'No partner selected for this chat.', variant: 'warning' });
       return;
@@ -181,18 +197,28 @@ export async function initMessagesPage({ me, role } = {}) {
       });
 
       socket.on('message:new', (payload) => {
-        // Only render if it matches current open conversation
-        if (!partnerId) return;
+        // Render into the currently open thread.
+        // If partnerId is missing, fall back to the “other user” inferred from sender/recipient.
+        const myId = me?._id || me?.id;
+        const pId = partnerId ||
+          (payload?.sender?.toString?.() === myId?.toString?.() ? payload?.recipient : payload?.sender);
+
+        if (!pId) return;
+
         const matches =
-          (payload?.sender?.toString?.() === partnerId?.toString?.()) ||
-          (payload?.recipient?.toString?.() === partnerId?.toString?.());
+          (payload?.sender?.toString?.() === pId?.toString?.()) ||
+          (payload?.recipient?.toString?.() === pId?.toString?.());
         if (!matches) return;
 
-        const el = renderMessage(payload, { meId: me?._id || me?.id });
+        // Ensure partnerId stays aligned with the open thread.
+        partnerId = pId;
+
+        const el = renderMessage(payload, { meId: myId });
         messagesList.insertAdjacentHTML('beforeend', el);
         messagesList.scrollTop = messagesList.scrollHeight;
         loadUnread();
       });
+
     }
   } catch (e) {
     // ignore socket errors; polling/history still works
