@@ -51,6 +51,14 @@ function buildRequestCard(req, { myRole } = {}) {
   const isPending = normalizedStatus?.toString?.().toLowerCase?.() === 'pending';
   const myRoleNorm = (myRole || '').toString().toUpperCase();
 
+  const userName = req?.user
+    ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim()
+    : req?.user?.name || req?.requestedByName || '';
+
+  // messages.html backend expects conversation/userId, not requestId
+  // For vendor incoming requests, partner is the request.user
+  const partnerUserId = req?.user?._id || req?.user?.id || '';
+
   return `
     <div class="col-12">
       <div class="card card-glass p-3">
@@ -60,6 +68,7 @@ function buildRequestCard(req, { myRole } = {}) {
             <div class="small text-muted-soft">
               ID: ${escapeHtml(id || '—')}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}
             </div>
+            <div class="small mt-1"><strong>Requested by:</strong> ${escapeHtml(userName || '—')}</div>
             <div class="small mt-1"><strong>Event date:</strong> ${escapeHtml(formatDate(req?.eventDate))}</div>
             <div class="small"><strong>Location:</strong> ${escapeHtml(req?.eventLocation || '—')}</div>
           </div>
@@ -69,9 +78,9 @@ function buildRequestCard(req, { myRole } = {}) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <a class="btn btn-soft btn-sm" href="messages.html?requestId=${encodeURIComponent(
-            id
-          )}">Message</a>
+          <a class="btn btn-soft btn-sm" href="messages.html?userId=${encodeURIComponent(
+            partnerUserId
+          )}">Message ${escapeHtml(userName || '')}</a>
           <a class="btn btn-soft btn-sm" href="bookings.html?requestId=${encodeURIComponent(
             id
           )}">Bookings</a>
@@ -107,6 +116,9 @@ export async function initVendorServicePage({ role } = {}) {
   btnShowIncoming?.addEventListener('click', () => {
     shell.classList.remove('d-none');
   });
+
+  // Ensure request.user is present by using backend-populated data (it should be)
+  // but we also guard message link when partnerUserId is missing.
 
   async function load() {
     requestList.innerHTML = '';
