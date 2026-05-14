@@ -432,10 +432,14 @@ export async function getAdminStats() {
 }
 
 export async function sendAnnouncement(payload) {
+  // Admin UI can send recipientType=ALL. Backend expands it.
   return apiFetch('/api/v1/admin/announcements', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
+
+
+
 
 

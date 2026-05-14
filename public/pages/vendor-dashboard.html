@@ -20,8 +20,36 @@
           </span>
         </a>
 
-        <div class="ms-auto d-flex gap-2">
+        <div class="ms-auto d-flex align-items-center gap-2">
           <a class="btn btn-soft" href="services.html">Browse</a>
+
+          <div class="dropdown">
+            <button
+              class="btn btn-soft position-relative"
+              type="button"
+              id="announcementBellBtn"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="Announcements"
+              title="Announcements"
+            >
+              <span aria-hidden="true">🔔</span>
+              <span
+                id="announcementBellDot"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style="display:none; font-size:0.65rem; padding:0.25rem 0.45rem;"
+              >!</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end" style="min-width:320px; max-width:90vw;">
+              <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
+              <div id="announcementBellList" class="px-3" style="max-height:50vh; overflow:auto;">
+                <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
+              </div>
+              <div class="px-3 pb-2">
+                <a class="dropdown-item" href="#" id="announcementBellViewAll">View in dashboard</a>
+              </div>
+            </div>
+          </div>
 
           <button
             id="themeToggleBtn"
@@ -344,6 +372,14 @@
         try {
           const role = me?.role || me?.user?.role;
           await initAnnouncements({ role });
+
+          const viewAllLink = document.getElementById('announcementBellViewAll');
+          if (viewAllLink) viewAllLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Keep dashboard UX: open the existing announcements list on the page.
+            const shell = document.getElementById('announcementsShell');
+            if (shell) shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
         } catch {}
       });
     </script>
