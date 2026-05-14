@@ -101,9 +101,178 @@
                 </div>
               </div>
 
-              <div class="mt-4 text-muted-soft small">
-                Connect these widgets to admin routes in the backend (e.g., pending vendors).
+              <!-- Admin tables -->
+              <div class="mt-4">
+                <div class="row g-3">
+                  <div class="col-12 col-lg-6">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                          <div class="fw-bold">Platform statistics</div>
+                          <div class="text-muted-soft small">Overview across users, vendors & payments.</div>
+                        </div>
+                        <div class="badge badge-glow">Live</div>
+                      </div>
+
+                      <div class="row g-2" id="statsGrid">
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Total users</div>
+                          <div class="h4 fw-bold mb-0" id="statTotalUsers">—</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Total vendors</div>
+                          <div class="h4 fw-bold mb-0" id="statTotalVendors">—</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Total bookings</div>
+                          <div class="h4 fw-bold mb-0" id="statTotalBookings">—</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Completed bookings</div>
+                          <div class="h4 fw-bold mb-0" id="statCompletedBookings">—</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Total revenue</div>
+                          <div class="h4 fw-bold mb-0" id="statTotalRevenue">—</div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                          <div class="text-muted-soft small">Avg rating</div>
+                          <div class="h4 fw-bold mb-0" id="statAvgRating">—</div>
+                        </div>
+                      </div>
+
+                      <div class="small text-muted-soft mt-2">
+                        Uses <code>/api/v1/admin/dashboard</code>.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-lg-6">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                          <div class="fw-bold">Send announcement</div>
+                          <div class="text-muted-soft small">Notify users/vendors via app UI.</div>
+                        </div>
+                      </div>
+
+                      <form id="announcementForm">
+                        <div class="mb-2">
+                          <label class="form-label">Title</label>
+                          <input class="form-control" id="announcementTitle" placeholder="e.g., Platform update" required />
+                        </div>
+                        <div class="mb-2">
+                          <label class="form-label">Message</label>
+                          <textarea class="form-control" id="announcementMessage" rows="3" placeholder="Write a short announcement" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Recipient type</label>
+                          <select class="form-select" id="announcementRecipientType" required title="Recipient type">
+                            <option value="USER">USER</option>
+                            <option value="VENDOR">VENDOR</option>
+                            <option value="ALL">ALL</option>
+                          </select>
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">Send</button>
+                        <div class="small text-muted-soft mt-2">
+                          Uses <code>POST /api/v1/admin/announcements</code>.
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+                        <div>
+                          <div class="fw-bold">Pending vendors</div>
+                          <div class="text-muted-soft small">Approve or reject vendor submissions.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-soft btn-sm" type="button" id="btnRefreshPending">Refresh</button>
+                        </div>
+                      </div>
+
+                      <div id="pendingVendorsLoading" class="text-muted-soft small d-none">Loading…</div>
+                      <div id="pendingVendorsError" class="text-danger small d-none"></div>
+
+                      <div class="table-responsive" style="max-height:420px; overflow:auto;">
+                        <table class="table table-dark table-hover" style="margin-bottom:0;">
+                          <thead>
+                            <tr>
+                              <th>User</th>
+                              <th>Business</th>
+                              <th>Requested</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody id="pendingVendorsBody"></tbody>
+                        </table>
+                      </div>
+
+                      <div class="d-flex justify-content-between align-items-center mt-3 gap-2">
+                        <div class="small text-muted-soft">Showing first page (pagination can be added later).</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+                        <div>
+                          <div class="fw-bold">Users management</div>
+                          <div class="text-muted-soft small">Enable/disable users.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-soft btn-sm" type="button" id="btnRefreshUsers">Refresh</button>
+                        </div>
+                      </div>
+
+                      <div id="usersLoading" class="text-muted-soft small d-none">Loading…</div>
+                      <div id="usersError" class="text-danger small d-none"></div>
+
+                      <div class="table-responsive" style="max-height:420px; overflow:auto;">
+                        <table class="table table-dark table-hover" style="margin-bottom:0;">
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Email</th>
+                              <th>Role</th>
+                              <th>Status</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody id="usersBody"></tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="card card-glass p-3">
+                      <div class="fw-bold mb-2">Admin billing views</div>
+                      <div class="text-muted-soft small mb-3">Bookings & payments overview. (Optional: add filters later.)</div>
+                      <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                          <div class="card card-glass p-2">
+                            <div class="small text-muted-soft">Bookings</div>
+                            <div class="h5 fw-bold" id="bookingsCount">—</div>
+                          </div>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                          <div class="card card-glass p-2">
+                            <div class="small text-muted-soft">Payments</div>
+                            <div class="h5 fw-bold" id="paymentsCount">—</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="small text-muted-soft mt-2">Uses <code>getAdminBookings</code> / <code>getAdminPayments</code> APIs.</div>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <div class="mt-4 text-muted-soft small d-none" id="adminLegacyNote">Connect these widgets to admin routes in the backend (e.g., pending vendors).</div>
             </div>
           </div>
         </div>
@@ -121,92 +290,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module">
-      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
-      import { toast, setYear } from '../js/ui.js';
-      import { initThemeToggle } from '../js/theme-toggle.js';
-
-      initThemeToggle();
-      setYear('year');
-
-      const avatarEl = document.getElementById('avatar');
-      const avatarFileInput = document.getElementById('profilePictureInput');
-
-      function setAvatarUrl(url) {
-        if (!avatarEl) return;
-        if (url) {
-          avatarEl.style.backgroundImage = `url(${url})`;
-          avatarEl.style.backgroundSize = 'cover';
-          avatarEl.style.backgroundPosition = 'center';
-          avatarEl.textContent = '';
-          avatarEl.style.fontWeight = 'normal';
-          return;
-        }
-        avatarEl.style.backgroundImage = '';
-        avatarEl.textContent = 'BME';
-        avatarEl.style.fontWeight = '900';
-      }
-
-      function getAvatarInitials(name) {
-        return (name || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
-      }
-
-      async function loadMe() {
-        try {
-          const res = await fetchMe();
-          const me = res?.data || res;
-          document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
-          document.getElementById('meEmail').textContent = me?.email || '—';
-
-          if (me?.profilePicture) {
-            setAvatarUrl(me.profilePicture);
-          } else {
-            avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
-            avatarEl.style.backgroundImage = '';
-            avatarEl.style.background = 'rgba(124,92,255,0.12)';
-            avatarEl.style.fontWeight = '900';
-          }
-        } catch {
-          clearToken();
-          toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-          window.location.href = 'auth-login.html';
-        }
-      }
-
-      document.getElementById('btnLogout').addEventListener('click', async () => {
-        try { await logoutUser(); } finally { clearToken(); }
-        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
-      });
-
-      if (avatarFileInput) {
-        avatarFileInput.addEventListener('change', async () => {
-          const file = avatarFileInput.files?.[0];
-          if (!file) return;
-
-          try {
-            avatarFileInput.disabled = true;
-            toast({ title: 'Uploading', message: 'Updating profile picture…', variant: 'warning' });
-
-            const fd = new FormData();
-            fd.append('image', file);
-
-            const res = await apiFetch('/api/v1/uploads/profile-picture', { method: 'POST', body: fd });
-            const data = res?.data || res;
-
-            if (data?.url) setAvatarUrl(data.url);
-            toast({ title: 'Updated', message: 'Profile picture updated.', variant: 'success' });
-          } catch (e) {
-            toast({ title: 'Upload failed', message: e?.message || 'Try again.', variant: 'danger' });
-          } finally {
-            avatarFileInput.disabled = false;
-            avatarFileInput.value = '';
-          }
-        });
-      }
-
-      loadMe();
-    </script>
+    <script src="../js/pages/admin-dashboard.js" type="module"></script>
   </body>
 </html>
 
