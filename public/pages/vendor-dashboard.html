@@ -103,8 +103,8 @@
                   <div class="small text-muted-soft">Role</div>
                   <div class="fw-bold" id="meRole">VENDOR</div>
 
-                  <div class="mt-2">
-                    <span class="badge" id="vendorKycBadge" style="background: rgba(255,255,255,0.08); color: #fff;">KYC Not Verified</span>
+                    <div class="mt-2">
+                    <span class="badge" id="vendorKycBadge" title="Vendor KYC status" style="background: rgba(255,255,255,0.08); color: #fff;">KYC Not Verified</span>
                   </div>
                 </div>
               </div>
@@ -383,6 +383,20 @@
 
           document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
             e.preventDefault();
+
+            // Best-effort UX: since backend currently doesn’t track per-user read status,
+            // clear the bell badge immediately and refresh the bell dropdown preview.
+            const dotEl = document.getElementById('announcementBellDot');
+            if (dotEl) {
+              dotEl.textContent = '';
+              dotEl.style.display = 'none';
+            }
+
+            try {
+              // Refresh bell UI so it stays consistent with the current announcements.
+              await import('../js/pages/announcements.js').then(m => m.initAnnouncements({ role }));
+            } catch {}
+
             toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
           });
         } catch {}

@@ -311,7 +311,21 @@
 
           document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
             e.preventDefault();
-            // Best-effort UX: frontend marks read. Backend tracking can be added later.
+
+            // Best-effort UX: since backend currently doesn’t track per-user read status,
+            // clear the bell badge immediately and refresh the bell dropdown preview.
+            const dotEl = document.getElementById('announcementBellDot');
+            if (dotEl) {
+              dotEl.textContent = '';
+              dotEl.style.display = 'none';
+            }
+
+            try {
+              // Refresh bell UI so it stays consistent with the current announcements.
+              // initAnnouncements will rebuild the bell dropdown.
+              await import('../js/pages/announcements.js').then(m => m.initAnnouncements({ role }));
+            } catch {}
+
             toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
           });
         } catch {}
