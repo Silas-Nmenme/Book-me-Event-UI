@@ -170,7 +170,12 @@ export async function initMessagesPage({ me, role } = {}) {
   });
 
   // Auto-load if URL provides userId
-  const initialUserId = qs('userId');
+      const initialUserId = qs('userId');
+  const initialRequestId = qs('requestId');
+  if (initialRequestId && !initialUserId) {
+    // Legacy page: requestId not fully supported by backend yet; show a hint.
+    toast({ title: 'Info', message: 'Open user-message.html or vendor-message.html for request-based chat UI.', variant: 'warning' });
+  }
   if (initialUserId) {
     partnerId = initialUserId;
     await loadConversation(initialUserId);

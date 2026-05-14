@@ -272,6 +272,15 @@ export async function getConversation(userId, { page = 1, limit = 20 } = {}) {
   return apiFetch(`/api/v1/messages/conversation/${userId}${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
 }
 
+export async function getRequestConversation(requestId, { page = 1, limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  const qsStr = params.toString();
+  return apiFetch(`/api/v1/messages/request/${encodeURIComponent(requestId)}${qsStr ? `?${qsStr}` : ''}`, { method: 'GET' });
+}
+
+
 export async function getMessage(id) {
   return apiFetch(`/api/v1/messages/${id}`, { method: 'GET' });
 }
@@ -282,6 +291,14 @@ export async function sendMessage(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function sendMessageByRequestId({ requestId, messageContent, attachments, subject, booking } = {}) {
+  return apiFetch(`/api/v1/messages/request/${encodeURIComponent(requestId)}`, {
+    method: 'POST',
+    body: JSON.stringify({ messageContent, attachments, subject, booking }),
+  });
+}
+
 
 export async function markMessageAsRead(id) {
   return apiFetch(`/api/v1/messages/${id}/read`, { method: 'PUT' });

@@ -68,7 +68,7 @@
               <div class="mt-3 d-grid gap-2">
                 <button class="btn btn-brand" type="button" id="btnShowIncoming">Incoming requests</button>
                 <a class="btn btn-soft" href="services.html">Browse services</a>
-                <a class="btn btn-soft" href="messages.html">Messages</a>
+                <a class="btn btn-soft" href="vendor-message.html">Messages</a>
                 <input id="requestPartnerUserId" type="hidden" />
                 <a class="btn btn-soft" href="bookings.html">Bookings</a>
               </div>
@@ -126,7 +126,6 @@
       initThemeToggle();
 
       const avatarEl = document.getElementById('avatar');
-      const avatarFileInput = document.getElementById('profilePictureInput');
 
       function setAvatarUrl(url) {
         if (!avatarEl) return;

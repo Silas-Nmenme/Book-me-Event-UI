@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor Messages - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/chat.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <div class="ms-auto d-flex gap-2">
+          <a class="btn btn-soft" href="vendor-service.html">Requests</a>
+          <a class="btn btn-soft" href="bookings.html">Bookings</a>
+
+          <button
+            id="themeToggleBtn"
+            class="btn btn-soft btn-sm bme-theme-toggle"
+            type="button"
+            aria-label="Toggle dark/light theme"
+            title="Toggle theme"
+          >
+            <span data-icon="sun" style="display:none;">☀️</span>
+            <span data-icon="moon" style="display:inline-flex;">🌙</span>
+          </button>
+
+          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section" style="padding-top:72px; padding-bottom:64px;">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="badge badge-glow mb-3">Vendor chat</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+
+              <hr style="border-color: rgba(255,255,255,0.12)" />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div
+                  id="avatar"
+                  class="rounded-circle border"
+                  style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;"
+                >
+                  BME
+                </div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">—</div>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <div class="small text-muted-soft">Active request</div>
+                <div class="fw-bold" id="activeRequestLabel">—</div>
+                <div class="small text-muted-soft" id="activeUserLabel" style="margin-top:6px;">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="card card-glass p-4 fade-slide" style="min-height: 340px;">
+              <div class="bme-chat-header">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">WhatsApp-style chat</div>
+                  <h3 class="h5 fw-bold mb-0" id="pageTitle">Chat with organizer</h3>
+                </div>
+                <div class="small text-muted-soft">Send replies tied to their accepted request.</div>
+              </div>
+
+              <div class="card card-glass p-3">
+                <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
+                <div id="roleNotice" class="alert alert-info d-none" role="alert"></div>
+
+                <div class="bme-chat-thread" id="messagesList"></div>
+
+                <div class="bme-chat-inputbar mt-3">
+                  <label class="form-label fw-bold">Send a message</label>
+                  <div class="input-group">
+                    <input id="messageText" class="form-control" placeholder="Type your message..." />
+                    <button id="btnSendMessage" class="btn btn-brand" type="button">Send</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="conversationMeta" class="small text-muted-soft mt-3" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Vendor Messages</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, apiFetch, getConversation, sendMessage } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+      const avatarEl = document.getElementById('avatar');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = 'BME';
+        avatarEl.style.fontWeight = '900';
+      }
+
+      function getAvatarInitials(name) {
+        return (name || 'BME')
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((x) => x[0].toUpperCase())
+          .join('');
+      }
+
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name);
+      }
+
+      function escapeHtml(s) {
+        return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+          const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+          return m[c] || c;
+        });
+      }
+
+      function renderMessage(m, { meId } = {}) {
+        const sender = m?.sender || m?.senderId || m?.from || null;
+        const senderId = (typeof sender === 'string' ? sender : sender?._id) || '';
+        const text = m?.messageContent ?? (m?.message || m?.text || '');
+        const createdAt = m?.createdAt ? new Date(m.createdAt).toLocaleString() : '';
+
+        const isMe = meId && senderId && senderId.toString() === meId.toString();
+        const dir = isMe ? 'justify-content-end' : 'justify-content-start';
+
+        return `
+          <div class="d-flex ${dir} mb-2">
+            <div class="bme-bubble ${isMe ? 'me' : 'them'}">
+              <div class="bme-bubble-meta">${escapeHtml(isMe ? 'You' : (m?.sender?.firstName || senderId))}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
+              <div class="bme-bubble-text">${escapeHtml(text)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadMe() {
+        const res = await fetchMe();
+        const me = res?.data || res;
+        const firstName = me?.firstName || me?.user?.firstName;
+        const lastName = me?.lastName || me?.user?.lastName;
+
+        document.getElementById('meName').textContent = firstName
+          ? `${firstName} ${lastName || ''}`.trim()
+          : me?.name || me?.fullName || '—';
+
+        document.getElementById('meEmail').textContent = me?.email || '—';
+
+        const role = (me?.role || me?.user?.role || 'VENDOR').toString().toUpperCase();
+        document.getElementById('meRole').textContent = role;
+
+        if (me?.profilePicture) setAvatarUrl(me.profilePicture);
+        else {
+          avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
+          avatarEl.style.backgroundImage = '';
+          avatarEl.style.background = 'rgba(124,92,255,0.12)';
+        }
+
+        return { me, role };
+      }
+
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); sessionStorage.clear(); localStorage.clear(); }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      const messagesList = document.getElementById('messagesList');
+      const messageText = document.getElementById('messageText');
+      const btnSendMessage = document.getElementById('btnSendMessage');
+      const authzError = document.getElementById('authzError');
+      const roleNotice = document.getElementById('roleNotice');
+      const activeRequestLabel = document.getElementById('activeRequestLabel');
+      const activeUserLabel = document.getElementById('activeUserLabel');
+
+      const requestId = qs('requestId') || '';
+
+      let meRes = await loadMe();
+      roleNotice?.classList.remove('d-none');
+      roleNotice.textContent = meRes.role === 'VENDOR' ? 'Vendor replies enabled.' : 'This page is designed for VENDOR accounts.';
+
+      let activePartnerUserId = '';
+      let activeRequestMeta = null;
+
+      async function loadConversation(userId) {
+        messagesList.innerHTML = '';
+        if (!userId) return;
+        const res = await getConversation(userId, { page: 1, limit: 200 });
+        const data = res?.data || res;
+        const items = data?.data || data?.messages || data?.results || data || [];
+        const arr = Array.isArray(items) ? items : [];
+        if (!arr.length) {
+          messagesList.innerHTML = `<div class="small text-muted-soft">No messages yet. Send the first message below.</div>`;
+          return;
+        }
+        messagesList.innerHTML = arr.map((m) => renderMessage(m, { meId: meRes.me._id || meRes.me?.id })).join('');
+        messagesList.scrollTop = messagesList.scrollHeight;
+      }
+
+      async function selectRequest(requestIdToSelect) {
+        if (!requestIdToSelect) {
+          authzError.classList.remove('d-none');
+          authzError.textContent = 'Missing requestId.';
+          return;
+        }
+
+        const res = await apiFetch(`/api/v1/requests/${encodeURIComponent(requestIdToSelect)}`, { method: 'GET' });
+        const r = res?.data || res;
+        activeRequestMeta = r;
+
+        const organizerUserId = r?.user?._id || r?.user || '';
+        if (!organizerUserId) {
+          authzError.classList.remove('d-none');
+          authzError.textContent = 'Cannot determine organizer chat user from request.';
+          return;
+        }
+
+        activePartnerUserId = organizerUserId;
+        activeRequestLabel.textContent = `Request ${activeRequestMeta?._id || requestIdToSelect}`;
+
+        const userName = r?.user?.firstName || r?.user?.email ? `${r?.user?.firstName || ''} ${r?.user?.lastName || ''}`.trim() : 'Organizer';
+        activeUserLabel.textContent = `Organizer: ${userName || '—'}`;
+
+        await loadConversation(activePartnerUserId);
+      }
+
+      btnSendMessage.addEventListener('click', async () => {
+        const text = messageText.value.trim();
+        if (!activePartnerUserId) {
+          toast({ title: 'Missing organizer', message: 'Open a request first to chat.', variant: 'warning' });
+          return;
+        }
+        if (!text) {
+          toast({ title: 'Empty message', message: 'Type a message first.', variant: 'warning' });
+          return;
+        }
+        try {
+          await sendMessage({ recipient: activePartnerUserId, messageContent: text, conversationId: `${meRes.me._id}-${activePartnerUserId}` });
+          messageText.value = '';
+          await loadConversation(activePartnerUserId);
+          toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
+        } catch (e) {
+          toast({ title: 'Send failed', message: e?.message || 'Try again.', variant: 'danger' });
+        }
+      });
+
+      messageText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnSendMessage.click();
+      });
+
+      await selectRequest(requestId);
+
+      // Socket.IO real-time updates
+      try {
+        const socket = window.io
+          ? window.io({ transports: ['polling', 'websocket'], path: '/socket.io' })
+          : null;
+
+        if (socket && meRes.me?._id) {
+          socket.on('connect', () => {
+            socket.emit('join', { userId: meRes.me._id });
+          });
+
+          socket.on('message:new', (payload) => {
+            const myId = meRes.me?._id || meRes.me?.id;
+            const senderId = payload?.sender?.toString?.() || payload?.sender;
+            const recipientId = payload?.recipient?.toString?.() || payload?.recipient;
+
+            const otherId = senderId === myId ? recipientId : senderId;
+            if (!otherId) return;
+            if (activePartnerUserId && otherId.toString() !== activePartnerUserId.toString()) return;
+
+            const el = renderMessage(payload, { meId: myId });
+            messagesList.insertAdjacentHTML('beforeend', el);
+            messagesList.scrollTop = messagesList.scrollHeight;
+          });
+        }
+      } catch {}
+    </script>
+  </body>
+</html>
+
