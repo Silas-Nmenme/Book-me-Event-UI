@@ -313,15 +313,9 @@
         // current requestController populates vendor as businessName only; so vendor.user may be missing.
         // We therefore also try request.user? (fallback: message conversation uses recipient as other user id)
         // If vendor user id is missing, backend endpoint will fix; for now we require vendor user populated by backend.
-        if (!vendorUserId) {
-          // fallback: derive from message conversation by looking for messages between me and vendor by request.vendor id isn't possible.
-          // So we show error and stop.
-          authzError.classList.remove('d-none');
-          authzError.textContent = 'Cannot determine vendor chat user. Backend data is incomplete for this request.';
-          return;
-        }
-
-        activePartnerUserId = vendorUserId;
+        // Vendor owner userId is required only for UI state (active user label + socket filtering).
+        // Messaging itself is request-based, so we can still load and send even if vendor.user isn't populated.
+        if (vendorUserId) activePartnerUserId = vendorUserId;
         activeRequestLabel.textContent = `Request ${activeRequestMeta?._id || requestId}`;
         activeVendorLabel.textContent = `Vendor: ${activeRequestMeta?.vendor?.businessName || '—'}`;
 
@@ -353,13 +347,7 @@
 
       btnSendMessage.addEventListener('click', async () => {
         const rid = activeRequestId || activeRequestMeta?._id;
-        const partner = activePartnerUserId;
         const text = messageText.value.trim();
-
-        if (!partner) {
-          toast({ title: 'Missing vendor', message: 'Select a request to chat with a vendor.', variant: 'warning' });
-          return;
-        }
         if (!text) {
           toast({ title: 'Empty message', message: 'Type a message first.', variant: 'warning' });
           return;
