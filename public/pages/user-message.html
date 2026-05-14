@@ -85,7 +85,6 @@
             <div class="card card-glass p-4 fade-slide" style="min-height: 340px;">
               <div class="bme-chat-header">
                 <div>
-                  <div class="badge badge-glow text-white mb-2" id="pageBadge">WhatsApp-style chat</div>
                   <h3 class="h5 fw-bold mb-0" id="pageTitle">Chat with vendor</h3>
                 </div>
                 <div class="small text-muted-soft" id="unreadCountWrap">Unread: <span id="unreadCount">0</span></div>
@@ -396,9 +395,14 @@
           ? window.io({ transports: ['polling', 'websocket'], path: '/socket.io' })
           : null;
 
-        if (socket && meRes.me?._id) {
+        if (socket) {
           socket.on('connect', () => {
-            socket.emit('join', { userId: meRes.me._id });
+            const myUserId = meRes?.me?._id || meRes?.me?.id || meRes?.me?._userId || meRes?.me?._doc?._id || null;
+            if (!myUserId) {
+              console.warn('[socket] missing userId for join', { meRes });
+              return;
+            }
+            socket.emit('join', { userId: myUserId });
           });
 
           socket.on('message:new', (payload) => {
