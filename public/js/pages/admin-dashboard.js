@@ -101,7 +101,7 @@ async function renderPendingVendors() {
     const vendors = data?.data || data?.results || data || [];
 
     if (!Array.isArray(vendors) || vendors.length === 0) {
-      bodyEl.innerHTML = `<tr><td colspan="4" class="text-muted-soft">No pending vendors.</td></tr>`;
+      bodyEl.innerHTML = `<tr><td colspan="5" class="text-muted-soft">No pending vendors.</td></tr>`;
       return;
     }
 
@@ -110,11 +110,16 @@ async function renderPendingVendors() {
         const user = v?.user;
         const requested = formatDateMaybe(v?.createdAt || v?.verificationRequestedAt);
 
+        const kycUrl = v?.kycDocumentUrl;
+        const hasKyc = !!kycUrl;
         return `
           <tr>
             <td>${escapeHtml(user?.firstName || '')} ${escapeHtml(user?.lastName || '')}</td>
             <td>${escapeHtml(v?.businessName || '—')}</td>
             <td>${escapeHtml(requested)}</td>
+            <td>
+              ${hasKyc ? `<a class="btn btn-soft btn-sm" target="_blank" rel="noreferrer" href="${escapeHtml(kycUrl)}">View</a>` : `<span class="text-muted-soft">—</span>`}
+            </td>
             <td>
               <div class="d-flex gap-2">
                 <button class="btn btn-success btn-sm" data-action="verify" data-vendor-id="${escapeHtml(v?._id || '')}">Verify</button>

@@ -138,6 +138,13 @@
               <div class="mt-4 text-muted-soft small">
                 Note: Your existing detailed Pages (services, requests, messages, bookings) will connect to the backend APIs.
               </div>
+
+              <div class="mt-4" id="announcementsShell" style="display:none;">
+                <div class="fw-bold mb-2">Announcements</div>
+                <div class="row g-3" id="announcementsList"></div>
+                <div id="announcementsEmpty" class="text-muted-soft small d-none">No announcements at the moment.</div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -159,9 +166,11 @@
       import { fetchMe, logoutUser, clearToken, sendVerificationEmail, apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initAnnouncements } from '../js/pages/announcements.js';
 
       setYear('year');
       initThemeToggle();
+
 
       const avatarEl = document.getElementById('avatar');
       const avatarFileInput = document.getElementById('profilePictureInput');
@@ -259,9 +268,15 @@
         window.location.href = 'auth-login.html';
       });
 
-      loadMe();
+      loadMe().then(async (me) => {
+        try {
+          const role = me?.role || me?.user?.role;
+          await initAnnouncements({ role });
+        } catch {}
+      });
 
     </script>
+
   </body>
 </html>
 

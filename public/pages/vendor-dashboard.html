@@ -66,12 +66,17 @@
                       type="file"
                       name="image"
                       accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                      aria-label="Change profile picture"
                     />
                   </div>
                 </div>
                 <div>
                   <div class="small text-muted-soft">Role</div>
                   <div class="fw-bold" id="meRole">VENDOR</div>
+
+                  <div class="mt-2">
+                    <span class="badge" id="vendorKycBadge" style="background: rgba(255,255,255,0.08); color: #fff;">KYC Not Verified</span>
+                  </div>
                 </div>
               </div>
 
@@ -208,6 +213,13 @@
                 Note: KYC and vendor verification are handled by admin.
               </div>
 
+              <div class="mt-4" id="announcementsShell" style="display:none;">
+                <div class="fw-bold mb-2">Announcements</div>
+                <div class="row g-3" id="announcementsList"></div>
+                <div id="announcementsEmpty" class="text-muted-soft small d-none">No announcements at the moment.</div>
+              </div>
+
+
             </div>
           </div>
         </div>
@@ -231,6 +243,8 @@
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
       import { initVendorDashboard } from '../js/pages/vendor-dashboard.js';
+      import { initAnnouncements } from '../js/pages/announcements.js';
+
 
       setYear('year');
       initThemeToggle();
@@ -326,8 +340,14 @@
         window.location.href = 'auth-login.html';
       });
 
-      loadMe();
+      loadMe().then(async (me) => {
+        try {
+          const role = me?.role || me?.user?.role;
+          await initAnnouncements({ role });
+        } catch {}
+      });
     </script>
+
   </body>
 </html>
 

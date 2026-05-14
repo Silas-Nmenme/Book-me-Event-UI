@@ -152,6 +152,20 @@ export async function initVendorDashboard({ me, role } = {}) {
   // Basic UI: we store all services client-side.
   let allServices = [];
 
+  // Gate service creation until vendor KYC is verified by admin.
+  // We use vendor record `isVerified` when available; otherwise allow but backend will still block.
+  const isVerified = !!(me?.vendor?.isVerified ?? me?.isVerified ?? me?.vendorIsVerified);
+  if (!isVerified) {
+    // Disable service creation UI.
+    roleNotice?.classList.remove('d-none');
+    if (roleNotice) {
+      roleNotice.textContent = 'Your vendor account is not verified by admin yet. Service creation is locked until verification.';
+    }
+    if (btnAdd) btnAdd.disabled = true;
+    hideForm();
+  }
+
+
   function resetForm() {
     modeInput.value = 'create';
     serviceIdInput.value = '';
@@ -222,6 +236,19 @@ export async function initVendorDashboard({ me, role } = {}) {
       allServices = await listMyServices({ vendorId: myVendorId });
 
       const myServices = allServices;
+
+      // Render KYC badge if present.
+      const badgeEl = document.getElementById('vendorKycBadge');
+      const verifiedNow = !!(me?.vendor?.isVerified ?? me?.isVerified ?? me?.vendorIsVerified);
+      if (badgeEl) {
+        if (verifiedNow) {
+          badgeEl.textContent = 'KYC Verified';
+          badgeEl.classList.add('text-bg-success');
+        } else {
+          badgeEl.textContent = 'Not Verified';
+          badgeEl.classList.add('text-bg-warning');
+        }
+      }
 
       if (!Array.isArray(myServices) || myServices.length === 0) {
         noServices?.classList.remove('d-none');
@@ -294,6 +321,13 @@ export async function initVendorDashboard({ me, role } = {}) {
   }
 
   btnAdd?.addEventListener('click', () => {
+    // If not verified, block UI access (backend also enforces).
+    const isVerified = !!(me?.vendor?.isVerified ?? me?.isVerified ?? me?.vendorIsVerified);
+    if (!isVerified) {
+      toast({ title: 'Verification required', message: 'Admin must verify your KYC before you can create services.', variant: 'warning' });
+      return;
+    }
+
     resetForm();
     showForm();
     window.scrollTo({ top: formEl.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
