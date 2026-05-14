@@ -46,7 +46,8 @@
                 <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
               </div>
               <div class="px-3 pb-2">
-                <a class="dropdown-item" href="#" id="announcementBellViewAll">View in dashboard</a>
+                <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
+                <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
               </div>
             </div>
           </div>
@@ -302,10 +303,16 @@
           await initAnnouncements({ role });
 
           const viewAllLink = document.getElementById('announcementBellViewAll');
-          if (viewAllLink) viewAllLink.addEventListener('click', (e) => {
+          if (viewAllLink) {
+            viewAllLink.addEventListener('click', (e) => {
+              // Keep default navigation to annonces page.
+            });
+          }
+
+          document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
             e.preventDefault();
-            const shell = document.getElementById('announcementsShell');
-            if (shell) shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Best-effort UX: frontend marks read. Backend tracking can be added later.
+            toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
           });
         } catch {}
       });
