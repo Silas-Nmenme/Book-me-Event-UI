@@ -31,9 +31,9 @@ function renderMessage(m, { meId } = {}) {
 
   return `
     <div class="d-flex ${dir} mb-2">
-      <div class="card card-glass p-2" style="max-width: 85%;">
-        <div class="small text-muted-soft mb-1">${escapeHtml(isMe ? 'You' : senderId)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
-        <div style="white-space: pre-wrap;">${escapeHtml(text)}</div>
+      <div class="bme-bubble ${isMe ? 'me' : 'them'}">
+        <div class="bme-bubble-meta">${escapeHtml(isMe ? 'You' : senderId)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
+        <div class="bme-bubble-text">${escapeHtml(text)}</div>
       </div>
     </div>
   `;
