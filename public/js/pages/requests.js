@@ -148,6 +148,7 @@ function buildCard(req, { myRole } = {}) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
+          <a class="btn btn-soft btn-sm" href="request-details.html?requestId=${encodeURIComponent(id)}">Details</a>
 
           <button
             class="btn btn-soft btn-sm"
@@ -158,6 +159,14 @@ function buildCard(req, { myRole } = {}) {
             Message
           </button>
 
+          ${
+            myRoleNorm === 'USER' && statusNorm === 'accepted'
+              ? `
+            <a class="btn btn-primary btn-sm" href="create-booking.html?requestId=${encodeURIComponent(id)}">Book</a>
+          `
+              : ''
+          }
+
           <button
             class="btn btn-soft btn-sm"
             data-action="viewBookings"
@@ -167,9 +176,7 @@ function buildCard(req, { myRole } = {}) {
             Bookings
           </button>
 
-          ${
-            myRoleNorm === 'VENDOR' && isPending
-              ? `
+          ${myRoleNorm === 'VENDOR' && isPending ? `
             <button
               class="btn btn-success btn-sm"
               data-action="acceptRequest"
@@ -186,8 +193,8 @@ function buildCard(req, { myRole } = {}) {
             >
               Decline
             </button>
-          `
-              : `
+          ` : ''}
+          ${myRoleNorm === 'USER' ? `
             <button
               class="btn btn-danger btn-sm"
               data-action="cancelRequest"
@@ -196,8 +203,7 @@ function buildCard(req, { myRole } = {}) {
             >
               Cancel
             </button>
-          `
-          }
+          ` : ''}
 
         </div>
 
@@ -436,7 +442,11 @@ export async function initRequestsPage({ me, role } = {}) {
 
             if (action === 'openMessages') {
               // Request-based chat UI ensures vendor/user messages stay aligned.
-              window.location.href = `user-message.html?requestId=${encodeURIComponent(id)}`;
+              if (myRole === 'VENDOR') {
+                window.location.href = `vendor-message.html?requestId=${encodeURIComponent(id)}`;
+              } else {
+                window.location.href = `user-message.html?requestId=${encodeURIComponent(id)}`;
+              }
               return;
             }
 

@@ -105,31 +105,6 @@ async function loadUnread() {
   }
 }
 
-async function createBookingForRequest(request) {
-  if (!request) throw new Error('Missing request');
-  const payload = {
-    request: request._id || request.id,
-    service: request.service?._id || request.service,
-    eventDate: request.eventDate,
-    eventLocation: request.eventLocation,
-    totalAmount: request.totalAmount || request?.service?.price || 0,
-  };
-  const res = await apiFetch('/api/v1/bookings', { method: 'POST', body: JSON.stringify(payload) });
-  return res?.data || res;
-}
-
-async function createPaymentForBooking(bookingId) {
-  if (!bookingId) throw new Error('Missing bookingId');
-  const payload = {
-    booking: bookingId,
-    paymentMethod: 'OFFLINE',
-    transactionReference: 'LOCAL-' + Date.now(),
-    paymentGateway: 'MANUAL',
-  };
-  const res = await apiFetch('/api/v1/payments', { method: 'POST', body: JSON.stringify(payload) });
-  return res?.data || res;
-}
-
 async function fetchUserRequestsForChat() {
   const res = await apiFetch('/api/v1/requests?status=ACCEPTED&page=1&limit=50', { method: 'GET' });
   const data = res?.data || res;
@@ -312,32 +287,16 @@ export async function initChatPage({ role = 'USER' } = {}) {
     conversationMeta.classList.remove('d-none');
     conversationMeta.textContent = buildConversationMeta(request, isVendor);
 
-    // If user and request is accepted, show quick booking action
+    // If user and request is accepted, show a link to the dedicated booking page
     if (!isVendor && String(request?.status).toUpperCase() === 'ACCEPTED') {
-      const existing = document.getElementById('btnCreateBooking');
+      const existing = document.getElementById('linkCreateBooking');
       if (!existing) {
-        const btn = document.createElement('button');
-        btn.id = 'btnCreateBooking';
-        btn.type = 'button';
-        btn.className = 'btn btn-sm btn-success ms-2';
-        btn.textContent = 'Create Booking & Pay';
-        btn.addEventListener('click', async () => {
-          try {
-            btn.setAttribute('disabled', 'disabled');
-            toast({ title: 'Processing', message: 'Creating booking...', variant: 'info' });
-            const booking = await createBookingForRequest(request);
-            toast({ title: 'Booking created', message: 'Booking created. Processing payment...', variant: 'success' });
-            const payment = await createPaymentForBooking(booking?._id || booking?.id);
-            toast({ title: 'Payment', message: 'Payment recorded.', variant: 'success' });
-            // optionally redirect to bookings page
-            setTimeout(() => { window.location.href = 'bookings.html'; }, 800);
-          } catch (err) {
-            toast({ title: 'Booking failed', message: err?.message || 'Try again.', variant: 'danger' });
-          } finally {
-            btn.removeAttribute('disabled');
-          }
-        });
-        conversationMeta.parentElement?.appendChild(btn);
+        const a = document.createElement('a');
+        a.id = 'linkCreateBooking';
+        a.className = 'btn btn-sm btn-primary ms-2';
+        a.textContent = 'Create Booking';
+        a.href = `create-booking.html?requestId=${encodeURIComponent(request._id || request.id)}`;
+        conversationMeta.parentElement?.appendChild(a);
       }
     }
   }

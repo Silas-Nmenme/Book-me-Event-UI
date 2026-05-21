@@ -78,6 +78,7 @@ function buildRequestCard(req, { myRole } = {}) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
+          <a class="btn btn-soft btn-sm" href="request-details.html?requestId=${encodeURIComponent(id)}">Details</a>
           <a class="btn btn-soft btn-sm" href="vendor-message.html?requestId=${encodeURIComponent(
             id
           )}">Message ${escapeHtml(userName || '')}</a>
@@ -126,7 +127,8 @@ export async function initVendorServicePage({ role } = {}) {
 
     try {
       // Vendor: backend already filters by vendor in getRequests when role is VENDOR.
-      const res = await apiFetch('/api/v1/requests?status=PENDING&page=1&limit=50', {
+      // Show the full request history so vendors can review pending and accepted work.
+      const res = await apiFetch('/api/v1/requests?page=1&limit=50', {
         method: 'GET',
       });
       const data = res?.data || res;

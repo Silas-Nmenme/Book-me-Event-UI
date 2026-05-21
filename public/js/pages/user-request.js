@@ -39,6 +39,9 @@ function buildRequestCard(req) {
   const id = req?._id || req?.id;
   const title = req?.service?.serviceName || req?.service?.title || 'Request';
   const { text, variant } = statusLabel(req?.status);
+  const normalizedStatus = (req?.status || '').toString().toLowerCase();
+  const isPending = normalizedStatus === 'pending';
+  const isAccepted = normalizedStatus === 'accepted';
 
   return `
     <div class="col-12">
@@ -56,8 +59,24 @@ function buildRequestCard(req) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <button class="btn btn-soft btn-sm" type="button" data-action="edit" data-id="${escapeHtml(id)}">Edit</button>
-          <button class="btn btn-danger btn-sm" type="button" data-action="delete" data-id="${escapeHtml(id)}">Delete</button>
+          <a class="btn btn-soft btn-sm" href="request-details.html?requestId=${encodeURIComponent(id)}">Details</a>
+          <button
+            class="btn btn-soft btn-sm"
+            type="button"
+            data-action="openMessages"
+            data-id="${escapeHtml(id)}"
+          >
+            Messages
+          </button>
+
+          ${isAccepted ? `
+            <a class="btn btn-primary btn-sm" href="create-booking.html?requestId=${encodeURIComponent(id)}">Book</a>
+          ` : ''}
+
+          ${isPending ? `
+            <button class="btn btn-soft btn-sm" type="button" data-action="edit" data-id="${escapeHtml(id)}">Edit</button>
+            <button class="btn btn-danger btn-sm" type="button" data-action="delete" data-id="${escapeHtml(id)}">Delete</button>
+          ` : ''}
         </div>
       </div>
     </div>
@@ -143,6 +162,14 @@ export async function initUserRequestPage({ role } = {}) {
     }
 
     requestList.innerHTML = items.map((r) => buildRequestCard(r)).join('');
+
+    requestList.querySelectorAll('[data-action="openMessages"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        window.location.href = `user-message.html?requestId=${encodeURIComponent(id)}`;
+      });
+    });
 
     requestList.querySelectorAll('[data-action="edit"]').forEach((btn) => {
       btn.addEventListener('click', () => {
