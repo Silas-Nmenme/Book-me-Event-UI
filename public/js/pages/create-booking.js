@@ -37,13 +37,31 @@ export async function initCreateBookingPage() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     btnCreate.setAttribute('disabled', 'disabled');
+    const prevLabel = btnCreate.textContent;
+    btnCreate.textContent = 'Creating…';
     try {
+      // basic validation
+      const evDate = document.getElementById('eventDate').value;
+      const evLoc = document.getElementById('eventLocation').value?.trim();
+      const tot = Number(document.getElementById('totalAmount').value) || 0;
+
+      if (!loadedRequest) {
+        throw new Error('Request not loaded — cannot create booking.');
+      }
+      if ((loadedRequest.status || '').toString().toUpperCase() !== 'ACCEPTED') {
+        throw new Error('Request must be accepted before creating a booking.');
+      }
+      if (!evDate) throw new Error('Event date is required');
+      if (!evLoc) throw new Error('Event location is required');
+      if (!tot || tot <= 0) throw new Error('Enter a valid total amount');
+
       const payload = {
         request: requestId,
         service: loadedRequest?.service?._id || loadedRequest?.service,
-        eventDate: document.getElementById('eventDate').value,
-        eventLocation: document.getElementById('eventLocation').value,
-        totalAmount: Number(document.getElementById('totalAmount').value) || 0,
+        eventDate: evDate,
+        eventLocation: evLoc,
+        totalAmount: tot,
+        amountCurrency: loadedRequest?.budgetCurrency || 'NGN',
         specialRequests: document.getElementById('specialRequests').value || '',
       };
 
@@ -66,9 +84,11 @@ export async function initCreateBookingPage() {
       });
 
     } catch (err) {
-      toast({ title: 'Create booking failed', message: err?.message || 'Try again', variant: 'danger' });
+      const msg = err?.data?.message || err?.message || 'Try again';
+      toast({ title: 'Create booking failed', message: msg, variant: 'danger' });
     } finally {
       btnCreate.removeAttribute('disabled');
+      btnCreate.textContent = prevLabel;
     }
   });
 }

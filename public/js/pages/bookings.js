@@ -21,7 +21,7 @@ function statusLabel(status) {
   return { text: status || '—', variant: 'secondary' };
 }
 
-function buildBookingCard(b) {
+function buildBookingCard(b, myRole) {
   const id = b?._id || b?.id;
   const status = b?.status || b?.bookingStatus;
   const { text, variant } = statusLabel(status);
@@ -29,23 +29,26 @@ function buildBookingCard(b) {
   const title = b?.serviceName || b?.service?.name || b?.title || b?.requestTitle || `Booking ${id || ''}`.trim();
   const scheduledAt = b?.scheduledAt || b?.eventDate || b?.date || b?.request?.eventDate;
   const scheduledLabel = scheduledAt ? new Date(scheduledAt).toLocaleString() : '';
+  const vendorName = b?.vendor?.businessName || b?.vendor?.name || b?.vendor?.email || '';
+  const amount = (b?.totalAmount != null ? `₦${Number(b.totalAmount).toLocaleString()}` : '—');
 
   return `
     <div class="col-12">
-      <div class="card card-glass p-3">
+      <div class="card card-glass p-3 card-hover">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
           <div>
             <div class="fw-bold">${escapeHtml(title)}</div>
-            <div class="small text-muted-soft">ID: ${escapeHtml(id || '—')}${scheduledLabel ? ` • ${escapeHtml(scheduledLabel)}` : ''}</div>
+            <div class="small text-muted-soft">ID: ${escapeHtml(id || '—')}${scheduledLabel ? ` • ${escapeHtml(scheduledLabel)}` : ''}${vendorName ? ` • ${escapeHtml(vendorName)}` : ''}</div>
+            <div class="small text-muted-soft">Amount: ${escapeHtml(amount)}</div>
           </div>
           <div>
             <span class="badge text-bg-${variant}">${escapeHtml(text)}</span>
           </div>
         </div>
-
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <button class="btn btn-soft btn-sm" type="button" data-action="cancel" data-id="${escapeHtml(id || '')}">Cancel</button>
-          <button class="btn btn-soft btn-sm" type="button" data-action="complete" data-id="${escapeHtml(id || '')}">Complete</button>
+          ${myRole === 'USER' ? `<button class="btn btn-danger btn-sm" type="button" data-action="cancel" data-id="${escapeHtml(id || '')}">Cancel</button>` : ''}
+          ${myRole === 'VENDOR' ? `<button class="btn btn-success btn-sm" type="button" data-action="complete" data-id="${escapeHtml(id || '')}">Mark complete</button>` : ''}
+          <a class="btn btn-soft btn-sm" href="bookings.html?bookingId=${encodeURIComponent(id)}">Details</a>
         </div>
       </div>
     </div>
@@ -127,6 +130,10 @@ export async function initBookingsPage({ me, role } = {}) {
           return;
         }
 
+        btnCreateBooking.setAttribute('disabled', 'disabled');
+        const prev = btnCreateBooking.textContent;
+        btnCreateBooking.textContent = 'Creating…';
+
         try {
           const bookingRes = await createBooking({
             request: requestId,
@@ -134,6 +141,7 @@ export async function initBookingsPage({ me, role } = {}) {
             eventDate: request?.eventDate,
             eventLocation: request?.eventLocation,
             totalAmount,
+            amountCurrency: request?.budgetCurrency || 'NGN',
             specialRequests,
           });
 
@@ -143,7 +151,11 @@ export async function initBookingsPage({ me, role } = {}) {
           btnPayBooking?.setAttribute('data-booking-id', booking?._id || booking?.id || '');
           await load();
         } catch (e) {
-          toast({ title: 'Booking failed', message: e?.message || 'Try again.', variant: 'danger' });
+          const msg = e?.data?.message || e?.message || 'Try again.';
+          toast({ title: 'Booking failed', message: msg, variant: 'danger' });
+        } finally {
+          btnCreateBooking.removeAttribute('disabled');
+          btnCreateBooking.textContent = prev;
         }
       });
 
@@ -189,7 +201,7 @@ export async function initBookingsPage({ me, role } = {}) {
         return;
       }
 
-      bookingList.innerHTML = items.map(buildBookingCard).join('');
+      bookingList.innerHTML = items.map((it) => buildBookingCard(it, myRole)).join('');
 
       bookingList.querySelectorAll('[data-action]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -217,6 +229,40 @@ export async function initBookingsPage({ me, role } = {}) {
       if (authzError) authzError.textContent = e?.message || 'Failed to load bookings.';
     }
   }
+
+  // Wire up search + refresh controls added to the HTML
+  const bookingSearch = document.getElementById('bookingSearch');
+  const btnRefreshBookings = document.getElementById('btnRefreshBookings');
+
+  let searchTimer;
+  function applySearchFilter() {
+    const q = bookingSearch?.value?.toString().toLowerCase().trim() || '';
+    const cards = bookingList.querySelectorAll('.card');
+    if (!q) {
+      cards.forEach((c) => (c.parentElement.style.display = ''));
+      return;
+    }
+    cards.forEach((c) => {
+      const txt = c.innerText.toLowerCase();
+      const show = txt.indexOf(q) !== -1;
+      c.parentElement.style.display = show ? '' : 'none';
+    });
+  }
+
+  bookingSearch?.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applySearchFilter, 220);
+  });
+
+  btnRefreshBookings?.addEventListener('click', async () => {
+    btnRefreshBookings.setAttribute('disabled', 'disabled');
+    try {
+      await load();
+      applySearchFilter();
+    } finally {
+      btnRefreshBookings.removeAttribute('disabled');
+    }
+  });
 
   await load();
   await loadRequestBookingPanel();

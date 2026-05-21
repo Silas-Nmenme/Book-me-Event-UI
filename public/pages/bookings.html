@@ -104,14 +104,18 @@
 
                 <div id="bookingsShell" class="d-none">
                   <div class="card card-glass p-3">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                      <div>
-                        <div class="fw-bold">Booking list</div>
-                        <div class="small text-muted-soft">Actions depend on your role and booking state.</div>
-                      </div>
-                    </div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                          <div>
+                            <div class="fw-bold">Booking list</div>
+                            <div class="small text-muted-soft">Actions depend on your role and booking state.</div>
+                          </div>
+                          <div class="d-flex gap-2 align-items-center">
+                            <input id="bookingSearch" class="form-control form-control-sm" placeholder="Search bookings by ID, vendor, or service" style="min-width:220px;" />
+                            <button id="btnRefreshBookings" class="btn btn-soft btn-sm">Refresh</button>
+                          </div>
+                        </div>
 
-                    <div id="bookingList" class="row g-3"></div>
+                        <div id="bookingList" class="row g-3"></div>
                     <div id="noBookings" class="text-muted-soft small d-none" style="margin-top:12px;">No bookings found.</div>
                   </div>
 
