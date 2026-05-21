@@ -168,9 +168,16 @@ export async function initUserRequestPage({ role } = {}) {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
         if (!id) return;
+
+        // Defensive check: backend expects a Mongo ObjectId (24 hex chars)
+        if (!/^[a-fA-F0-9]{24}$/.test(id)) {
+          toast({ title: 'Invalid request id', message: 'This request id is malformed.', variant: 'danger' });
+          return;
+        }
         if (!confirm('Delete this request?')) return;
 
         try {
+
           await apiFetch(`/api/v1/requests/${encodeURIComponent(id)}`, { method: 'DELETE' });
           toast({ title: 'Deleted', message: 'Request deleted successfully.', variant: 'success' });
           if (editingId === id) resetForm();
@@ -203,6 +210,7 @@ export async function initUserRequestPage({ role } = {}) {
       toast({ title: 'Event date required', message: 'Please provide a valid date.', variant: 'danger' });
       return;
     }
+
     if (!payload.eventLocation) {
       toast({ title: 'Location required', message: 'Event location is required.', variant: 'danger' });
       return;

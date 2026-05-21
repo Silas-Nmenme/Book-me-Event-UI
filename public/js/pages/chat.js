@@ -1,6 +1,10 @@
 import { apiFetch, fetchMe, logoutUser, clearToken, getUnreadCount, getRequestConversation, sendMessageByRequestId } from '../api.js';
 import { toast } from '../ui.js';
 
+// currently active request id for the chat page (mutable)
+let activeRequestIdModule = '';
+
+
 function qs(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
@@ -99,6 +103,31 @@ async function loadUnread() {
     const unreadCountEl = document.getElementById('unreadCount');
     if (unreadCountEl) unreadCountEl.textContent = '0';
   }
+}
+
+async function createBookingForRequest(request) {
+  if (!request) throw new Error('Missing request');
+  const payload = {
+    request: request._id || request.id,
+    service: request.service?._id || request.service,
+    eventDate: request.eventDate,
+    eventLocation: request.eventLocation,
+    totalAmount: request.totalAmount || request?.service?.price || 0,
+  };
+  const res = await apiFetch('/api/v1/bookings', { method: 'POST', body: JSON.stringify(payload) });
+  return res?.data || res;
+}
+
+async function createPaymentForBooking(bookingId) {
+  if (!bookingId) throw new Error('Missing bookingId');
+  const payload = {
+    booking: bookingId,
+    paymentMethod: 'OFFLINE',
+    transactionReference: 'LOCAL-' + Date.now(),
+    paymentGateway: 'MANUAL',
+  };
+  const res = await apiFetch('/api/v1/payments', { method: 'POST', body: JSON.stringify(payload) });
+  return res?.data || res;
 }
 
 async function fetchUserRequestsForChat() {
@@ -233,13 +262,14 @@ export async function initChatPage({ role = 'USER' } = {}) {
   });
 
   const myId = me?._id || me?.id;
-  const activeRequestId = requestId || '';
+  activeRequestIdModule = requestId || '';
+
 
   if (requestPickerShell) {
     await loadRequestPicker(myId, isVendor, requestPickerShell, requestPickerEmpty, activePartnerLabel, activeRequestLabel, conversationMeta, messagesList, btnSendMessage, messageText);
   }
 
-  if (!activeRequestId) {
+  if (!activeRequestIdModule) {
     if (!requestPickerShell) {
       authzError?.classList.remove('d-none');
       authzError.textContent = 'No request selected. Open this page through a request details or requests list.';
@@ -258,14 +288,14 @@ export async function initChatPage({ role = 'USER' } = {}) {
 
   let request;
   try {
-    request = await loadRequest(activeRequestId);
+    request = await loadRequest(activeRequestIdModule);
   } catch (err) {
     authzError?.classList.remove('d-none');
     authzError.textContent = err?.message || 'Failed to load request details.';
     return;
   }
 
-  activeRequestLabel.textContent = `Request ${activeRequestId}`;
+  activeRequestLabel.textContent = `Request ${activeRequestIdModule}`;
   const partnerName = isVendor
     ? escapeHtml(request?.user?.firstName || request?.user?.email || 'Organizer')
     : escapeHtml(request?.vendor?.businessName || request?.vendor?.user?.email || 'Vendor');
@@ -281,9 +311,38 @@ export async function initChatPage({ role = 'USER' } = {}) {
   if (conversationMeta) {
     conversationMeta.classList.remove('d-none');
     conversationMeta.textContent = buildConversationMeta(request, isVendor);
+
+    // If user and request is accepted, show quick booking action
+    if (!isVendor && String(request?.status).toUpperCase() === 'ACCEPTED') {
+      const existing = document.getElementById('btnCreateBooking');
+      if (!existing) {
+        const btn = document.createElement('button');
+        btn.id = 'btnCreateBooking';
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-success ms-2';
+        btn.textContent = 'Create Booking & Pay';
+        btn.addEventListener('click', async () => {
+          try {
+            btn.setAttribute('disabled', 'disabled');
+            toast({ title: 'Processing', message: 'Creating booking...', variant: 'info' });
+            const booking = await createBookingForRequest(request);
+            toast({ title: 'Booking created', message: 'Booking created. Processing payment...', variant: 'success' });
+            const payment = await createPaymentForBooking(booking?._id || booking?.id);
+            toast({ title: 'Payment', message: 'Payment recorded.', variant: 'success' });
+            // optionally redirect to bookings page
+            setTimeout(() => { window.location.href = 'bookings.html'; }, 800);
+          } catch (err) {
+            toast({ title: 'Booking failed', message: err?.message || 'Try again.', variant: 'danger' });
+          } finally {
+            btn.removeAttribute('disabled');
+          }
+        });
+        conversationMeta.parentElement?.appendChild(btn);
+      }
+    }
   }
 
-  await loadConversation(activeRequestId, myId, messagesList);
+  await loadConversation(activeRequestIdModule, myId, messagesList);
 
   btnSendMessage?.addEventListener('click', async () => {
     const text = messageText.value.trim();
@@ -293,9 +352,9 @@ export async function initChatPage({ role = 'USER' } = {}) {
     }
 
     try {
-      await sendMessageByRequestId({ requestId: activeRequestId, messageContent: text });
+      await sendMessageByRequestId({ requestId: activeRequestIdModule, messageContent: text });
       messageText.value = '';
-      await loadConversation(activeRequestId, myId, messagesList);
+      await loadConversation(activeRequestIdModule, myId, messagesList);
       await loadUnread();
       toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
     } catch (err) {
@@ -321,7 +380,7 @@ export async function initChatPage({ role = 'USER' } = {}) {
       });
 
       socket.on('message:new', (payload) => {
-        if (!payload?.request || payload.request?.toString() !== activeRequestId?.toString()) {
+        if (!payload?.request || payload.request?.toString() !== activeRequestIdModule?.toString()) {
           return;
         }
 
