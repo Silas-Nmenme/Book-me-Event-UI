@@ -1,9 +1,9 @@
 import {
-  apiFetch,
-  getMessages,
   getUnreadCount,
   sendMessage,
   getConversation,
+  getRequestConversation,
+  sendMessageByRequestId,
 } from '../api.js';
 
 import { toast } from '../ui.js';
@@ -59,6 +59,8 @@ export async function initMessagesPage({ me, role } = {}) {
   // partnerId must only be declared once; used for loadConversation() and sendMessage()
   let partnerId = qs('userId') || qs('partnerId') || qs('recipient');
 
+  const requestId = qs('requestId');
+  const isRequestChat = Boolean(requestId);
   const myRole = (role || qs('role') || 'USER').toString().toUpperCase();
 
 
@@ -81,27 +83,27 @@ export async function initMessagesPage({ me, role } = {}) {
     authzError?.classList.add('d-none');
     messagesList.innerHTML = '';
 
+    const requestId = qs('requestId');
+    const isRequestChat = Boolean(requestId);
 
-    if (!userId) {
+    if (!userId && !isRequestChat) {
       authzError?.classList.remove('d-none');
       if (authzError) authzError.textContent = 'Enter a partner userId first.';
       return;
     }
 
     try {
-      // Use messages/conversation endpoint
-      const res = await getConversation(userId, { page: 1, limit: 50 });
+      const res = isRequestChat
+        ? await getRequestConversation(requestId, { page: 1, limit: 50 })
+        : await getConversation(userId, { page: 1, limit: 50 });
       const data = res?.data || res;
-      const items = data?.messages || data?.results || data?.items || data || [];
+      const items = data?.messages || data?.results || data?.items || data?.data || data || [];
 
       if (Array.isArray(items) && items.length) {
         messagesList.innerHTML = items.map((x) => renderMessage(x, { meId: me?._id || me?.id })).join('');
       } else {
         messagesList.innerHTML = `<div class="small text-muted-soft">No messages yet.</div>`;
       }
-
-      // Mark as read best-effort: mark all messages as read (backend route expects message id).
-      // We do not have ids here; this is UX placeholder.
     } catch (e) {
       authzError?.classList.remove('d-none');
       if (authzError) authzError.textContent = e?.message || 'Failed to load conversation.';
@@ -141,10 +143,12 @@ export async function initMessagesPage({ me, role } = {}) {
 
   btnSendMessage?.addEventListener('click', async () => {
     partnerId = await resolvePartnerFromUrlOrData();
+    const requestId = qs('requestId');
+    const isRequestChat = Boolean(requestId);
 
     const text = messageText?.value?.trim();
 
-    if (!partnerId) {
+    if (!partnerId && !isRequestChat) {
       toast({ title: 'Missing recipient', message: 'No partner selected for this chat.', variant: 'warning' });
       return;
     }
@@ -154,7 +158,11 @@ export async function initMessagesPage({ me, role } = {}) {
     }
 
     try {
-      await sendMessage({ recipient: partnerId, messageContent: text });
+      if (isRequestChat) {
+        await sendMessageByRequestId({ requestId, messageContent: text });
+      } else {
+        await sendMessage({ recipient: partnerId, messageContent: text });
+      }
       messageText.value = '';
       toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
       await loadConversation(partnerId);
@@ -169,14 +177,15 @@ export async function initMessagesPage({ me, role } = {}) {
     if (e.key === 'Enter') btnSendMessage?.click();
   });
 
-  // Auto-load if URL provides userId
-      const initialUserId = qs('userId');
+  // Auto-load if URL provides requestId or userId.
   const initialRequestId = qs('requestId');
-  if (initialRequestId && !initialUserId) {
-    // Legacy page: requestId not fully supported by backend yet; show a hint.
-    toast({ title: 'Info', message: 'Open user-message.html or vendor-message.html for request-based chat UI.', variant: 'warning' });
-  }
-  if (initialUserId) {
+  const initialUserId = qs('userId');
+  if (initialRequestId) {
+    if (!partnerId) {
+      partnerId = initialUserId || '';
+    }
+    await loadConversation(partnerId);
+  } else if (initialUserId) {
     partnerId = initialUserId;
     await loadConversation(initialUserId);
   }
@@ -202,9 +211,11 @@ export async function initMessagesPage({ me, role } = {}) {
       });
 
       socket.on('message:new', (payload) => {
-        // Render into the currently open thread.
-        // If partnerId is missing, fall back to the “other user” inferred from sender/recipient.
         const myId = me?._id || me?.id;
+        if (isRequestChat && payload?.request?.toString?.() !== requestId?.toString?.()) {
+          return;
+        }
+
         const pId = partnerId ||
           (payload?.sender?.toString?.() === myId?.toString?.() ? payload?.recipient : payload?.sender);
 
@@ -215,7 +226,6 @@ export async function initMessagesPage({ me, role } = {}) {
           (payload?.recipient?.toString?.() === pId?.toString?.());
         if (!matches) return;
 
-        // Ensure partnerId stays aligned with the open thread.
         partnerId = pId;
 
         const el = renderMessage(payload, { meId: myId });
@@ -231,12 +241,6 @@ export async function initMessagesPage({ me, role } = {}) {
   }
 
   await loadUnread();
-
-  // Conversation via requestId could be supported later; reserved for future.
-  const requestId = qs('requestId');
-  if (requestId) {
-    toast({ title: 'Tip', message: 'Conversation partner userId may be required by backend.', variant: 'warning' });
-  }
 }
 
 

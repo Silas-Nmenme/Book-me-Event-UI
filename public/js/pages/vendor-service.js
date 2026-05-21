@@ -78,8 +78,8 @@ function buildRequestCard(req, { myRole } = {}) {
         </div>
 
         <div class="mt-3 d-flex flex-wrap gap-2">
-          <a class="btn btn-soft btn-sm" href="messages.html?userId=${encodeURIComponent(
-            partnerUserId
+          <a class="btn btn-soft btn-sm" href="vendor-message.html?requestId=${encodeURIComponent(
+            id
           )}">Message ${escapeHtml(userName || '')}</a>
           <a class="btn btn-soft btn-sm" href="bookings.html?requestId=${encodeURIComponent(
             id

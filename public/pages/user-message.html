@@ -72,6 +72,22 @@
                 <div class="small text-muted-soft" id="activeVendorLabel" style="margin-top:6px;">—</div>
               </div>
             </div>
+            <!-- Why you'll love (compact) -->
+            <div class="mt-4 card card-glass p-4 fade-slide">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-bold">Why you'll love Book Me Events</div>
+                <span class="badge text-bg-secondary">Built for speed</span>
+              </div>
+
+              <div class="small text-muted-soft mb-2">Professional workflows for users, vendors, and admins.</div>
+
+              <ul class="list-unstyled mb-0">
+                <li class="mb-1"><span class="fw-bold">1.</span> Tell us about your event (create a request)</li>
+                <li class="mb-1"><span class="fw-bold">2.</span> Receive proposals from vendors</li>
+                <li class="mb-1"><span class="fw-bold">3.</span> Chat and finalize details</li>
+                <li class="mb-0"><span class="fw-bold">4.</span> Book, pay, and track progress</li>
+              </ul>
+            </div>
 
             <div class="mt-4 card card-glass p-4 fade-slide">
               <div class="fw-bold mb-2">Select conversation</div>
@@ -125,292 +141,17 @@
 
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
-    <script type="module">
-      import { fetchMe, logoutUser, clearToken, apiFetch, getUnreadCount, getRequestConversation, sendMessageByRequestId } from '../js/api.js';
-
-      import { toast, setYear } from '../js/ui.js';
+        <script type="module">
+      import { setYear } from '../js/ui.js';
       import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initChatPage } from '../js/pages/chat.js';
 
       setYear('year');
       initThemeToggle();
       initNavbarBrandRoleRedirect();
 
-      const avatarEl = document.getElementById('avatar');
-
-      function setAvatarUrl(url) {
-        if (!avatarEl) return;
-        if (url) {
-          avatarEl.style.backgroundImage = `url(${url})`;
-          avatarEl.style.backgroundSize = 'cover';
-          avatarEl.style.backgroundPosition = 'center';
-          avatarEl.textContent = '';
-          avatarEl.style.fontWeight = 'normal';
-          return;
-        }
-        avatarEl.style.backgroundImage = '';
-        avatarEl.textContent = 'BME';
-        avatarEl.style.fontWeight = '900';
-      }
-
-      function getAvatarInitials(name) {
-        return (name || 'BME')
-          .split(' ')
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((x) => x[0].toUpperCase())
-          .join('');
-      }
-
-      function qs(name) {
-        return new URLSearchParams(window.location.search).get(name);
-      }
-
-      function escapeHtml(s) {
-        return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
-          const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
-          return m[c] || c;
-        });
-      }
-
-      function renderMessage(m, { meId } = {}) {
-        const sender = m?.sender || m?.senderId || m?.from || null;
-        const senderId = (typeof sender === 'string' ? sender : sender?._id) || '';
-        const text = m?.messageContent ?? (m?.message || m?.text || '');
-        const createdAt = m?.createdAt ? new Date(m.createdAt).toLocaleString() : '';
-
-        const isMe = meId && senderId && senderId.toString() === meId.toString();
-        const dir = isMe ? 'justify-content-end' : 'justify-content-start';
-
-        return `
-          <div class="d-flex ${dir} mb-2">
-            <div class="bme-bubble ${isMe ? 'me' : 'them'}">
-              <div class="bme-bubble-meta">${escapeHtml(isMe ? 'You' : (m?.sender?.firstName || senderId))}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
-              <div class="bme-bubble-text">${escapeHtml(text)}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      async function loadMe() {
-        const res = await fetchMe();
-        const me = res?.data || res;
-        const firstName = me?.firstName || me?.user?.firstName;
-        const lastName = me?.lastName || me?.user?.lastName;
-
-        document.getElementById('meName').textContent = firstName
-          ? `${firstName} ${lastName || ''}`.trim()
-          : me?.name || me?.fullName || '—';
-
-        document.getElementById('meEmail').textContent = me?.email || '—';
-
-        const role = (me?.role || me?.user?.role || 'USER').toString().toUpperCase();
-        document.getElementById('meRole').textContent = role;
-
-        if (me?.profilePicture) setAvatarUrl(me.profilePicture);
-        else {
-          avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
-          avatarEl.style.backgroundImage = '';
-          avatarEl.style.background = 'rgba(124,92,255,0.12)';
-        }
-
-        return { me, role };
-      }
-
-      document.getElementById('btnLogout').addEventListener('click', async () => {
-        try { await logoutUser(); } finally { clearToken(); sessionStorage.clear(); localStorage.clear(); }
-        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
-      });
-
-      const activeRequestId = qs('requestId') || '';
-
-      const requestPickerShell = document.getElementById('requestPickerShell');
-      const requestPickerEmpty = document.getElementById('requestPickerEmpty');
-      const messagesList = document.getElementById('messagesList');
-      const messageText = document.getElementById('messageText');
-      const btnSendMessage = document.getElementById('btnSendMessage');
-      const unreadCount = document.getElementById('unreadCount');
-      const authzError = document.getElementById('authzError');
-      const roleNotice = document.getElementById('roleNotice');
-      const activeRequestLabel = document.getElementById('activeRequestLabel');
-      const activeVendorLabel = document.getElementById('activeVendorLabel');
-
-      let meRes = await loadMe();
-      initRoleNotice(meRes.role);
-
-      function initRoleNotice(role) {
-        roleNotice?.classList.remove('d-none');
-        roleNotice.textContent = role === 'USER'
-          ? 'Chat is enabled for organizer requests.'
-          : 'This page is designed for USER accounts.';
-      }
-
-      let activePartnerUserId = '';
-      let activeRequestMeta = null;
-
-      async function loadUnread() {
-        try {
-          const res = await getUnreadCount();
-          const count = res?.data?.unreadCount ?? res?.data?.count ?? res?.unreadCount ?? 0;
-          if (unreadCount) unreadCount.textContent = count;
-        } catch {
-          if (unreadCount) unreadCount.textContent = '0';
-        }
-      }
-
-      async function fetchUserRequestsForChat() {
-        // Backend: reuse existing requests endpoint; vendor replies are tied to request->vendor->user conversation.
-        const res = await apiFetch('/api/v1/requests?status=ACCEPTED&page=1&limit=50', { method: 'GET' });
-        const data = res?.data || res;
-        const items = Array.isArray(data) ? data : data?.data || data?.requests || data || [];
-        return Array.isArray(items) ? items : [];
-      }
-
-      function buildRequestOptionCard(r) {
-        const id = r?._id || r?.id;
-        const vendorName = r?.vendor?.businessName || r?.vendor?.name || 'Vendor';
-        const createdAt = r?.createdAt ? new Date(r.createdAt).toLocaleDateString() : '';
-
-        return `
-          <button class="btn btn-soft w-100 text-start mt-2" type="button" data-request-id="${escapeHtml(id)}">
-            <div class="fw-bold">Request ${escapeHtml(id?.slice?.(-6) || id || '')}</div>
-            <div class="small text-muted-soft">${escapeHtml(vendorName)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
-          </button>
-        `;
-      }
-
-      async function loadRequestPicker() {
-        const requests = await fetchUserRequestsForChat();
-        if (!requests.length) {
-          requestPickerEmpty.classList.remove('d-none');
-          requestPickerShell.innerHTML = '';
-          return;
-        }
-
-        const cards = requests.map(buildRequestOptionCard).join('');
-        requestPickerShell.innerHTML = cards;
-
-        requestPickerShell.querySelectorAll('[data-request-id]').forEach((btn) => {
-          btn.addEventListener('click', async () => {
-            const rid = btn.getAttribute('data-request-id');
-            await selectRequest(rid);
-          });
-        });
-      }
-
-      async function selectRequest(requestId) {
-        authzError?.classList.add('d-none');
-        if (!requestId) return;
-
-        // Find partner/vendor user id from the request.
-        // For a USER request, vendor is r.vendor._id but conversation partner is vendor.user._id.
-        const res = await apiFetch(`/api/v1/requests/${encodeURIComponent(requestId)}`, { method: 'GET' });
-        const r = res?.data || res;
-        activeRequestMeta = r;
-
-        const vendorUserId = r?.vendor?.user?._id || r?.vendor?.user || '';
-        // current requestController populates vendor as businessName only; so vendor.user may be missing.
-        // We therefore also try request.user? (fallback: message conversation uses recipient as other user id)
-        // If vendor user id is missing, backend endpoint will fix; for now we require vendor user populated by backend.
-        // Vendor owner userId is required only for UI state (active user label + socket filtering).
-        // Messaging itself is request-based, so we can still load and send even if vendor.user isn't populated.
-        if (vendorUserId) activePartnerUserId = vendorUserId;
-        activeRequestLabel.textContent = `Request ${activeRequestMeta?._id || requestId}`;
-        activeVendorLabel.textContent = `Vendor: ${activeRequestMeta?.vendor?.businessName || '—'}`;
-
-        await loadRequestConversation(requestId);
-
-      }
-
-      async function loadRequestConversation(requestId) {
-        messagesList.innerHTML = '';
-        if (!requestId) return;
-
-        const res = await getRequestConversation(requestId, { page: 1, limit: 200 });
-
-        const data = res?.data || res;
-        const items = data?.data || data?.messages || data?.results || data || [];
-
-        const arr = Array.isArray(items) ? items : [];
-        if (!arr.length) {
-          messagesList.innerHTML = `<div class="small text-muted-soft">No messages yet. Start the conversation below.</div>`;
-          return;
-        }
-
-        messagesList.innerHTML = arr.map((m) => renderMessage(m, { meId: meRes.me?._id || meRes.me?.id })).join('');
-        messagesList.scrollTop = messagesList.scrollHeight;
-
-        // keep unread UI in sync
-        await loadUnread();
-      }
-
-      btnSendMessage.addEventListener('click', async () => {
-        const rid = activeRequestId || activeRequestMeta?._id;
-        const text = messageText.value.trim();
-        if (!text) {
-          toast({ title: 'Empty message', message: 'Type a message first.', variant: 'warning' });
-          return;
-        }
-
-        try {
-          await sendMessageByRequestId({ requestId: rid, messageContent: text });
-          messageText.value = '';
-          await loadRequestConversation(rid);
-          await loadUnread();
-          toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
-        } catch (e) {
-
-          toast({ title: 'Send failed', message: e?.message || 'Try again.', variant: 'danger' });
-        }
-      });
-
-      messageText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') btnSendMessage.click();
-      });
-
-      // Load initial state
-      await loadRequestPicker();
-      await loadUnread();
-
-      if (activeRequestId) {
-        await selectRequest(activeRequestId);
-      }
-
-      // Socket.IO real-time updates
-      try {
-        const socket = window.io
-          ? window.io({ transports: ['polling', 'websocket'], path: '/socket.io' })
-          : null;
-
-        if (socket) {
-          socket.on('connect', () => {
-            const myUserId = meRes?.me?._id || meRes?.me?.id || meRes?.me?._userId || meRes?.me?._doc?._id || null;
-            if (!myUserId) {
-              console.warn('[socket] missing userId for join', { meRes });
-              return;
-            }
-            socket.emit('join', { userId: myUserId });
-          });
-
-          socket.on('message:new', (payload) => {
-            const myId = meRes.me?._id || meRes.me?.id;
-            const senderId = payload?.sender?.toString?.() || payload?.sender;
-            const recipientId = payload?.recipient?.toString?.() || payload?.recipient;
-
-            const otherId = senderId === myId ? recipientId : senderId;
-            // request-based conversation: only append if message belongs to the active request.
-            const msgRequestId = payload?.request?.toString?.() || payload?.request;
-            if (activeRequestId && msgRequestId && msgRequestId.toString() !== activeRequestId.toString()) return;
-
-
-            const el = renderMessage(payload, { meId: myId });
-            messagesList.insertAdjacentHTML('beforeend', el);
-            messagesList.scrollTop = messagesList.scrollHeight;
-            loadUnread();
-          });
-        }
-      } catch {}
+      await initChatPage({ role: 'USER' });
     </script>
   </body>
 </html>
