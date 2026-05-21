@@ -57,9 +57,16 @@ export async function initCreateBookingPage() {
 
       const payload = {
         request: requestId,
-        // backend creates service from the accepted request when possible.
-        // Only send service if we can reliably derive an id.
-        ...(loadedRequest?.service?._id ? { service: loadedRequest.service._id } : {}),
+        // Backend will use request.service when available, but some requests may not be populated.
+        // Send service whenever we can reliably derive an id.
+        ...(loadedRequest?.service
+          ? {
+              service:
+                typeof loadedRequest.service === 'string'
+                  ? loadedRequest.service
+                  : loadedRequest.service._id,
+            }
+          : {}),
         eventDate: evDate,
         eventLocation: evLoc,
         totalAmount: tot,
