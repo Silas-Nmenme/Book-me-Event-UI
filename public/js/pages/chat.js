@@ -114,12 +114,15 @@ async function fetchUserRequestsForChat() {
 
 function buildRequestOptionCard(r) {
   const id = r?._id || r?.id;
-  const vendorName = r?.vendor?.businessName || r?.vendor?.name || 'Vendor';
+  const serviceName = r?.service?.serviceName || r?.service?.name || 'Service';
+  const partnerName = r?.vendor?.businessName || r?.vendor?.name || r?.user?.firstName || 'Partner';
   const createdAt = r?.createdAt ? new Date(r.createdAt).toLocaleDateString() : '';
+  const statusLabel = r?.status ? r.status.toString().toLowerCase() : 'unknown';
+
   return `
     <button class="btn btn-soft w-100 text-start mt-2" type="button" data-request-id="${escapeHtml(id)}">
-      <div class="fw-bold">Request ${escapeHtml(id?.slice?.(-6) || id || '')}</div>
-      <div class="small text-muted-soft">${escapeHtml(vendorName)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
+      <div class="fw-bold">${escapeHtml(serviceName)} • ${escapeHtml(id?.slice?.(-6) || id || '')}</div>
+      <div class="small text-muted-soft">${escapeHtml(partnerName)}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''} • ${escapeHtml(statusLabel)}</div>
     </button>
   `;
 }

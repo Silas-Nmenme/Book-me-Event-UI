@@ -1,4 +1,4 @@
-import { getRequest, createBooking, createPayment } from '../api.js';
+import { getRequest, createBooking, createPayment, apiFetch } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -29,6 +29,41 @@ export async function initCreateBookingPage() {
       if (loadedRequest.eventDate) eventDateEl.value = new Date(loadedRequest.eventDate).toISOString().slice(0,10);
       if (loadedRequest.eventLocation) eventLocationEl.value = loadedRequest.eventLocation;
       if (tot) totalAmountEl.value = tot;
+
+      // If request has no linked service, try to load vendor services so user can pick one.
+      if (!loadedRequest.service) {
+        try {
+          const svcRes = await apiFetch('/api/v1/services?limit=200', { method: 'GET' });
+          const services = svcRes?.data || svcRes || [];
+          const vendorId = loadedRequest?.vendor?._id || loadedRequest?.vendor || null;
+          const vendorServices = Array.isArray(services)
+            ? services.filter((s) => (s?.vendor?._id || s?.vendor?._id || s?.vendor) == vendorId)
+            : [];
+
+          if (vendorServices && vendorServices.length) {
+            // insert a select into the form for service choice
+            const totalAmountGroup = document.getElementById('totalAmount')?.closest('.col-12') || document.getElementById('totalAmount')?.parentElement;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'col-12 col-md-6';
+            wrapper.innerHTML = `
+              <label class="form-label small">Service (select)</label>
+              <select id="serviceSelectForBooking" class="form-select form-select-sm" required>
+                <option value="">Select a service</option>
+                ${vendorServices.map(s => `<option value="${s._id}">${(s.serviceName || s.serviceName) + (s.basePrice ? ' — ' + s.basePrice : '')}</option>`).join('')}
+              </select>
+            `;
+            // insert before total amount group if found, otherwise append to form row
+            const row = document.querySelector('#createBookingForm .row');
+            if (totalAmountGroup && totalAmountGroup.parentElement) {
+              totalAmountGroup.parentElement.insertBefore(wrapper, totalAmountGroup);
+            } else if (row) {
+              row.insertBefore(wrapper, row.firstChild);
+            }
+          }
+        } catch (e) {
+          // ignore vendor services load failure; user will see clear error on submit
+        }
+      }
     } catch (err) {
       toast({ title: 'Request not found', message: err?.message || '', variant: 'danger' });
     }
@@ -67,6 +102,12 @@ export async function initCreateBookingPage() {
       }
       // Additional fallbacks for common field names
       if (!serviceId) serviceId = loadedRequest?.serviceId || null;
+
+      // If still missing, try the service selector rendered earlier (if any)
+      if (!serviceId) {
+        const sel = document.getElementById('serviceSelectForBooking');
+        if (sel) serviceId = sel.value || null;
+      }
 
       if (!serviceId) {
         throw new Error('Request must have a service linked, or service must be provided in payload');
