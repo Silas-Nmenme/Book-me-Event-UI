@@ -55,18 +55,26 @@ export async function initCreateBookingPage() {
       if (!evLoc) throw new Error('Event location is required');
       if (!tot || tot <= 0) throw new Error('Enter a valid total amount');
 
+      // Determine a reliable service id to include in the payload.
+      // Backend requires either the request to have a linked service or the payload to provide one.
+      let serviceId = null;
+      if (loadedRequest?.service) {
+        if (typeof loadedRequest.service === 'string') {
+          serviceId = loadedRequest.service;
+        } else {
+          serviceId = loadedRequest.service._id || loadedRequest.service.id || loadedRequest.service.serviceId || loadedRequest.serviceId || null;
+        }
+      }
+      // Additional fallbacks for common field names
+      if (!serviceId) serviceId = loadedRequest?.serviceId || null;
+
+      if (!serviceId) {
+        throw new Error('Request must have a service linked, or service must be provided in payload');
+      }
+
       const payload = {
         request: requestId,
-        // Backend will use request.service when available, but some requests may not be populated.
-        // Send service whenever we can reliably derive an id.
-        ...(loadedRequest?.service
-          ? {
-              service:
-                typeof loadedRequest.service === 'string'
-                  ? loadedRequest.service
-                  : loadedRequest.service._id,
-            }
-          : {}),
+        service: serviceId,
         eventDate: evDate,
         eventLocation: evLoc,
         totalAmount: tot,
