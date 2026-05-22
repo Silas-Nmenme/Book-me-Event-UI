@@ -168,6 +168,7 @@ async function applyRequestSelection(requestId, isVendor, activeRequestLabel, ac
   }
 
   if (conversationMeta) {
+    conversationMeta.style.display = '';
     conversationMeta.classList.remove('d-none');
     conversationMeta.textContent = buildConversationMeta(request, isVendor);
   }
@@ -264,47 +265,7 @@ export async function initChatPage({ role = 'USER' } = {}) {
     return;
   }
 
-  let request;
-  try {
-    request = await loadRequest(activeRequestIdModule);
-  } catch (err) {
-    authzError?.classList.remove('d-none');
-    authzError.textContent = err?.message || 'Failed to load request details.';
-    return;
-  }
-
-  activeRequestLabel.textContent = `Request ${activeRequestIdModule}`;
-  const partnerName = isVendor
-    ? escapeHtml(request?.user?.firstName || request?.user?.email || 'Organizer')
-    : escapeHtml(request?.vendor?.businessName || request?.vendor?.user?.email || 'Vendor');
-  if (activePartnerLabel) {
-    activePartnerLabel.textContent = isVendor
-      ? `Organizer: ${partnerName}`
-      : `Vendor: ${partnerName}`;
-  }
-  if (pageTitle) {
-    pageTitle.textContent = `Chat with ${partnerName}`;
-  }
-
-  if (conversationMeta) {
-    conversationMeta.classList.remove('d-none');
-    conversationMeta.textContent = buildConversationMeta(request, isVendor);
-
-    // If user and request is accepted, show a link to the dedicated booking page
-    if (!isVendor && String(request?.status).toUpperCase() === 'ACCEPTED') {
-      const existing = document.getElementById('linkCreateBooking');
-      if (!existing) {
-        const a = document.createElement('a');
-        a.id = 'linkCreateBooking';
-        a.className = 'btn btn-sm btn-primary ms-2';
-        a.textContent = 'Create Booking';
-        a.href = `create-booking.html?requestId=${encodeURIComponent(request._id || request.id)}`;
-        conversationMeta.parentElement?.appendChild(a);
-      }
-    }
-  }
-
-  await loadConversation(activeRequestIdModule, myId, messagesList);
+  await applyRequestSelection(activeRequestIdModule, isVendor, activeRequestLabel, activePartnerLabel, conversationMeta, messagesList, btnSendMessage, messageText, myId);
 
   btnSendMessage?.addEventListener('click', async () => {
     const text = messageText.value.trim();

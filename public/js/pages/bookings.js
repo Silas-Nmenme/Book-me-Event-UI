@@ -1,4 +1,4 @@
-import { apiFetch, getBookings, cancelBooking, completeBooking, createBooking, createPayment } from '../api.js';
+import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -16,8 +16,9 @@ function statusLabel(status) {
   const s = (status || '').toString().toLowerCase();
   if (s === 'pending') return { text: 'Pending', variant: 'warning' };
   if (s === 'confirmed') return { text: 'Confirmed', variant: 'success' };
+  if (s === 'in_progress' || s === 'in progress') return { text: 'In progress', variant: 'info' };
   if (s === 'completed') return { text: 'Completed', variant: 'success' };
-  if (s === 'canceled') return { text: 'Canceled', variant: 'secondary' };
+  if (s === 'canceled' || s === 'cancelled') return { text: 'Canceled', variant: 'secondary' };
   return { text: status || '—', variant: 'secondary' };
 }
 
@@ -64,7 +65,8 @@ export async function initBookingsPage({ me, role } = {}) {
   const roleNotice = document.getElementById('roleNotice');
 
   const requestId = qs('requestId');
-  const status = qs('status') || undefined;
+  const rawStatus = qs('status') || undefined;
+  const status = rawStatus ? rawStatus.toString().toUpperCase().replace('CANCELED', 'CANCELLED') : undefined;
   const myRole = (role || 'USER').toString().toUpperCase();
 
   shell?.classList.remove('d-none');
@@ -187,6 +189,53 @@ export async function initBookingsPage({ me, role } = {}) {
     }
   }
 
+  async function loadBookingDetailsPanel() {
+    const bookingDetailsShell = document.getElementById('bookingDetailsShell');
+    if (!bookingDetailsShell) return;
+
+    if (!qs('bookingId')) {
+      bookingDetailsShell.classList.add('d-none');
+      bookingDetailsShell.innerHTML = '';
+      return;
+    }
+
+    try {
+      const bookingId = qs('bookingId');
+      const res = await getBooking(bookingId);
+      const booking = res?.data || res;
+      const bookingStatus = booking?.bookingStatus || booking?.status || '—';
+      const paymentStatus = booking?.paymentStatus || '—';
+      const serviceName = booking?.service?.serviceName || booking?.service?.name || '—';
+      const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || '—';
+      const customerName = booking?.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}`.trim() : booking?.user?.email || '—';
+      const requestIdValue = booking?.request?._id || booking?.request?.id || '—';
+
+      bookingDetailsShell.classList.remove('d-none');
+      bookingDetailsShell.innerHTML = `
+        <div class="fw-bold mb-2">Booking details</div>
+        <div class="row g-3">
+          <div class="col-12 col-md-6"><strong>ID</strong><div class="small text-muted-soft">${escapeHtml(booking._id || booking.id || '—')}</div></div>
+          <div class="col-12 col-md-6"><strong>Status</strong><div class="small text-muted-soft">${escapeHtml(bookingStatus)}</div></div>
+          <div class="col-12 col-md-6"><strong>Payment</strong><div class="small text-muted-soft">${escapeHtml(paymentStatus)}</div></div>
+          <div class="col-12 col-md-6"><strong>Service</strong><div class="small text-muted-soft">${escapeHtml(serviceName)}</div></div>
+          <div class="col-12 col-md-6"><strong>Vendor</strong><div class="small text-muted-soft">${escapeHtml(vendorName)}</div></div>
+          <div class="col-12 col-md-6"><strong>Customer</strong><div class="small text-muted-soft">${escapeHtml(customerName)}</div></div>
+          <div class="col-12 col-md-6"><strong>Request</strong><div class="small text-muted-soft">${escapeHtml(requestIdValue)}</div></div>
+          <div class="col-12 col-md-6"><strong>Event date</strong><div class="small text-muted-soft">${escapeHtml(booking?.eventDate ? new Date(booking.eventDate).toLocaleDateString() : '—')}</div></div>
+          <div class="col-12 col-md-6"><strong>Location</strong><div class="small text-muted-soft">${escapeHtml(booking?.eventLocation || '—')}</div></div>
+          <div class="col-12 col-md-6"><strong>Amount</strong><div class="small text-muted-soft">${booking?.totalAmount != null ? `₦${Number(booking.totalAmount).toLocaleString()} ${escapeHtml(booking.amountCurrency || '')}` : '—'}</div></div>
+          <div class="col-12"><strong>Special requests</strong><div class="small text-muted-soft">${escapeHtml(booking?.specialRequests || 'None')}</div></div>
+        </div>
+      `;
+    } catch (e) {
+      const bookingDetailsShell = document.getElementById('bookingDetailsShell');
+      bookingDetailsShell.classList.remove('d-none');
+      bookingDetailsShell.innerHTML = `
+        <div class="alert alert-danger">Unable to load booking details: ${escapeHtml(e?.message || 'Try again.')}</div>
+      `;
+    }
+  }
+
   async function load() {
     bookingList.innerHTML = '';
     noBookings?.classList.add('d-none');
@@ -194,7 +243,7 @@ export async function initBookingsPage({ me, role } = {}) {
     try {
       const res = await getBookings({ status, page: 1, limit: 30 });
       const data = res?.data || res;
-      const items = data?.results || data?.bookings || data?.items || data || [];
+      const items = data?.results || data?.bookings || data?.items || data?.data || data || [];
 
       if (!Array.isArray(items) || items.length === 0) {
         noBookings?.classList.remove('d-none');
@@ -266,5 +315,6 @@ export async function initBookingsPage({ me, role } = {}) {
 
   await load();
   await loadRequestBookingPanel();
+  await loadBookingDetailsPanel();
 }
 

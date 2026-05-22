@@ -86,6 +86,21 @@ export async function initMessagesPage({ me, role } = {}) {
     const requestId = qs('requestId');
     const isRequestChat = Boolean(requestId);
 
+    const headerEl = document.getElementById('conversationHeader');
+    const metaEl = document.getElementById('conversationMeta');
+    if (headerEl) {
+      headerEl.textContent = isRequestChat
+        ? `Request conversation: ${escapeHtml(requestId)}`
+        : `Conversation with ${escapeHtml(userId || 'partner')}`;
+    }
+    if (metaEl) {
+      metaEl.style.display = '';
+      metaEl.classList.remove('d-none');
+      metaEl.textContent = isRequestChat
+        ? `Request ID: ${escapeHtml(requestId)}`
+        : `Partner ID: ${escapeHtml(userId || '—')}`;
+    }
+
     if (!userId && !isRequestChat) {
       authzError?.classList.remove('d-none');
       if (authzError) authzError.textContent = 'Enter a partner userId first.';
