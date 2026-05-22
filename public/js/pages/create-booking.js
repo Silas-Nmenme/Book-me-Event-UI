@@ -1,4 +1,4 @@
-import { getRequest, createBooking, createPayment, apiFetch } from '../api.js';
+import { getRequest, createBooking, createPayment, initializeFlutterwavePayment, apiFetch } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -129,7 +129,29 @@ export async function initCreateBookingPage() {
       confirmation.classList.remove('d-none');
       form.classList.add('d-none');
 
-      // attach record payment handler
+      const payButton = document.getElementById('btnPayWithCard') || document.createElement('button');
+      payButton.id = 'btnPayWithCard';
+      payButton.type = 'button';
+      payButton.className = 'btn btn-primary btn-sm';
+      payButton.textContent = 'Pay with card';
+      if (!document.getElementById('btnPayWithCard') && btnRecordPayment?.parentElement) {
+        btnRecordPayment.parentElement.insertBefore(payButton, btnRecordPayment.nextSibling);
+      }
+
+      payButton.addEventListener('click', async () => {
+        try {
+          toast({ title: 'Checkout', message: 'Redirecting to payment...', variant: 'info' });
+          const res = await initializeFlutterwavePayment(booking._id || booking.id);
+          if (res?.link) {
+            window.location.href = res.link;
+            return;
+          }
+          throw new Error('Unable to initialize payment.');
+        } catch (err) {
+          toast({ title: 'Payment failed', message: err?.message || 'Try again.', variant: 'danger' });
+        }
+      });
+
       btnRecordPayment.addEventListener('click', async () => {
         try {
           toast({ title: 'Processing', message: 'Recording payment...', variant: 'info' });

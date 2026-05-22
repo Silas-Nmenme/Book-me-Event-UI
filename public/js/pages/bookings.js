@@ -1,4 +1,4 @@
-import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment } from '../api.js';
+import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment, initializeFlutterwavePayment } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -169,16 +169,13 @@ export async function initBookingsPage({ me, role } = {}) {
         }
 
         try {
-          await createPayment({
-            booking: bookingId,
-            paymentMethod: 'CARD',
-            transactionReference: `PAY-${Date.now()}`,
-            paymentGateway: 'MANUAL',
-          });
-          toast({ title: 'Payment complete', message: 'Your payment is confirmed.', variant: 'success' });
-          requestBookingResult.textContent = 'Payment completed. Your booking is confirmed.';
-          btnPayBooking?.classList.add('d-none');
-          await load();
+          toast({ title: 'Checkout', message: 'Redirecting to payment...', variant: 'info' });
+          const session = await initializeFlutterwavePayment(bookingId);
+          if (session?.link) {
+            window.location.href = session.link;
+            return;
+          }
+          throw new Error('Unable to initialize payment.');
         } catch (e) {
           toast({ title: 'Payment failed', message: e?.message || 'Try again.', variant: 'danger' });
         }
@@ -209,6 +206,10 @@ export async function initBookingsPage({ me, role } = {}) {
       const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || '—';
       const customerName = booking?.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}`.trim() : booking?.user?.email || '—';
       const requestIdValue = booking?.request?._id || booking?.request?.id || '—';
+      const canPay = paymentStatus.toString().toUpperCase() !== 'COMPLETED';
+      const paymentActionButton = canPay
+        ? `<button id="btnPayBookingDetail" class="btn btn-primary btn-sm mt-3">Pay now</button>`
+        : '';
 
       bookingDetailsShell.classList.remove('d-none');
       bookingDetailsShell.innerHTML = `
@@ -226,7 +227,27 @@ export async function initBookingsPage({ me, role } = {}) {
           <div class="col-12 col-md-6"><strong>Amount</strong><div class="small text-muted-soft">${booking?.totalAmount != null ? `₦${Number(booking.totalAmount).toLocaleString()} ${escapeHtml(booking.amountCurrency || '')}` : '—'}</div></div>
           <div class="col-12"><strong>Special requests</strong><div class="small text-muted-soft">${escapeHtml(booking?.specialRequests || 'None')}</div></div>
         </div>
+        ${paymentActionButton}
       `;
+
+      if (canPay) {
+        const btnPayBookingDetail = document.getElementById('btnPayBookingDetail');
+        btnPayBookingDetail?.addEventListener('click', async () => {
+          try {
+            toast({ title: 'Checkout', message: 'Redirecting to payment...', variant: 'info' });
+            const session = await initializeFlutterwavePayment(
+              booking._id || booking.id
+            );
+            if (session?.link) {
+              window.location.href = session.link;
+              return;
+            }
+            throw new Error('Unable to initialize payment.');
+          } catch (e) {
+            toast({ title: 'Payment failed', message: e?.message || 'Try again.', variant: 'danger' });
+          }
+        });
+      }
     } catch (e) {
       const bookingDetailsShell = document.getElementById('bookingDetailsShell');
       bookingDetailsShell.classList.remove('d-none');

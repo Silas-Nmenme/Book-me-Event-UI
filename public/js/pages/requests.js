@@ -28,6 +28,10 @@ function statusLabel(status) {
     return { text: 'Accepted', variant: 'success' };
   }
 
+  if (s === 'booked') {
+    return { text: 'Booked', variant: 'primary' };
+  }
+
   if (s === 'declined') {
     return { text: 'Declined', variant: 'danger' };
   }

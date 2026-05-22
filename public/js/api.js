@@ -326,6 +326,13 @@ export async function createPayment(payload) {
   });
 }
 
+export async function initializeFlutterwavePayment(bookingId) {
+  return apiFetch('/api/v1/payments/initialize', {
+    method: 'POST',
+    body: JSON.stringify({ bookingId }),
+  });
+}
+
 export async function refundPayment(id, payload = {}) {
   return apiFetch(`/api/v1/payments/${id}/refund`, {
     method: 'POST',
