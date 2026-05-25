@@ -299,73 +299,162 @@ body{
 /* ============================
    Chat (WhatsApp-like)
    ============================ */
-+
-+.bme-chat{
-+  background: transparent;
-+}
-+
-+.bme-chat-header{
-+  display:flex;
-+  align-items:center;
-+  justify-content:space-between;
-+  gap:12px;
-+  margin-bottom:12px;
-+}
-+
-+.bme-chat-thread{
-+  max-height: 420px;
-+  overflow:auto;
-+  padding: 10px;
-+  border-radius: 14px;
-+  background: rgba(255,255,255,.03);
-+  border: 1px solid rgba(255,255,255,.10);
-+}
-+
-+:root[data-theme="light"] .bme-chat-thread{
-+  background: rgba(255,255,255,.7);
-+  border-color: rgba(15,23,42,.12);
-+}
-+
-+.bme-bubble{
-+  padding: 10px 12px;
-+  border-radius: 18px;
-+  max-width: 80%;
-+  border: 1px solid rgba(255,255,255,.10);
-+  box-shadow: 0 6px 18px rgba(0,0,0,.15);
-+}
-+
-+.bme-bubble.me{
-+  background: linear-gradient(135deg, rgba(124,92,255,.40), rgba(49,208,170,.20));
-+  border-color: rgba(124,92,255,.40);
-+}
-+
-+.bme-bubble.them{
-+  background: rgba(255,255,255,.06);
-+}
-+
-+:root[data-theme="light"] .bme-bubble.them{
-+  background: rgba(15,23,42,.05);
-+}
-+
-+.bme-bubble .bme-bubble-meta{
-+  font-size: 12px;
-+  opacity: .8;
-+  margin-bottom: 6px;
-+}
-+
-+.bme-bubble .bme-bubble-text{
-+  white-space: pre-wrap;
-+  word-break: break-word;
-+}
-+
-+.bme-chat-inputbar{
-+  margin-top: 14px;
-+}
-+
-+.bme-chat-inputbar .form-control{
-+  background: var(--inputBg);
-+  border-color: var(--inputBorder);
-+}
+
+.bme-chat{
+  background: transparent;
+}
+
+.bme-chat-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.bme-chat-thread{
+  max-height: 420px;
+  overflow:auto;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+:root[data-theme="light"] .bme-chat-thread{
+  background: rgba(255,255,255,.7);
+  border-color: rgba(15,23,42,.12);
+}
+
+.bme-bubble{
+  padding: 10px 12px;
+  border-radius: 18px;
+  max-width: 80%;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.15);
+}
+
+.bme-bubble.me{
+  background: linear-gradient(135deg, rgba(124,92,255,.40), rgba(49,208,170,.20));
+  border-color: rgba(124,92,255,.40);
+}
+
+.bme-bubble.them{
+  background: rgba(255,255,255,.06);
+}
+
+:root[data-theme="light"] .bme-bubble.them{
+  background: rgba(15,23,42,.05);
+}
+
+.bme-bubble .bme-bubble-meta{
+  font-size: 12px;
+  opacity: .8;
+  margin-bottom: 6px;
+}
+
+.bme-bubble .bme-bubble-text{
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Responsive navbar support for custom header layouts */
+.bme-navbar .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bme-navbar .navbar-brand {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.bme-navbar .ms-auto,
+.bme-navbar .navbar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.bme-navbar .navbar-nav {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.bme-navbar .navbar-nav .nav-item,
+.bme-navbar .ms-auto > * {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.bme-navbar .nav-link,
+.bme-navbar .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 992px) {
+  .bme-navbar .navbar-brand {
+    flex: 1 1 100%;
+  }
+
+  .bme-navbar .ms-auto,
+  .bme-navbar .navbar-nav {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .bme-navbar .navbar-brand,
+  .bme-navbar .ms-auto {
+    width: 100%;
+  }
+
+  .bme-navbar .navbar-brand {
+    justify-content: flex-start;
+  }
+
+  .bme-navbar .nav-link,
+  .bme-navbar .btn,
+  .bme-navbar .navbar-toggler,
+  .bme-navbar .dropdown-toggle {
+    min-width: 0;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 576px) {
+  .bme-navbar .navbar-brand {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .bme-navbar .ms-auto,
+  .bme-navbar .navbar-nav {
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .bme-navbar .btn,
+  .bme-navbar .nav-link,
+  .bme-navbar .dropdown-toggle {
+    flex: 1 1 100%;
+  }
+}
+
+.bme-chat-inputbar{
+  margin-top: 14px;
+}
+
+.bme-chat-inputbar .form-control{
+  background: var(--inputBg);
+  border-color: var(--inputBorder);
+}
 
 
 /* ==============================
