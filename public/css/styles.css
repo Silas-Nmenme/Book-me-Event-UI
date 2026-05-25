@@ -81,6 +81,35 @@ body{
   border: 1px solid var(--surfaceBorder) !important;
 }
 
+/* Ensure navbar does not overlap content: provide safe offset and stacking */
+.bme-navbar{
+  position: sticky;
+  top: 0;
+  z-index: 1085;
+}
+
+:root{
+  --bme-navbar-height: 64px;
+}
+
+@media (min-width: 992px) {
+  :root{ --bme-navbar-height: 72px; }
+}
+
+html{ scroll-padding-top: var(--bme-navbar-height); }
+
+.bme-navbar + header,
+.bme-navbar + .section,
+.bme-navbar + main,
+.bme-navbar + .container{
+  padding-top: var(--bme-navbar-height);
+}
+
+/* Prevent closed collapse from intercepting pointer events */
+.bme-navbar .navbar-collapse{ pointer-events: none; }
+.bme-navbar .navbar-collapse.show{ pointer-events: auto; }
+
+
 .bme-navbar .navbar-collapse {
   display: flex !important;
   flex-direction: column;
