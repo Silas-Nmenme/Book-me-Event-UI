@@ -22,6 +22,15 @@ function statusLabel(status) {
   return { text: status || '—', variant: 'secondary' };
 }
 
+function formatPaymentStatus(status) {
+  const s = (status || '').toString().toUpperCase();
+  if (s === 'PENDING') return 'Pending';
+  if (s === 'COMPLETED') return 'Approved';
+  if (s === 'FAILED') return 'Failed';
+  if (s === 'REFUNDED') return 'Refunded';
+  return status || '—';
+}
+
 function buildBookingCard(b, myRole) {
   const id = b?._id || b?.id;
   const status = b?.status || b?.bookingStatus;
@@ -202,12 +211,14 @@ export async function initBookingsPage({ me, role } = {}) {
       const booking = res?.data || res;
       const bookingStatus = booking?.bookingStatus || booking?.status || '—';
       const paymentStatus = booking?.paymentStatus || '—';
+      const paymentStatusDisplay = formatPaymentStatus(paymentStatus);
       const serviceName = booking?.service?.serviceName || booking?.service?.name || '—';
       const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || '—';
       const customerName = booking?.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}`.trim() : booking?.user?.email || '—';
       const requestIdValue = booking?.request?._id || booking?.request?.id || '—';
-      const canPay = paymentStatus.toString().toUpperCase() !== 'COMPLETED';
-      const paymentActionButton = canPay
+      const isBookingOwner = (booking?.user?._id || booking?.user?.id || '').toString() === (me?._id || me?.id || '').toString();
+      const canPay = paymentStatus.toString().toUpperCase() === 'PENDING';
+      const paymentActionButton = (canPay && myRole === 'USER' && isBookingOwner)
         ? `<button id="btnPayBookingDetail" class="btn btn-primary btn-sm mt-3">Pay now</button>`
         : '';
 
@@ -217,7 +228,7 @@ export async function initBookingsPage({ me, role } = {}) {
         <div class="row g-3">
           <div class="col-12 col-md-6"><strong>ID</strong><div class="small text-muted-soft">${escapeHtml(booking._id || booking.id || '—')}</div></div>
           <div class="col-12 col-md-6"><strong>Status</strong><div class="small text-muted-soft">${escapeHtml(bookingStatus)}</div></div>
-          <div class="col-12 col-md-6"><strong>Payment</strong><div class="small text-muted-soft">${escapeHtml(paymentStatus)}</div></div>
+          <div class="col-12 col-md-6"><strong>Payment</strong><div class="small text-muted-soft">${escapeHtml(paymentStatusDisplay)}</div></div>
           <div class="col-12 col-md-6"><strong>Service</strong><div class="small text-muted-soft">${escapeHtml(serviceName)}</div></div>
           <div class="col-12 col-md-6"><strong>Vendor</strong><div class="small text-muted-soft">${escapeHtml(vendorName)}</div></div>
           <div class="col-12 col-md-6"><strong>Customer</strong><div class="small text-muted-soft">${escapeHtml(customerName)}</div></div>
