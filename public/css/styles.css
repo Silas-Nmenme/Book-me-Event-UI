@@ -5,25 +5,25 @@
   --brand:#7c5cff;
   --brand2:#31d0aa;
 
-  --bg:#070A12;
-  --bg2:#0B1020;
+  --bg:#101827;
+  --bg2:#121d33;
 
-  --card:rgba(255,255,255,.06);
+  --card:rgba(255,255,255,.08);
   --cardBorder:rgba(255,255,255,.14);
 
-  --text:#e9eaf2;
-  --mutedText: rgba(233,234,242,.72);
+  --text:#f0f2ff;
+  --mutedText: rgba(224,228,255,.72);
 
-  --shadow: rgba(0,0,0,.35);
+  --shadow: rgba(0,0,0,.28);
 
   /* Forms / surfaces */
-  --surface: rgba(16,20,35,.65);
+  --surface: rgba(18,26,47,.82);
   --surfaceBorder: rgba(255,255,255,.12);
 
-  --inputBg: rgba(255,255,255,.06);
+  --inputBg: rgba(255,255,255,.08);
   --inputBorder: rgba(255,255,255,.16);
   --inputText: var(--text);
-  --inputPlaceholder: rgba(233,234,242,.55);
+  --inputPlaceholder: rgba(224,228,255,.56);
 
   --link: #b9afff;
 
@@ -31,22 +31,22 @@
 }
 
 :root[data-theme="light"]{
-  --bg:#F6F7FF;
-  --bg2:#EEF1FF;
+  --bg:#F2F5FF;
+  --bg2:#E8EEFF;
 
-  --card: rgba(15,23,42,.04);
+  --card: rgba(255,255,255,.86);
   --cardBorder: rgba(15,23,42,.12);
 
   --text:#111827;
-  --mutedText: rgba(17,24,39,.68);
+  --mutedText: rgba(17,24,39,.66);
 
-  --shadow: rgba(17,24,39,.16);
+  --shadow: rgba(17,24,39,.12);
 
-  --surface: rgba(255,255,255,.72);
-  --surfaceBorder: rgba(15,23,42,.12);
+  --surface: rgba(255,255,255,.92);
+  --surfaceBorder: rgba(15,23,42,.10);
 
-  --inputBg: rgba(17,24,39,.04);
-  --inputBorder: rgba(17,24,39,.16);
+  --inputBg: rgba(17,24,39,.06);
+  --inputBorder: rgba(17,24,39,.14);
   --inputText: var(--text);
   --inputPlaceholder: rgba(17,24,39,.48);
 
@@ -57,15 +57,15 @@
 
 
 body{
-  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.25), transparent 60%),
-              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.18), transparent 55%),
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.16), transparent 55%),
+              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.12), transparent 50%),
               var(--bg);
   color:var(--text);
 }
 
 :root[data-theme="light"] body{
-  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.16), transparent 60%),
-              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.14), transparent 55%),
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.08), transparent 55%),
+              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.08), transparent 50%),
               var(--bg);
 }
 
@@ -77,8 +77,33 @@ body{
   -webkit-backdrop-filter: none !important;
 
   /* Keep the solid surface look */
-  background: rgba(16,20,35,.92) !important;
+  background: var(--surface) !important;
   border: 1px solid var(--surfaceBorder) !important;
+}
+
+.bme-navbar .navbar-collapse {
+  display: none !important;
+  width: 100%;
+}
+
+.bme-navbar .navbar-collapse.show {
+  display: flex !important;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.bme-navbar .navbar-toggler {
+  display: inline-flex !important;
+}
+
+.bme-navbar .navbar-collapse .navbar-nav {
+  width: 100%;
+}
+
+.bme-navbar .navbar-collapse .navbar-nav .nav-item,
+.bme-navbar .navbar-collapse .navbar-nav .nav-item .btn,
+.bme-navbar .navbar-collapse .navbar-nav .nav-item .dropdown-toggle {
+  width: 100%;
 }
 
 :root[data-theme="light"] .navbar-glass,
