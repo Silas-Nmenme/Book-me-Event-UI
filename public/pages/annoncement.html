@@ -13,7 +13,7 @@
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
-        <a class="navbar-brand" href="index.html">
+        <a class="navbar-brand" href="index.html" id="brandRoleRedirect">
           <span class="brand-pill">
             <span class="brand-dot"></span>
             <span class="fw-bold">Book Me Events</span>
@@ -74,9 +74,16 @@
       import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
 
       setYear('year');
       initThemeToggle();
+      initNavbarBrandRoleRedirect({
+        selector: '#brandRoleRedirect',
+        onAuthRequired: () => {
+          // role-redirect handles redirect to login
+        },
+      });
 
       const btnLogout = document.getElementById('btnLogout');
       btnLogout?.addEventListener('click', async () => {
