@@ -398,6 +398,41 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
 .section{padding: 64px 0;}
 
 /* ============================
+   Landing header details toggle
+   ============================ */
+
+.bme-header-toggle{
+  color: inherit;
+  text-decoration: none;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.bme-header-details{
+  margin-top: -6px;
+}
+
+.bme-header-toggle .bme-chevron{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(124,92,255,.35);
+  background: rgba(124,92,255,.10);
+  transition: transform .2s ease;
+}
+
+.bme-header-toggle[aria-expanded="true"] .bme-chevron{
+  transform: rotate(180deg);
+}
+
+@media (min-width: 992px){
+  .bme-header-toggle{ width: auto; }
+}
+
+/* ============================
    Chat (WhatsApp-like)
    ============================ */
 

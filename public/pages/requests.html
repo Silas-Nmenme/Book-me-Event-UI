@@ -16,6 +16,7 @@
 <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
   <div class="container">
 
+
     <a class="navbar-brand" href="index.html">
       <span class="brand-pill">
         <span class="brand-dot"></span>
@@ -23,26 +24,39 @@
       </span>
     </a>
 
-    <div class="ms-auto d-flex gap-2">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navContent"
+      aria-controls="navContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <a class="btn btn-soft" href="services.html">Browse</a>
+    <div id="navContent" class="collapse navbar-collapse">
+      <div class="ms-auto d-flex gap-2 align-items-center flex-wrap justify-content-end">
+        <a class="btn btn-soft" href="services.html">Browse</a>
 
-      <button
-        id="themeToggleBtn"
-        class="btn btn-soft btn-sm bme-theme-toggle"
-        type="button"
-        aria-label="Toggle dark/light theme"
-        title="Toggle theme"
-      >
-        <span data-icon="sun" style="display:none;">☀️</span>
-        <span data-icon="moon" style="display:inline-flex;">🌙</span>
-      </button>
+        <button
+          id="themeToggleBtn"
+          class="btn btn-soft btn-sm bme-theme-toggle"
+          type="button"
+          aria-label="Toggle dark/light theme"
+          title="Toggle theme"
+        >
+          <span data-icon="sun" style="display:none;">☀️</span>
+          <span data-icon="moon" style="display:inline-flex;">🌙</span>
+        </button>
 
-      <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
-
+        <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+      </div>
     </div>
   </div>
 </nav>
+
 
 <section class="section" style="padding-top:72px; padding-bottom:64px;">
   <div class="container">
