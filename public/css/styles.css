@@ -235,6 +235,18 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
   transform: translateY(1px);
 }
 
+/* Hide theme icons until JS sets the correct one to avoid a flash */
+.bme-theme-toggle [data-icon]{
+  display: none;
+}
+
+/* Toast host z-index (used by client-side toasts) */
+#toastHost{ z-index: 1080; }
+
+/* Landing-specific spacing and readable lead width */
+.bme-landing-hero{ padding-bottom: 24px; }
+.hero-lead{ max-width: 60ch; }
+
 
 :root[data-theme="light"] .footer{
   color: rgba(17,24,39,.68);
@@ -393,6 +405,83 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
   background: rgba(124,92,255,.2) !important;
   border: 1px solid rgba(124,92,255,.4) !important;
   box-shadow: 0 0 0 4px rgba(124,92,255,.12);
+}
+
+.badge-outline-brand{
+  border-color: rgba(124,92,255,.45) !important;
+}
+
+.bme-avatar{
+  width: 64px;
+  height: 64px;
+  background: rgba(124,92,255,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.bme-chat-panel{
+  min-height: 340px;
+}
+
+.bme-scroll-panel{
+  max-height: 420px;
+  overflow: auto;
+}
+
+.bme-popover-menu{
+  min-width: 320px;
+  max-width: 90vw;
+}
+
+.bme-status-badge{
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+.bme-badge-sm{
+  font-size: 0.65rem;
+  padding: 0.25rem 0.45rem;
+}
+
+.bme-prewrap{
+  white-space: pre-wrap;
+}
+
+.w-40 {
+  width: 40% !important;
+}
+
+.min-w-220 {
+  min-width: 220px !important;
+}
+
+.placeholder-w-160 {
+  width: 160px !important;
+  height: 24px !important;
+}
+
+.placeholder-w-90 {
+  width: 90px !important;
+  height: 24px !important;
+}
+
+.placeholder-h-110 {
+  width: 100% !important;
+  height: 110px !important;
+}
+
+.progress-sm {
+  height: 10px !important;
+}
+
+.bme-min-height-sm {
+  min-height: 120px;
+}
+
+.card-glass hr{
+  border-color: rgba(255,255,255,.12);
 }
 
 .section{padding: 64px 0;}

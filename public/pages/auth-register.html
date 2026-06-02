@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
@@ -20,25 +20,39 @@
           </span>
         </a>
 
-        <div class="ms-auto d-flex gap-2">
-          <a class="btn btn-soft" href="index.html">Home</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAuthRegisterContent"
+          aria-controls="navAuthRegisterContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-          <button
-            id="themeToggleBtn"
-            class="btn btn-soft btn-sm bme-theme-toggle"
-            type="button"
-            aria-label="Toggle dark/light theme"
-            title="Toggle theme"
-          >
-            <span data-icon="sun" style="display:none;">☀️</span>
-            <span data-icon="moon" style="display:inline-flex;">🌙</span>
-          </button>
+        <div id="navAuthRegisterContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="auth-login.html">Login</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+          </div>
         </div>
       </div>
     </nav>
 
 
-<section class="section" style="padding-top: var(--bme-navbar-height); padding-bottom:64px;">
+<section class="section">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-12 col-md-8 col-lg-6">
@@ -48,7 +62,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Create account</span>
                 </span>
-                <span class="badge text-bg-dark border" style="border-color: rgba(124,92,255,0.45) !important;">Secure</span>
+                <span class="badge text-bg-dark border badge-outline-brand">Secure</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Join Book Me Events</h1>

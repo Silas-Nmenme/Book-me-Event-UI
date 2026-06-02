@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
@@ -20,56 +20,68 @@
           </span>
         </a>
 
-        <div class="ms-auto d-flex align-items-center gap-2">
-          <a class="btn btn-soft" href="services.html">Browse</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navVendorDashboardContent"
+          aria-controls="navVendorDashboardContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-          <div class="dropdown">
-            <button
-              class="btn btn-soft position-relative"
-              type="button"
-              id="announcementBellBtn"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              aria-label="Announcements"
-              title="Announcements"
-            >
-              <span aria-hidden="true">🔔</span>
-              <span
-                id="announcementBellDot"
-                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                style="display:none; font-size:0.65rem; padding:0.25rem 0.45rem;"
-              >!</span>
-            </button>
-            <div class="dropdown-menu dropdown-menu-end" style="min-width:320px; max-width:90vw;">
-              <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
-              <div id="announcementBellList" class="px-3" style="max-height:50vh; overflow:auto;">
-                <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
-              </div>
-              <div class="px-3 pb-2">
-                <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
-                <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
+        <div id="navVendorDashboardContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="services.html">Browse</a>
+
+            <div class="dropdown">
+              <button
+                class="btn btn-soft position-relative"
+                type="button"
+                id="announcementBellBtn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="Announcements"
+                title="Announcements"
+              >
+                <span aria-hidden="true">🔔</span>
+                <span
+                  id="announcementBellDot"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"
+                >!</span>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end bme-popover-menu">
+                <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
+                <div id="announcementBellList" class="px-3 bme-scroll-panel">
+                  <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
+                </div>
+                <div class="px-3 pb-2">
+                  <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
+                  <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
+                </div>
               </div>
             </div>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
           </div>
-
-          <button
-            id="themeToggleBtn"
-            class="btn btn-soft btn-sm bme-theme-toggle"
-            type="button"
-            aria-label="Toggle dark/light theme"
-            title="Toggle theme"
-          >
-            <span data-icon="sun" style="display:none;">☀️</span>
-            <span data-icon="moon" style="display:inline-flex;">🌙</span>
-          </button>
-
-          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
         </div>
-
       </div>
     </nav>
 
-<section class="section" style="padding-top:var(--bme-navbar-height); padding-bottom:64px;">
+<section class="section">
       <div class="container">
         <div class="row g-4 align-items-start">
           <div class="col-12 col-lg-4">
@@ -77,18 +89,13 @@
               <div class="badge badge-glow mb-3">Vendor dashboard</div>
               <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
               <div class="text-muted-soft" id="meEmail">—</div>
-              <hr style="border-color: rgba(255,255,255,0.12)" />
+              <hr />
 
               <div class="d-flex gap-3 align-items-center">
                 <div class="d-flex flex-column align-items-center">
-                  <div
-                    id="avatar"
-                    class="rounded-circle border"
-                    style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;"
-                    aria-label="Profile picture"
-                  >BME</div>
+                  <div id="avatar" class="rounded-circle border bme-avatar" aria-label="Profile picture">BME</div>
                   <div class="mt-2">
-                    <label class="btn btn-soft btn-sm" style="cursor:pointer;" for="profilePictureInput">Change</label>
+                    <label class="btn btn-soft btn-sm" for="profilePictureInput">Change</label>
                     <input
                       id="profilePictureInput"
                       class="d-none"
@@ -104,7 +111,7 @@
                   <div class="fw-bold" id="meRole">VENDOR</div>
 
                     <div class="mt-2">
-                    <span class="badge" id="vendorKycBadge" title="Vendor KYC status" style="background: rgba(255,255,255,0.08); color: #fff;">KYC Not Verified</span>
+                    <span class="badge bme-status-badge" id="vendorKycBadge" title="Vendor KYC status">KYC Not Verified</span>
                   </div>
                 </div>
               </div>
@@ -126,7 +133,7 @@
           </div>
 
           <div class="col-12 col-lg-8">
-            <div class="card card-glass p-4 fade-slide" style="min-height: 340px;">
+            <div class="card card-glass p-4 fade-slide bme-chat-panel">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <div>
                   <div class="badge badge-glow text-white mb-2">Professional vendor ops</div>
@@ -179,7 +186,7 @@
 
                 <div class="row g-3" id="vendorServiceList"></div>
 
-                <div id="vendorNoServices" class="text-muted-soft small d-none" style="margin-top:12px;">
+                <div id="vendorNoServices" class="text-muted-soft small d-none mt-3">
                   No services found.
                 </div>
 
@@ -233,7 +240,7 @@
 
                   <div class="mt-3 d-flex flex-wrap gap-2">
                     <button type="submit" class="btn btn-brand" id="btnVendorSubmit">Save</button>
-                    <button type="button" class="btn btn-soft" id="btnVendorToggle" disabled style="display:none;">—</button>
+                    <button type="button" class="btn btn-soft d-none" id="btnVendorToggle" disabled>—</button>
                   </div>
                 </form>
               </div>
@@ -242,7 +249,7 @@
                 Note: KYC and vendor verification are handled by admin.
               </div>
 
-              <div class="mt-4" id="announcementsShell" style="display:none;">
+              <div class="mt-4 d-none" id="announcementsShell">
                 <div class="fw-bold mb-2">Announcements</div>
                 <div class="row g-3" id="announcementsList"></div>
                 <div id="announcementsEmpty" class="text-muted-soft small d-none">No announcements at the moment.</div>

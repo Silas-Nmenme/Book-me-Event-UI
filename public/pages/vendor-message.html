@@ -10,8 +10,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
-
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
         <a class="navbar-brand" href="index.html">
@@ -21,27 +20,41 @@
           </span>
         </a>
 
-        <div class="ms-auto d-flex gap-2">
-          <a class="btn btn-soft" href="vendor-service.html">Requests</a>
-          <a class="btn btn-soft" href="bookings.html">Bookings</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navVendorMessageContent"
+          aria-controls="navVendorMessageContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-          <button
-            id="themeToggleBtn"
-            class="btn btn-soft btn-sm bme-theme-toggle"
-            type="button"
-            aria-label="Toggle dark/light theme"
-            title="Toggle theme"
-          >
-            <span data-icon="sun" style="display:none;">☀️</span>
-            <span data-icon="moon" style="display:inline-flex;">🌙</span>
-          </button>
+        <div id="navVendorMessageContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="vendor-service.html">Requests</a>
+            <a class="btn btn-soft" href="bookings.html">Bookings</a>
 
-          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
         </div>
       </div>
     </nav>
 
-<section class="section" style="padding-top:var(--bme-navbar-height); padding-bottom:64px;">
+<section class="section">
       <div class="container">
         <div class="row g-4 align-items-start">
           <div class="col-12 col-lg-4">
@@ -50,14 +63,10 @@
               <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
               <div class="text-muted-soft" id="meEmail">—</div>
 
-              <hr style="border-color: rgba(255,255,255,0.12)" />
+              <hr />
 
               <div class="d-flex gap-3 align-items-center">
-                <div
-                  id="avatar"
-                  class="rounded-circle border"
-                  style="width:64px;height:64px;background: rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;"
-                >
+                <div id="avatar" class="rounded-circle border bme-avatar">
                   BME
                 </div>
                 <div>
@@ -69,7 +78,7 @@
               <div class="mt-3">
                 <div class="small text-muted-soft">Active request</div>
                 <div class="fw-bold" id="activeRequestLabel">—</div>
-                <div class="small text-muted-soft" id="activeUserLabel" style="margin-top:6px;">—</div>
+                <div class="small text-muted-soft mt-2" id="activeUserLabel">—</div>
               </div>
             </div>
 
@@ -82,7 +91,7 @@
           </div>
 
           <div class="col-12 col-lg-8">
-            <div class="card card-glass p-4 fade-slide" style="min-height: 340px;">
+            <div class="card card-glass p-4 fade-slide bme-chat-panel">
               <div class="bme-chat-header">
                 <div>
                   <h3 class="h5 fw-bold mb-0" id="pageTitle">Chat with organizer</h3>
@@ -105,7 +114,7 @@
                 </div>
               </div>
 
-              <div id="conversationMeta" class="small text-muted-soft mt-3" style="display:none;"></div>
+              <div id="conversationMeta" class="small text-muted-soft mt-3 d-none"></div>
             </div>
           </div>
         </div>

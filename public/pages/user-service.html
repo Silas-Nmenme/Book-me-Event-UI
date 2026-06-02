@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index:1080;"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
@@ -20,24 +20,40 @@
           </span>
         </a>
 
-        <div class="ms-auto d-flex gap-2">
-          <a class="btn btn-soft" href="services.html">Browse</a>
-          <button
-            id="themeToggleBtn"
-            class="btn btn-soft btn-sm bme-theme-toggle"
-            type="button"
-            aria-label="Toggle dark/light theme"
-            title="Toggle theme"
-          >
-            <span data-icon="sun" style="display:none;">☀️</span>
-            <span data-icon="moon" style="display:inline-flex;">🌙</span>
-          </button>
-          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navUserServiceContent"
+          aria-controls="navUserServiceContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navUserServiceContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="services.html">Browse</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
         </div>
       </div>
     </nav>
 
-<section class="section" style="padding-top: var(--bme-navbar-height); padding-bottom:64px;">
+<section class="section">
       <div class="container">
         <div class="row g-4 align-items-start">
           <!-- SIDEBAR -->
@@ -46,14 +62,10 @@
               <div class="badge badge-glow mb-3">User services</div>
               <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
               <div class="text-muted-soft" id="meEmail">—</div>
-              <hr style="border-color:rgba(255,255,255,0.12)" />
+              <hr />
 
               <div class="d-flex gap-3 align-items-center">
-                <div
-                  id="avatar"
-                  class="rounded-circle border"
-                  style="width:64px;height:64px;background:rgba(124,92,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:900;"
-                >
+                <div id="avatar" class="rounded-circle border bme-avatar">
                   BME
                 </div>
 
@@ -77,7 +89,7 @@
 
           <!-- MAIN -->
           <div class="col-12 col-lg-8">
-            <div class="card card-glass p-4 fade-slide" style="min-height:340px;">
+            <div class="card card-glass p-4 fade-slide bme-chat-panel">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <div>
                   <div class="badge badge-glow text-white mb-2">Request from services</div>
@@ -101,7 +113,7 @@
 
                   <div class="row g-3" id="serviceList"></div>
 
-                  <div id="noServices" class="text-muted-soft small d-none" style="margin-top:12px;">
+                  <div id="noServices" class="text-muted-soft small d-none mt-3">
                     No services found.
                   </div>
                 </div>
@@ -109,11 +121,11 @@
                 <div id="loadingShell" class="placeholder-glow">
                   <div class="card-glass p-4">
                     <div class="d-flex gap-3 align-items-center mb-3">
-                      <span class="placeholder" style="width:160px;height:24px;"></span>
-                      <span class="placeholder" style="width:90px;height:24px;"></span>
+                      <span class="placeholder placeholder-w-160"></span>
+                      <span class="placeholder placeholder-w-90"></span>
                     </div>
-                    <div class="placeholder" style="width:100%;height:110px;"></div>
-                    <div class="placeholder" style="width:100%;height:110px;"></div>
+                    <div class="placeholder placeholder-h-110"></div>
+                    <div class="placeholder placeholder-h-110"></div>
                   </div>
                 </div>
               </div>

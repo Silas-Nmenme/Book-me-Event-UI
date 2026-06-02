@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
@@ -19,14 +19,41 @@
             <span class="fw-bold">Book Me Events</span>
           </span>
         </a>
-        <div class="ms-auto d-flex gap-2 align-items-center">
-          <a class="btn btn-soft" href="user-dashboard.html" id="btnBackToDashboard">Back</a>
-          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAnnouncementContent"
+          aria-controls="navAnnouncementContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navAnnouncementContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="user-dashboard.html" id="btnBackToDashboard">Back</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
         </div>
       </div>
     </nav>
 
-<section class="section" style="padding-top: var(--bme-navbar-height); padding-bottom:64px;">
+<section class="section">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-12 col-md-10 col-lg-8">
@@ -44,13 +71,13 @@
                 <button id="btnMarkAllRead" class="btn btn-brand btn-sm" type="button">Mark as read</button>
               </div>
 
-              <div id="announcementsList" class="row g-3" style="min-height:120px;"></div>
+              <div id="announcementsList" class="row g-3 bme-min-height-sm"></div>
 
-              <div id="announcementsEmpty" class="text-muted-soft small d-none" style="margin-top:10px;">
+              <div id="announcementsEmpty" class="text-muted-soft small d-none mt-3">
                 No announcements at the moment.
               </div>
 
-              <div id="announcementsLoading" class="text-muted-soft small d-none" style="margin-top:12px;">
+              <div id="announcementsLoading" class="text-muted-soft small d-none mt-3">
                 Loading…
               </div>
             </div>
@@ -128,7 +155,7 @@
                   <div class="small text-muted-soft mt-1">${escapeHtml(date)}</div>
                 </div>
               </div>
-              <div class="text-muted-soft mt-2" style="white-space: pre-wrap;">${message}</div>
+              <div class="text-muted-soft mt-2 bme-prewrap">${message}</div>
             </div>
           </div>
         `;

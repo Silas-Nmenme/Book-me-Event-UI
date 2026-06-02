@@ -9,7 +9,7 @@
   </head>
 
   <body>
-    <div id="toastHost" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
       <div class="container">
@@ -19,13 +19,39 @@
             <span class="fw-bold">Book Me Events</span>
           </span>
         </a>
-        <div class="ms-auto d-flex gap-2">
-          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navProfileContent"
+          aria-controls="navProfileContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navProfileContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
         </div>
       </div>
     </nav>
 
-    <section class="section" style="padding-top:var(--bme-navbar-height); padding-bottom:64px;">
+    <section class="section">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-12 col-md-8 col-lg-7">
@@ -38,8 +64,8 @@
                 </div>
               </div>
 
-              <div class="progress" style="height:10px;">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 40%;"></div>
+              <div class="progress progress-sm">
+                <div class="progress-bar progress-bar-striped progress-bar-animated w-40"></div>
               </div>
 
               <div class="mt-3 small text-muted-soft" id="hint"></div>
