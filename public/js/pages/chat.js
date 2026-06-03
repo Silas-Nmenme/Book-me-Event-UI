@@ -294,8 +294,15 @@ export async function initChatPage({ role = 'USER' } = {}) {
 
   try {
     const socket = window.io
-      ? window.io({ transports: ['polling', 'websocket'], path: '/socket.io' })
+      ? window.io({
+          transports: ['polling', 'websocket'],
+          path: '/socket.io',
+          auth: {
+            token: (localStorage.getItem('token') || sessionStorage.getItem('token') || '')
+          },
+        })
       : null;
+
 
     if (socket && myId) {
       socket.on('connect', () => {
