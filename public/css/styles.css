@@ -5,6 +5,10 @@
   --brand:#7c5cff;
   --brand2:#31d0aa;
 
+  /* Theme transition tuning */
+  --bme-theme-transition: 260ms;
+
+
   --bg:#101827;
   --bg2:#121d33;
 
@@ -242,6 +246,35 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
 
 /* Toast host z-index (used by client-side toasts) */
 #toastHost{ z-index: 1080; }
+
+/* Smooth dark/light theme switching (variables swap) */
+:root{
+  transition: background-color var(--bme-theme-transition) ease,
+              color var(--bme-theme-transition) ease;
+}
+
+body{
+  transition: background var(--bme-theme-transition) ease,
+              color var(--bme-theme-transition) ease;
+}
+
+.card-glass,
+.navbar-glass,
+.btn-soft,
+.dropdown-menu,
+.form-control,
+.form-select{
+  transition: background-color var(--bme-theme-transition) ease,
+              color var(--bme-theme-transition) ease,
+              border-color var(--bme-theme-transition) ease;
+}
+
+@media (prefers-reduced-motion: reduce){
+  :root, body, .card-glass, .navbar-glass, .btn-soft, .dropdown-menu, .form-control, .form-select{
+    transition: none !important;
+  }
+}
+
 
 /* Landing-specific spacing and readable lead width */
 .bme-landing-hero{ padding-bottom: 24px; }

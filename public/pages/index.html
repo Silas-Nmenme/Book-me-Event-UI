@@ -8,12 +8,184 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
+
+    <style>
+      /* Mobile-app feel + new color palette (page-scoped so other pages are unaffected) */
+      :root{
+        --bme-brand3:#ff4d8d;     /* magenta-pink */
+        --bme-brand4:#2ee9a6;     /* mint */
+        --bme-hero-grad: linear-gradient(135deg, var(--bme-brand3), var(--bme-brand4));
+        --bme-kicker-bg: rgba(255,77,141,.14);
+        --bme-kicker-brd: rgba(255,77,141,.38);
+      }
+
+      .bme-hero{
+        padding: 72px 0 26px;
+        position: relative;
+      }
+
+      /* Soft app-like gradient background card */
+      .bme-hero::before{
+        content:"";
+        position:absolute;
+        inset:-40px -20px auto -20px;
+        height: 280px;
+        background:
+          radial-gradient(700px 240px at 20% 20%, rgba(255,77,141,.18), transparent 55%),
+          radial-gradient(650px 240px at 90% 20%, rgba(46,233,166,.16), transparent 50%),
+          linear-gradient(180deg, rgba(255,255,255,.00), rgba(255,255,255,.00));
+        pointer-events:none;
+      }
+
+      .bme-hero-kicker{
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--bme-kicker-bg);
+        border: 1px solid var(--bme-kicker-brd);
+      }
+
+      .bme-hero-kicker .dot{
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--bme-hero-grad);
+        box-shadow: 0 0 0 4px rgba(255,77,141,.16);
+      }
+
+      .bme-hero-title{
+        font-weight: 950;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin-top: 16px;
+        margin-bottom: 14px;
+        font-size: clamp(2rem, 5vw, 2.7rem);
+      }
+
+      .bme-hero-lead{
+        max-width: 62ch;
+        font-size: 1.02rem;
+      }
+
+      .gradient-text{
+        background: var(--bme-hero-grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .bme-cta-row{ gap: 12px; flex-wrap: wrap; }
+
+      /* App-like bottom-sheet spacing on mobile */
+      .bme-hero .card-glass{
+        border-radius: 20px;
+      }
+
+      .bme-stat-card{
+        height: 100%;
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.06);
+      }
+
+      .bme-section-title{
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        margin-bottom: 8px;
+      }
+
+      .bme-muted{
+        color: var(--mutedText);
+      }
+
+      .bme-service-tile{
+        padding: 18px;
+        border-radius: 16px;
+      }
+
+      .bme-icon{
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,77,141,.10);
+        border: 1px solid rgba(255,77,141,.25);
+        font-size: 18px;
+      }
+
+      .bme-steps-card{
+        border-radius: 18px;
+      }
+
+      .bme-step-badge{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 88px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(255,77,141,.14);
+        border: 1px solid rgba(255,77,141,.34);
+        font-weight: 900;
+        letter-spacing: .2px;
+      }
+
+      /* Mobile app spacing + safe areas */
+      main{ padding-bottom: env(safe-area-inset-bottom); }
+
+      /* Make the layout feel like a phone app: stack content, slightly larger touch targets */
+      .bme-cta-row .btn{ min-height: 48px; }
+
+      /* Better tap/reading on small screens */
+      @media (max-width: 576px){
+        .bme-hero{ padding-top: 56px; }
+        .bme-hero-title{ margin-top: 10px; margin-bottom: 10px; }
+        .bme-hero-lead{ font-size: 1rem; }
+        .bme-stat-card{ padding: 16px; }
+        .bme-service-tile{ padding: 16px; }
+      }
+
+      /* Ensure cards don't feel cramped on intermediate tablets */
+      @media (min-width: 577px) and (max-width: 991px){
+        .bme-hero{ padding-top: 64px; }
+      }
+
+      .bme-footer{
+        padding: 46px 0;
+      }
+
+      /* Bottom nav hint (visual only; no behavior) */
+      .bme-mobile-nav-shadow{
+        display:none;
+      }
+      @media (max-width: 768px){
+        .bme-mobile-nav-shadow{
+          display:block;
+          position: sticky;
+          bottom: 0;
+          z-index: 5;
+          height: 16px;
+          background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.18));
+          pointer-events:none;
+          margin-top: -10px;
+        }
+      }
+
+      /* Reduce motion for users who prefer it */
+      @media (prefers-reduced-motion: reduce){
+        .fade-slide{ transition: none !important; }
+      }
+    </style>
   </head>
 
   <body>
     <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
-    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar" role="navigation">
       <div class="container">
         <a class="navbar-brand" href="index.html" aria-label="Book Me Events home">
           <span class="brand-pill">
@@ -79,262 +251,305 @@
             </ul>
           </div>
         </div>
-
       </div>
     </nav>
 
-
-
-
-    <section class="section">
-      <div class="container section position-relative bme-landing-hero">
-
-        <div class="row align-items-center g-4">
-          <div class="col-lg-7">
-            <div>
-              <button
-                class="bme-header-toggle btn btn-link p-0 d-inline-flex align-items-center gap-2 mb-3"
-                type="button"
-                data-header-details-toggle="marketplace"
-                aria-expanded="false"
-                aria-controls="headerDetails"
-              >
-                <span class="badge badge-glow text-white">Nigerian event marketplace</span>
-                <span class="text-muted-soft">
-                  Planners • DJs • Caterers • Security & more
-                </span>
-                <span class="bme-chevron" aria-hidden="true">▾</span>
-              </button>
-
-              <div id="headerDetails" class="bme-header-details" hidden>
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-0">
-                  <span class="text-muted-soft">Planners • DJs • Caterers • Security & more</span>
-                </div>
+    <main>
+      <!-- HERO -->
+      <section class="bme-hero">
+        <div class="container">
+          <div class="row g-4 align-items-center">
+            <div class="col-lg-7">
+              <div class="bme-hero-kicker mb-3" role="note" aria-label="Nigerian event marketplace">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="fw-semibold">Nigerian event marketplace</span>
+                <span class="text-muted-soft">Planners • DJs • Caterers • Security &amp; more</span>
               </div>
 
-              <h1 class="hero-title">
-                Find professional event services in minutes—
+              <h1 class="bme-hero-title">
+                Find trusted event services in minutes—
                 <span class="gradient-text">request, chat, and book</span>
               </h1>
 
-              <p class="lead text-muted-soft mt-3 hero-lead">
+              <p class="lead text-muted-soft bme-hero-lead">
                 Book Me Events connects event lovers with verified service providers across Nigeria.
                 Share your event details, get proposals, communicate with vendors, and manage your booking
                 in one clean dashboard.
               </p>
 
-              <div class="d-flex flex-wrap gap-2 mt-4">
-                <a href="services.html" class="btn btn-brand btn-lg">Explore Services</a>
-                <a href="auth-register.html" class="btn btn-soft btn-lg">Join & Request Services</a>
+              <div class="d-flex bme-cta-row mt-4">
+                <a href="services.html" class="btn btn-brand btn-lg" aria-label="Explore Services">
+                  Explore Services
+                </a>
+                <a href="auth-register.html" class="btn btn-soft btn-lg" aria-label="Join and request services">
+                  Join &amp; Request Services
+                </a>
               </div>
 
               <div class="row g-3 mt-4">
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100">
+                  <div class="card card-glass bme-stat-card">
                     <div class="fw-bold">Verified vendors</div>
-                    <div class="text-muted-soft small">Trust through vendor KYC</div>
+                    <div class="bme-muted small mt-1">Trust through vendor KYC</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100">
+                  <div class="card card-glass bme-stat-card">
                     <div class="fw-bold">Clear requests</div>
-                    <div class="text-muted-soft small">Send details vendors understand</div>
+                    <div class="bme-muted small mt-1">Share what vendors understand</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100">
+                  <div class="card card-glass bme-stat-card">
                     <div class="fw-bold">Fast communication</div>
-                    <div class="text-muted-soft small">Chat and confirm in-app</div>
+                    <div class="bme-muted small mt-1">Chat and confirm in-app</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-5">
+              <div class="card card-glass p-4 fade-slide">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div>
+                    <div class="fw-bold">Why you’ll love Book Me Events</div>
+                    <div class="bme-muted small">Built for speed • Designed for clarity</div>
+                  </div>
+                  <span class="badge text-bg-secondary">Dashboard-ready</span>
+                </div>
+
+                <ul class="list-unstyled mb-4">
+                  <li class="mb-2"><span class="fw-bold">1.</span> Tell us about your event</li>
+                  <li class="mb-2"><span class="fw-bold">2.</span> Get service proposals</li>
+                  <li class="mb-2"><span class="fw-bold">3.</span> Chat and finalize details</li>
+                  <li class="mb-2"><span class="fw-bold">4.</span> Book, pay, and track progress</li>
+                </ul>
+
+                <a href="auth-login.html" class="btn btn-brand w-100" aria-label="Sign in to start">
+                  Sign in to start
+                </a>
+                <p class="bme-muted small mt-3 mb-0">
+                  Tip: After login, manage requests, messages, and bookings in your dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="bme-mobile-nav-shadow" aria-hidden="true"></div>
+
+      <!-- SERVICES -->
+      <section id="serviceCategories" class="section">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+            <div>
+              <h2 class="bme-section-title">Services offered</h2>
+              <div class="bme-muted">From event planning to last-minute security—find everything you need.</div>
+            </div>
+            <a class="btn btn-soft" href="services.html">Browse services</a>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">📋</div>
+                  <div>
+                    <div class="fw-bold mb-1">Event Planners</div>
+                    <div class="bme-muted small">Full planning, timelines, budgeting guidance, and vendor coordination.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🎛️</div>
+                  <div>
+                    <div class="fw-bold mb-1">DJs &amp; Music</div>
+                    <div class="bme-muted small">Live DJ setup, sound engineering, playlist support, and entertainment flow.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🧾</div>
+                  <div>
+                    <div class="fw-bold mb-1">Ushers &amp; Guest Service</div>
+                    <div class="bme-muted small">Professional ushering, guest directions, registration support, VIP handling.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🍽️</div>
+                  <div>
+                    <div class="fw-bold mb-1">Caterers</div>
+                    <div class="bme-muted small">Menu design, food supply, serving staff, and event-grade presentation.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🛡️</div>
+                  <div>
+                    <div class="fw-bold mb-1">Security &amp; Crowd Control</div>
+                    <div class="bme-muted small">Security personnel, access control, and safety supervision.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🎨</div>
+                  <div>
+                    <div class="fw-bold mb-1">Decorators &amp; Styling</div>
+                    <div class="bme-muted small">Tables, stage styling, branding, lighting ambience, and theme execution.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🎤</div>
+                  <div>
+                    <div class="fw-bold mb-1">MC/Host &amp; Entertainment</div>
+                    <div class="bme-muted small">Emceeing, guest engagement, schedule delivery, hype &amp; entertainment support.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">📸</div>
+                  <div>
+                    <div class="fw-bold mb-1">Photography &amp; Videography</div>
+                    <div class="bme-muted small">Event coverage, highlights, and professional photo/video delivery.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card card-glass bme-service-tile card-hover h-100">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="bme-icon" aria-hidden="true">🚐</div>
+                  <div>
+                    <div class="fw-bold mb-1">Transportation</div>
+                    <div class="bme-muted small">Shuttle planning, driver sourcing, and guest movement coordination.</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-5">
-            <div class="card card-glass p-4 fade-slide">
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <div class="fw-bold">Why you’ll love Book Me Events</div>
-                <span class="badge text-bg-secondary">Built for speed</span>
+          <div class="mt-4 card card-glass p-4">
+            <div class="fw-bold mb-2">How vendors get requests</div>
+            <div class="bme-muted">
+              Share your event date, location, guest count, budget, and key notes. Vendors respond with proposals.
+              You then chat, confirm availability, and proceed to booking.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="howItWorks" class="section">
+        <div class="container">
+          <h2 class="bme-section-title mb-3">How it works</h2>
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <div class="card card-glass p-4 h-100 bme-steps-card">
+                <div class="bme-step-badge mb-3">Step 1</div>
+                <div class="fw-bold mb-2">Create a request</div>
+                <div class="bme-muted small">Tell us what you need for your event.</div>
               </div>
-
-              <div class="small text-muted-soft mb-3">
-                Professional workflows for users, vendors, and admins.
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="card card-glass p-4 h-100 bme-steps-card">
+                <div class="bme-step-badge mb-3">Step 2</div>
+                <div class="fw-bold mb-2">Chat &amp; confirm</div>
+                <div class="bme-muted small">Discuss details with the right vendor.</div>
               </div>
-
-              <ul class="list-unstyled mb-4">
-                <li class="mb-2"><span class="fw-bold">1.</span> Tell us about your event</li>
-                <li class="mb-2"><span class="fw-bold">2.</span> Get service proposals</li>
-                <li class="mb-2"><span class="fw-bold">3.</span> Chat and finalize details</li>
-                <li class="mb-2"><span class="fw-bold">4.</span> Book, pay, and track progress</li>
-              </ul>
-
-              <a href="auth-login.html" class="btn btn-brand w-100">Sign in to start</a>
-              <p class="text-muted-soft small mt-3 mb-0">
-                Tip: Use the dashboard after login to manage requests, messages, and bookings.
-              </p>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="card card-glass p-4 h-100 bme-steps-card">
+                <div class="bme-step-badge mb-3">Step 3</div>
+                <div class="fw-bold mb-2">Book &amp; track</div>
+                <div class="bme-muted small">Manage booking status and updates in your dashboard.</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="serviceCategories" class="section">
-      <div class="container">
-        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
-          <div>
-            <h2 class="fw-bold mb-2">Services offered</h2>
-            <div class="text-muted-soft">From event planning to last-minute security—find everything you need.</div>
-          </div>
-          <a class="btn btn-soft" href="services.html">Browse services</a>
-        </div>
-
-        <div class="row g-3">
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Event Planners</div>
-              <div class="text-muted-soft small">Full planning, timelines, budgeting guidance, and vendor coordination.</div>
+      <!-- TRUSTED -->
+      <section id="trusted" class="section">
+        <div class="container">
+          <div class="row g-4 align-items-center">
+            <div class="col-12 col-lg-7">
+              <h2 class="bme-section-title mb-2">Trusted, professional, and role-based</h2>
+              <div class="bme-muted">
+                User dashboards focus on requests, messages, and bookings.
+                Vendor dashboards focus on service availability and vendor responses.
+                Admin dashboards help manage platform oversight.
+              </div>
             </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">DJs & Music</div>
-              <div class="text-muted-soft small">Live DJ setup, sound engineering, playlist support, and entertainment flow.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Ushers & Guest Service</div>
-              <div class="text-muted-soft small">Professional ushering, guest directions, registration support, VIP handling.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Caterers</div>
-              <div class="text-muted-soft small">Menu design, food supply, serving staff, and event-grade presentation.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Security & Crowd Control</div>
-              <div class="text-muted-soft small">Security personnel, access control, and safety supervision.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Decorators & Styling</div>
-              <div class="text-muted-soft small">Tables, stage styling, branding, lighting ambience, and theme execution.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">MC/Host & Entertainment</div>
-              <div class="text-muted-soft small">Emceeing, guest engagement, schedule delivery, hype & entertainment support.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Photography & Videography</div>
-              <div class="text-muted-soft small">Event coverage, highlights, and professional photo/video delivery.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-4">
-            <div class="card card-glass p-4 card-hover h-100">
-              <div class="fw-bold mb-2">Transportation</div>
-              <div class="text-muted-soft small">Shuttle planning, driver sourcing, and guest movement coordination.</div>
+            <div class="col-12 col-lg-5">
+              <div class="card card-glass p-4 h-100">
+                <div class="fw-bold mb-2">Ready to start?</div>
+                <div class="bme-muted small mb-3">Login to access your professional dashboard.</div>
+                <a href="auth-login.html" class="btn btn-brand w-100">Login</a>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="mt-4 card card-glass p-4">
-          <div class="fw-bold mb-2">How vendors get requests</div>
-          <div class="text-muted-soft">
-            Share your event date, location, guest count, budget, and key notes. Vendors respond with proposals.
-            You then chat, confirm availability, and proceed to booking.
+      <footer class="footer bme-footer">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>© <span id="year"></span> Book Me Events</div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section id="howItWorks" class="section">
-      <div class="container">
-        <h2 class="fw-bold mb-3">How it works</h2>
-        <div class="row g-3">
-          <div class="col-12 col-md-4">
-            <div class="card card-glass p-4 h-100">
-              <div class="badge badge-glow text-white mb-2">Step 1</div>
-              <div class="fw-bold mb-2">Create a request</div>
-              <div class="text-muted-soft small">Tell us what you need for your event.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="card card-glass p-4 h-100">
-              <div class="badge badge-glow text-white mb-2">Step 2</div>
-              <div class="fw-bold mb-2">Chat & confirm</div>
-              <div class="text-muted-soft small">Discuss details with the right vendor.</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="card card-glass p-4 h-100">
-              <div class="badge badge-glow text-white mb-2">Step 3</div>
-              <div class="fw-bold mb-2">Book & track</div>
-              <div class="text-muted-soft small">Manage booking status and updates in your dashboard.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="trusted" class="section">
-      <div class="container">
-        <div class="row g-4 align-items-center">
-          <div class="col-12 col-lg-7">
-            <h2 class="fw-bold mb-2">Trusted, professional, and role-based</h2>
-            <div class="text-muted-soft">
-              User dashboards focus on requests, messages, and bookings.
-              Vendor dashboards focus on service availability and vendor responses.
-              Admin dashboards help manage platform oversight.
-            </div>
-          </div>
-          <div class="col-12 col-lg-5">
-            <div class="card card-glass p-4 h-100">
-              <div class="fw-bold mb-2">Ready to start?</div>
-              <div class="text-muted-soft small mb-3">Login to access your professional dashboard.</div>
-              <a href="auth-login.html" class="btn btn-brand w-100">Login</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div class="container">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div>© <span id="year"></span> Book Me Events</div>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
       import { setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+
+      // Keep existing landing header toggle hook (no-op if no toggles exist)
       import { initLandingHeaderDetailsToggle } from '../js/pages/landing-header-toggle.js';
 
-      // Bootstrap dark/light toggle + landing header details toggle
       setYear('year');
       initThemeToggle();
       initLandingHeaderDetailsToggle();
 
-      // Ensure navbar collapse doesn't leave an overlay intercepting clicks on desktop.
-      // (Some CSS rules rely on the collapse being removed from the layout.)
+      // Defensive cleanup for any previous collapse state
       try {
         const navContent = document.getElementById('navContent');
         if (navContent) navContent.classList.remove('show');
       } catch {}
     </script>
-
   </body>
 </html>
-
 

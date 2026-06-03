@@ -1,0 +1,61 @@
+/* Shared landing/professional UI helpers for non-index pages (does not replace styles.css) */
+
+/* Page sections */
+.bme-page-hero{
+  padding: 56px 0 28px;
+}
+
+.bme-page-title{
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+/* Card helpers */
+.card-glass{
+  border-radius: 18px;
+}
+
+.bme-card-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.bme-soft-divider{
+  height: 1px;
+  background: rgba(255,255,255,.10);
+  margin: 14px 0;
+}
+
+:root[data-theme="light"] .bme-soft-divider{
+  background: rgba(15,23,42,.10);
+}
+
+/* Navbar spacing consistency */
+:root{ --bme-navbar-height: 64px; }
+@media (min-width: 992px){ :root{ --bme-navbar-height: 72px; } }
+
+/* Make section scroll into view nicely when navbar is sticky */
+html{ scroll-padding-top: var(--bme-navbar-height); }
+
+/* Small CTA pill */
+.bme-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  background: rgba(124,92,255,.12);
+  border: 1px solid rgba(124,92,255,.35);
+}
+
+.bme-kicker .dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
+  box-shadow: 0 0 0 4px rgba(124,92,255,.18);
+}
+
