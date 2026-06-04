@@ -1,5 +1,6 @@
-import { apiFetch, fetchMe, logoutUser, clearToken, getUnreadCount, getRequestConversation, sendMessageByRequestId } from '../api.js';
+import { apiFetch, fetchMe, logoutUser, clearToken, getUnreadCount, getRequestConversation, sendMessageByRequestId, uploadMessageAttachments } from '../api.js';
 import { toast } from '../ui.js';
+
 
 // currently active request id for the chat page (mutable)
 let activeRequestIdModule = '';
@@ -49,15 +50,45 @@ function renderMessage(m, { meId } = {}) {
   const isMe = meId && senderId && senderId.toString() === meId.toString();
   const dir = isMe ? 'justify-content-end' : 'justify-content-start';
 
+  const attachments = Array.isArray(m?.attachments) ? m.attachments : [];
+  const attachmentsHtml = attachments.length
+    ? `
+      <div class="bme-bubble-attachments mt-2">
+        ${attachments
+          .slice(0, 4)
+          .map((a) => {
+            const url = (a ?? '').toString();
+            if (!url) return '';
+            const isImage = /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(url);
+            if (isImage) {
+              return `
+                <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer" class="d-inline-block me-2 mb-2">
+                  <img src="${escapeHtml(url)}" alt="attachment" style="max-width: 160px; max-height: 120px; border-radius: 10px;" />
+                </a>
+              `;
+            }
+            return `
+              <div class="small">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">Attachment</a>
+              </div>
+            `;
+          })
+          .join('')}
+      </div>
+    `
+    : '';
+
   return `
     <div class="d-flex ${dir} mb-2">
       <div class="bme-bubble ${isMe ? 'me' : 'them'}">
         <div class="bme-bubble-meta">${escapeHtml(isMe ? 'You' : (m?.sender?.firstName || senderId))}${createdAt ? ` • ${escapeHtml(createdAt)}` : ''}</div>
         <div class="bme-bubble-text">${escapeHtml(text)}</div>
+        ${attachmentsHtml}
       </div>
     </div>
   `;
 }
+
 
 async function loadMe() {
   const res = await fetchMe();
@@ -275,8 +306,23 @@ export async function initChatPage({ role = 'USER' } = {}) {
     }
 
     try {
-      await sendMessageByRequestId({ requestId: activeRequestIdModule, messageContent: text });
+      const attachmentsInput = document.getElementById('attachmentsInput');
+      const files = attachmentsInput?.files ? Array.from(attachmentsInput.files) : [];
+      let attachments = [];
+
+      if (files.length) {
+        attachments = await uploadMessageAttachments(files);
+      }
+
+      await sendMessageByRequestId({
+        requestId: activeRequestIdModule,
+        messageContent: text,
+        attachments: attachments.length ? attachments : undefined,
+      });
+
       messageText.value = '';
+      if (attachmentsInput) attachmentsInput.value = '';
+
       await loadConversation(activeRequestIdModule, myId, messagesList);
       await loadUnread();
       toast({ title: 'Sent', message: 'Message delivered.', variant: 'success' });
@@ -284,6 +330,7 @@ export async function initChatPage({ role = 'USER' } = {}) {
       toast({ title: 'Send failed', message: err?.message || 'Try again.', variant: 'danger' });
     }
   });
+
 
   messageText?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {

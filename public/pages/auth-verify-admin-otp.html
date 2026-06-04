@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>User OTP verification</title>
+    <title>Admin 2FA - Book Me Events</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
   </head>
 
   <body>
@@ -24,19 +25,17 @@
           class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
-          data-bs-target="#navOtpContent"
-          aria-controls="navOtpContent"
+          data-bs-target="#navAdminOtpContent"
+          aria-controls="navAdminOtpContent"
           aria-expanded="false"
           aria-label="Toggle navigation"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div id="navOtpContent" class="collapse navbar-collapse">
+        <div id="navAdminOtpContent" class="collapse navbar-collapse">
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
-            <a class="btn btn-soft" href="auth-register.html">Back</a>
-            <a class="btn btn-soft" href="auth-login.html">Login</a>
-
+            <a class="btn btn-soft" href="auth-login.html">Back</a>
             <button
               id="themeToggleBtn"
               class="btn btn-soft btn-sm bme-theme-toggle"
@@ -52,7 +51,7 @@
       </div>
     </nav>
 
-<section class="section">
+    <section class="section">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-12 col-md-8 col-lg-6">
@@ -60,31 +59,42 @@
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <span class="brand-pill">
                   <span class="brand-dot"></span>
-                  <span class="fw-bold">Verify OTP</span>
+                  <span class="fw-bold">Admin 2FA</span>
                 </span>
                 <span class="badge text-bg-dark border badge-outline-brand">Step</span>
               </div>
 
-              <h1 class="h4 fw-bold mb-1">Confirm your email</h1>
-              <div class="text-muted-soft small mb-4">Enter the 6-digit code sent to your email.</div>
+              <h1 class="h4 fw-bold mb-1">Confirm admin login</h1>
+              <div class="text-muted-soft small mb-4">
+                Enter your 2FA code to finish signing in.
+              </div>
 
-              <form id="otpForm" class="row g-3" autocomplete="on">
+              <form id="adminOtpForm" class="row g-3" autocomplete="on">
                 <div class="col-12">
                   <label class="form-label" for="email">Email</label>
-                  <input class="form-control" id="email" name="email" type="email" required />
-                  <div class="form-text text-muted-soft">We prefill from signup if available.</div>
+                  <input class="form-control" id="email" name="email" type="email" required readonly />
+                  <div class="form-text text-muted-soft">Prefilled from your login attempt.</div>
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label" for="otp">6-digit OTP</label>
-                  <input class="form-control" id="otp" name="otp" type="text" inputmode="numeric" maxlength="6" placeholder="123456" required />
+                  <label class="form-label" for="totpCode">6-digit TOTP code</label>
+                  <input
+                    class="form-control"
+                    id="totpCode"
+                    name="totpCode"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="6"
+                    placeholder="123456"
+                    required
+                  />
                 </div>
 
                 <div class="col-12">
-                  <button type="submit" class="btn btn-brand w-100" id="btnVerify">Verify</button>
+                  <button type="submit" class="btn btn-brand w-100" id="btnVerify">Verify & continue</button>
                 </div>
 
-                <div class="col-12 small text-muted-soft" id="otpHint"></div>
+                <div class="col-12 small text-muted-soft" id="adminOtpHint"></div>
               </form>
             </div>
           </div>
@@ -96,7 +106,7 @@
       <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div>© <span id="year"></span> Book Me Events</div>
-          <div class="text-muted-soft small">OTP verification</div>
+          <div class="text-muted-soft small">Admin 2FA</div>
         </div>
       </div>
     </footer>
@@ -111,39 +121,56 @@
       setYear('year');
       initThemeToggle();
 
-      const pendingEmail = sessionStorage.getItem('bme_pending_verify_email');
-      if (pendingEmail) document.getElementById('email').value = pendingEmail;
+      const pendingEmail = sessionStorage.getItem('bme_admin_2fa_email');
+      const pendingPassword = sessionStorage.getItem('bme_admin_2fa_password');
+
+      if (!pendingEmail || !pendingPassword) {
+        // If user refreshed without context, send them back to login.
+        toast({ title: 'Session expired', message: 'Please log in again.', variant: 'warning' });
+        window.location.href = 'auth-login.html';
+      }
+
+      document.getElementById('email').value = pendingEmail || '';
 
       function normalizeOtp(x) {
         return (x || '').toString().trim();
       }
 
-      document.getElementById('otpForm').addEventListener('submit', async (e) => {
+      document.getElementById('adminOtpForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const email = document.getElementById('email').value.trim();
-        const otp = normalizeOtp(document.getElementById('otp').value);
+        const totpCode = normalizeOtp(document.getElementById('totpCode').value);
 
         const btn = document.getElementById('btnVerify');
         btn.disabled = true;
 
-        const hint = document.getElementById('otpHint');
+        const hint = document.getElementById('adminOtpHint');
         hint.textContent = '';
 
         try {
-          await apiFetch('/api/v1/auth/verify-otp', {
+          // Re-call login with email, password, and totpCode.
+          const res = await apiFetch('/api/v1/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ email, otp }),
+            body: JSON.stringify({ email, password: pendingPassword, totpCode }),
           });
 
-          toast({ title: 'Verified', message: 'Redirecting to login…', variant: 'success' });
-          sessionStorage.removeItem('bme_pending_verify_email');
-          window.location.href = 'auth-login.html';
+          if (res?.token) {
+            localStorage.setItem('bme_token', res.token);
+          }
+
+          toast({ title: '2FA verified', message: 'Redirecting to admin dashboard…', variant: 'success' });
+
+          sessionStorage.removeItem('bme_admin_2fa_email');
+          sessionStorage.removeItem('bme_admin_2fa_password');
+
+          window.location.href = 'admin-dashboard.html';
         } catch (err) {
           const status = err?.status || err?.response?.status;
-          const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many OTP attempts. Try again later.') : (err?.message || 'OTP verification failed.');
+          const msg = err?.message || (status === 429 ? 'Too many attempts. Try again later.' : 'Invalid 2FA code.');
+
           hint.textContent = msg;
-          toast({ title: status === 429 ? 'Too many attempts' : 'Verify failed', message: msg, variant: status === 429 ? 'warning' : 'danger' });
+          toast({ title: 'Verification failed', message: msg, variant: 'danger' });
         } finally {
           btn.disabled = false;
         }
@@ -151,5 +178,4 @@
     </script>
   </body>
 </html>
-
 

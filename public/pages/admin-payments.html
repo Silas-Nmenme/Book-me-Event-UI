@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Payments - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAdminPaymentsContent"
+          aria-controls="navAdminPaymentsContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navAdminPaymentsContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="badge badge-glow mb-3">Admin</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+              <hr />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div id="avatar" class="rounded-circle border bme-avatar">BME</div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">ADMIN</div>
+                </div>
+              </div>
+
+              <div class="mt-4 d-grid gap-2">
+                <a class="btn btn-soft" href="admin-dashboard.html">Back to dashboard</a>
+                <a class="btn btn-soft" href="admin-bookings.html">Bookings</a>
+                <a class="btn btn-soft" href="admin-stats.html">Stats</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="card card-glass p-4 fade-slide bme-chat-panel">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">Payments</div>
+                  <h3 class="h5 fw-bold mb-0">All payments (admin)</h3>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <select id="statusSelect" class="form-select form-select-sm" style="min-width: 170px;" title="Filter payment status">
+                    <option value="">All statuses</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="FAILED">FAILED</option>
+                    <option value="REFUNDED">REFUNDED</option>
+                  </select>
+                  <button id="btnRefreshPayments" class="btn btn-soft btn-sm" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
+              <div id="paymentsLoading" class="text-muted-soft small">Loading…</div>
+              <div id="paymentsError" class="text-danger small d-none"></div>
+
+              <div class="table-responsive bme-scroll-panel mt-3">
+                <table class="table table-dark table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>Payment ID</th>
+                      <th>User</th>
+                      <th>Vendor</th>
+                      <th>Booking</th>
+                      <th>Status</th>
+                      <th>Amount</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="paymentsBody"></tbody>
+                </table>
+              </div>
+
+              <div id="noPayments" class="text-muted-soft small d-none mt-3">No payments found.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Admin payments</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, getAdminPayments } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+
+      setYear('year');
+
+      const avatarEl = document.getElementById('avatar');
+      const authzErrorEl = document.getElementById('authzError');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+        avatarEl.textContent = 'BME';
+        avatarEl.style.backgroundImage = '';
+        avatarEl.style.background = 'rgba(124,92,255,0.12)';
+      }
+
+      function escapeHtml(s) {
+        return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+          const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+          return m[c] || c;
+        });
+      }
+
+      function fmtDate(d) {
+        if (!d) return '—';
+        const dt = new Date(d);
+        if (Number.isNaN(dt.getTime())) return '—';
+        return dt.toLocaleString();
+      }
+
+      function fmtAmount(p) {
+        const amount = p?.amount;
+        if (amount == null) return '—';
+        const currency = p?.currency || p?.amountCurrency || 'NGN';
+        const num = Number(amount);
+        if (!Number.isFinite(num)) return '—';
+        return `${currency} ${num.toLocaleString()}`;
+      }
+
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      async function loadMe() {
+        const res = await fetchMe();
+        const me = res?.data || res;
+        const role = (me?.role || me?.user?.role || '').toString().toUpperCase();
+
+        document.getElementById('meName').textContent = me?.firstName
+          ? `${me.firstName} ${me.lastName || ''}`.trim()
+          : me?.name || '—';
+        document.getElementById('meEmail').textContent = me?.email || '—';
+        document.getElementById('meRole').textContent = role || 'ADMIN';
+
+        if (me?.profilePicture) setAvatarUrl(me.profilePicture);
+        else setAvatarUrl(null);
+
+        if (role !== 'ADMIN') {
+          authzErrorEl.classList.remove('d-none');
+          authzErrorEl.textContent = 'Admin access required.';
+          throw new Error('Forbidden');
+        }
+
+        return me;
+      }
+
+      async function loadPayments() {
+        const statusSelect = document.getElementById('statusSelect');
+        const status = statusSelect?.value || undefined;
+
+        const bodyEl = document.getElementById('paymentsBody');
+        const noPaymentsEl = document.getElementById('noPayments');
+        const loadingEl = document.getElementById('paymentsLoading');
+        const errorEl = document.getElementById('paymentsError');
+
+        loadingEl?.classList.remove('d-none');
+        errorEl?.classList.add('d-none');
+        noPaymentsEl?.classList.add('d-none');
+        if (bodyEl) bodyEl.innerHTML = '';
+
+        try {
+          const res = await getAdminPayments({ status, page: 1, limit: 30 });
+          const data = res?.data || res;
+          const items = data?.data || data?.results || data?.payments || [];
+
+          if (!Array.isArray(items) || items.length === 0) {
+            noPaymentsEl?.classList.remove('d-none');
+            return;
+          }
+
+          bodyEl.innerHTML = items
+            .map((p) => {
+              const id = p?._id || p?.id || '—';
+              const user = p?.user?.email || p?.user?.firstName || '';
+              const vendor = p?.vendor?.businessName || p?.vendor?.name || '';
+              const booking = p?.booking?._id || p?.booking?.id || '—';
+              const statusText = (p?.paymentStatus || p?.status || '—').toString();
+              const createdAt = fmtDate(p?.createdAt);
+
+              return `
+                <tr>
+                  <td>${escapeHtml(id)}</td>
+                  <td>${escapeHtml(user)}</td>
+                  <td>${escapeHtml(vendor)}</td>
+                  <td>${escapeHtml(booking)}</td>
+                  <td>${escapeHtml(statusText)}</td>
+                  <td>${escapeHtml(fmtAmount(p))}</td>
+                  <td>${escapeHtml(createdAt)}</td>
+                </tr>
+              `;
+            })
+            .join('');
+        } catch (e) {
+          errorEl?.classList.remove('d-none');
+          errorEl.textContent = e?.message || 'Failed to load payments.';
+        } finally {
+          loadingEl?.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('btnRefreshPayments')?.addEventListener('click', loadPayments);
+
+      await loadMe();
+      await loadPayments();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Bookings - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAdminBookingsContent"
+          aria-controls="navAdminBookingsContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navAdminBookingsContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <button class="btn btn-soft" id="themeToggleBtn" type="button" aria-label="Toggle dark/light theme">
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="badge badge-glow mb-3">Admin</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+              <hr />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div id="avatar" class="rounded-circle border bme-avatar">BME</div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">ADMIN</div>
+                </div>
+              </div>
+
+              <div class="mt-4 d-grid gap-2">
+                <a class="btn btn-soft" href="admin-dashboard.html">Back to dashboard</a>
+                <a class="btn btn-soft" href="admin-payments.html">Payments</a>
+                <a class="btn btn-soft" href="admin-stats.html">Stats</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="card card-glass p-4 fade-slide bme-chat-panel">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">Bookings</div>
+                  <h3 class="h5 fw-bold mb-0">All bookings (admin)</h3>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <select id="statusSelect" class="form-select form-select-sm" style="min-width: 170px;" title="Filter booking status">
+                    <option value="">All statuses</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="CANCELED">CANCELED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                  <button id="btnRefreshBookings" class="btn btn-soft btn-sm" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
+              <div id="bookingsLoading" class="text-muted-soft small">Loading…</div>
+              <div id="bookingsError" class="text-danger small d-none"></div>
+
+              <div class="table-responsive bme-scroll-panel mt-3">
+                <table class="table table-dark table-hover mb-0">
+                  <thead>
+                    <tr>
+                      <th>Booking ID</th>
+                      <th>Customer</th>
+                      <th>Vendor</th>
+                      <th>Service</th>
+                      <th>Booking status</th>
+                      <th>Payment status</th>
+                      <th>Amount</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookingsBody"></tbody>
+                </table>
+              </div>
+
+              <div id="noBookings" class="text-muted-soft small d-none mt-3">No bookings found.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Admin bookings</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, apiFetch, getAdminBookings } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+      const avatarEl = document.getElementById('avatar');
+      const authzErrorEl = document.getElementById('authzError');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+        avatarEl.textContent = 'BME';
+        avatarEl.style.backgroundImage = '';
+        avatarEl.style.background = 'rgba(124,92,255,0.12)';
+      }
+
+      function escapeHtml(s) {
+        return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+          const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+          return m[c] || c;
+        });
+      }
+
+      function fmtDate(d) {
+        if (!d) return '—';
+        const dt = new Date(d);
+        if (Number.isNaN(dt.getTime())) return '—';
+        return dt.toLocaleString();
+      }
+
+      function fmtAmount(b) {
+        const amount = b?.totalAmount ?? b?.amount;
+        if (amount == null) return '—';
+        const currency = b?.amountCurrency || b?.currency || 'NGN';
+        const num = Number(amount);
+        if (!Number.isFinite(num)) return '—';
+        return `${currency} ${num.toLocaleString()}`;
+      }
+
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      async function loadMe() {
+        const res = await fetchMe();
+        const me = res?.data || res;
+        const role = (me?.role || me?.user?.role || '').toString().toUpperCase();
+
+        document.getElementById('meName').textContent = me?.firstName
+          ? `${me.firstName} ${me.lastName || ''}`.trim()
+          : me?.name || '—';
+        document.getElementById('meEmail').textContent = me?.email || '—';
+        document.getElementById('meRole').textContent = role || 'ADMIN';
+
+        if (me?.profilePicture) setAvatarUrl(me.profilePicture);
+        else setAvatarUrl(null);
+
+        if (role !== 'ADMIN') {
+          authzErrorEl.classList.remove('d-none');
+          authzErrorEl.textContent = 'Admin access required.';
+          throw new Error('Forbidden');
+        }
+
+        return me;
+      }
+
+      async function loadBookings() {
+        const statusSelect = document.getElementById('statusSelect');
+        const status = statusSelect?.value || undefined;
+
+        const bodyEl = document.getElementById('bookingsBody');
+        const noBookingsEl = document.getElementById('noBookings');
+        const loadingEl = document.getElementById('bookingsLoading');
+        const errorEl = document.getElementById('bookingsError');
+
+        loadingEl?.classList.remove('d-none');
+        errorEl?.classList.add('d-none');
+        noBookingsEl?.classList.add('d-none');
+        if (bodyEl) bodyEl.innerHTML = '';
+
+        try {
+          const res = await getAdminBookings({ status, page: 1, limit: 30 });
+          const data = res?.data || res;
+          const items = data?.data || data?.results || data?.bookings || [];
+
+          if (!Array.isArray(items) || items.length === 0) {
+            noBookingsEl?.classList.remove('d-none');
+            return;
+          }
+
+          bodyEl.innerHTML = items
+            .map((b) => {
+              const id = b?._id || b?.id || '—';
+              const customer = b?.user?.email || b?.user?.firstName || '';
+              const vendor = b?.vendor?.businessName || b?.vendor?.name || '';
+              const service = b?.service?.serviceName || b?.service?.name || '';
+              const bookingStatus = (b?.bookingStatus || b?.status || '—').toString();
+              const paymentStatus = (b?.paymentStatus || '—').toString();
+              const createdAt = fmtDate(b?.createdAt);
+
+              return `
+                <tr>
+                  <td>${escapeHtml(id)}</td>
+                  <td>${escapeHtml(customer)}</td>
+                  <td>${escapeHtml(vendor)}</td>
+                  <td>${escapeHtml(service)}</td>
+                  <td>${escapeHtml(bookingStatus)}</td>
+                  <td>${escapeHtml(paymentStatus)}</td>
+                  <td>${escapeHtml(fmtAmount(b))}</td>
+                  <td>${escapeHtml(createdAt)}</td>
+                </tr>
+              `;
+            })
+            .join('');
+        } catch (e) {
+          errorEl?.classList.remove('d-none');
+          errorEl.textContent = e?.message || 'Failed to load bookings.';
+        } finally {
+          loadingEl?.classList.add('d-none');
+        }
+      }
+
+      document.getElementById('btnRefreshBookings')?.addEventListener('click', loadBookings);
+
+      // init
+      await loadMe();
+      await loadBookings();
+    </script>
+  </body>
+</html>
+

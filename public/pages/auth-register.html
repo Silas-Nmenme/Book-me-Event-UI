@@ -172,8 +172,10 @@
           window.location.href = 'auth-verify-otp.html';
 
         } catch (err) {
-          hint.textContent = err?.message || 'Signup failed';
-          toast({ title: 'Signup failed', message: err?.message || 'Try again with valid details.', variant: 'danger' });
+          const status = err?.status || err?.response?.status;
+          const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many attempts. Try again later.') : (err?.message || 'Signup failed');
+          hint.textContent = msg;
+          toast({ title: status === 429 ? 'Too many attempts' : 'Signup failed', message: msg, variant: status === 429 ? 'warning' : 'danger' });
         } finally {
           btn.disabled = false;
         }
