@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fraud Signals - Book Me Events</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="admin-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+          <a class="btn btn-soft btn-sm" href="admin-dashboard.html">Back</a>
+          <button class="btn btn-soft btn-sm" type="button" id="btnLogout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="badge badge-glow mb-2">Admin fraud/anomaly signals</div>
+                  <h2 class="h5 fw-bold mb-1">Operational integrity monitoring</h2>
+                  <div class="text-muted-soft small">
+                    Computed signals based on payments/bookings/KYC status (MVP).
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap align-items-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <label class="text-muted-soft small mb-0" for="daysWindow">Window (days)</label>
+                    <input id="daysWindow" type="number" class="form-control form-control-sm" value="30" min="1" />
+                  </div>
+                  <button id="btnRefresh" class="btn btn-primary btn-sm" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <hr />
+
+              <div id="errorBox" class="alert alert-danger d-none"></div>
+              <div id="loadingBox" class="text-muted-soft small">Loading…</div>
+
+              <div id="signalsRoot" class="d-none">
+                <div class="row g-3 mt-2">
+                  <div class="col-12 col-md-4">
+                    <div class="card card-glass p-3">
+                      <div class="small text-muted-soft">Pending KYC vendors</div>
+                      <div class="h4 fw-bold" id="pendingKycCount">—</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="card card-glass p-3">
+                      <div class="small text-muted-soft">Rejected KYC vendors</div>
+                      <div class="h4 fw-bold" id="rejectedKycCount">—</div>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <div class="card card-glass p-3">
+                      <div class="small text-muted-soft">Computed window since</div>
+                      <div class="fw-bold" id="windowSince">—</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <h3 class="h6 fw-bold">Failed/Pending payments (top users)</h3>
+                  <div class="table-responsive bme-scroll-panel mt-2">
+                    <table class="table table-dark table-hover">
+                      <thead>
+                        <tr>
+                          <th>User Id</th>
+                          <th>Failed count</th>
+                          <th>Failed amount</th>
+                        </tr>
+                      </thead>
+                      <tbody id="failedByUserBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <h3 class="h6 fw-bold">Micro failed attempts (top vendors)</h3>
+                  <div class="table-responsive bme-scroll-panel mt-2">
+                    <table class="table table-dark table-hover">
+                      <thead>
+                        <tr>
+                          <th>Vendor Id</th>
+                          <th>Micro failed count</th>
+                        </tr>
+                      </thead>
+                      <tbody id="microFailedByVendorBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="mt-4">
+                  <h3 class="h6 fw-bold">Completed bookings without completed payment (by vendor)</h3>
+                  <div class="table-responsive bme-scroll-panel mt-2">
+                    <table class="table table-dark table-hover">
+                      <thead>
+                        <tr>
+                          <th>Vendor Id</th>
+                          <th>Mismatch count</th>
+                        </tr>
+                      </thead>
+                      <tbody id="mismatchByVendorBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Admin</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/pages/admin-fraud-signals.js" type="module"></script>
+  </body>
+</html>
+

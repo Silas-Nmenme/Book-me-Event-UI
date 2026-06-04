@@ -481,6 +481,16 @@ export async function sendAnnouncement(payload) {
   });
 }
 
+// =====================
+// Admin fraud signals
+// =====================
+export async function getFraudSignals({ days = 30 } = {}) {
+  const params = new URLSearchParams();
+  if (days) params.set('days', days);
+  return apiFetch(`/api/v1/fraud/signals?${params.toString()}`, { method: 'GET' });
+}
+
+
 
 
 

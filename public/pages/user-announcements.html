@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Announcements - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html" id="brandRoleRedirect">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAnnouncementContent"
+          aria-controls="navAnnouncementContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navAnnouncementContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="user-dashboard.html">Back</a>
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-10 col-lg-8">
+            <div class="card card-glass p-4 p-md-5 fade-slide">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                  <span class="badge badge-glow text-white">Announcements</span>
+                  <h1 class="h4 fw-bold mt-2 mb-0">Latest updates</h1>
+                  <div class="small text-muted-soft mt-1">Read announcements for your role.</div>
+                </div>
+                <div class="text-end">
+                  <div class="small text-muted-soft" id="announcementsMeta">—</div>
+                  <div class="mt-2 d-flex gap-2 justify-content-end">
+                    <button id="btnMarkAllRead" class="btn btn-brand btn-sm" type="button">Mark all read</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <button id="btnLoadUnread" class="btn btn-soft btn-sm" type="button">Unread only</button>
+                <button id="btnLoadAll" class="btn btn-soft btn-sm" type="button">All</button>
+              </div>
+
+              <div id="announcementsLoading" class="text-muted-soft small d-none">Loading…</div>
+
+              <div id="announcementsEmpty" class="text-muted-soft small d-none mt-3">No announcements.</div>
+
+              <div id="announcementsList" class="row g-3"></div>
+
+              <div class="mt-3">
+                <div id="pageHint" class="small text-muted-soft">Tip: “Unread only” uses backend read tracking.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Announcements</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect({
+        selector: '#brandRoleRedirect',
+      });
+
+      const listEl = document.getElementById('announcementsList');
+      const metaEl = document.getElementById('announcementsMeta');
+      const loadingEl = document.getElementById('announcementsLoading');
+      const emptyEl = document.getElementById('announcementsEmpty');
+      const btnLoadUnread = document.getElementById('btnLoadUnread');
+      const btnLoadAll = document.getElementById('btnLoadAll');
+      const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+
+      function escapeHtml(s) {
+        return (s ?? '')
+          .toString()
+          .replace(/[&<>\"']/g, (c) => {
+            const m = {
+              '&': '&amp;',
+              '<': '<',
+              '>': '>',
+              '\"': '\"',
+              "'": '&#039;',
+            };
+            return m[c] || c;
+          });
+      }
+
+      function renderAnnouncement(a) {
+        const title = escapeHtml(a?.title || 'Announcement');
+        const message = escapeHtml(a?.message || '');
+        const date = a?.createdAt ? new Date(a.createdAt).toLocaleString() : '—';
+
+        return `
+          <div class="col-12">
+            <div class="card card-glass p-3">
+              <div class="d-flex align-items-start justify-content-between gap-2">
+                <div>
+                  <div class="fw-bold">${title}</div>
+                  <div class="small text-muted-soft mt-1">${escapeHtml(date)}</div>
+                </div>
+                <button class="btn btn-soft btn-sm" type="button" data-read-id="${a?._id}">Mark read</button>
+              </div>
+              <div class="text-muted-soft mt-2 bme-prewrap" style="white-space: pre-wrap;">${message}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      let role = null;
+      let mode = 'all';
+
+      async function loadAnnouncements() {
+        if (!role) return;
+
+        loadingEl.classList.remove('d-none');
+        emptyEl.classList.add('d-none');
+        listEl.innerHTML = '';
+
+        try {
+          metaEl.textContent = 'Loading…';
+
+          const url = new URL('/api/v1/announcements', window.location.origin);
+          url.searchParams.set('page', '1');
+          url.searchParams.set('limit', '50');
+          if (mode === 'unread') url.searchParams.set('unreadOnly', 'true');
+
+          const res = await apiFetch(url.pathname + url.search, { method: 'GET' });
+          const data = res?.data || res;
+          const items = Array.isArray(data) ? data : data?.data || data?.items || [];
+
+          metaEl.textContent = `${items.length} announcement(s)`;
+
+          if (!items.length) {
+            emptyEl.classList.remove('d-none');
+            return;
+          }
+
+          listEl.innerHTML = items.map(renderAnnouncement).join('');
+
+          listEl.querySelectorAll('button[data-read-id]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const id = btn.getAttribute('data-read-id');
+              if (!id) return;
+              try {
+                await apiFetch(`/api/v1/announcements/${encodeURIComponent(id)}/read`, { method: 'POST' });
+                toast({ title: 'Saved', message: 'Announcement marked as read.', variant: 'success' });
+                await loadAnnouncements();
+              } catch (e) {
+                toast({ title: 'Failed', message: e?.message || 'Could not mark read.', variant: 'danger' });
+              }
+            });
+          });
+        } catch (e) {
+          toast({ title: 'Failed', message: e?.message || 'Could not load announcements.', variant: 'danger' });
+          emptyEl.classList.remove('d-none');
+          metaEl.textContent = '—';
+        } finally {
+          loadingEl.classList.add('d-none');
+        }
+      }
+
+      btnLoadUnread?.addEventListener('click', async () => {
+        mode = 'unread';
+        await loadAnnouncements();
+      });
+
+      btnLoadAll?.addEventListener('click', async () => {
+        mode = 'all';
+        await loadAnnouncements();
+      });
+
+      btnMarkAllRead?.addEventListener('click', async () => {
+        // Mark all in current mode (best-effort)
+        try {
+          const res = await apiFetch('/api/v1/announcements?page=1&limit=200', { method: 'GET' });
+          const data = res?.data || res;
+          const items = Array.isArray(data) ? data : data?.data || data?.items || [];
+
+          await Promise.all(
+            items.map((a) => apiFetch(`/api/v1/announcements/${encodeURIComponent(a._id)}/read`, { method: 'POST' }).catch(() => null))
+          );
+
+          toast({ title: 'Done', message: 'All announcements marked as read (best-effort).', variant: 'success' });
+          await loadAnnouncements();
+        } catch (e) {
+          toast({ title: 'Failed', message: e?.message || 'Could not mark as read.', variant: 'danger' });
+        }
+      });
+
+      document.getElementById('btnLogout')?.addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      try {
+        const res = await fetchMe();
+        const me = res?.data || res;
+        role = (me?.role || me?.user?.role || '').toString().toUpperCase();
+        mode = 'all';
+        await loadAnnouncements();
+      } catch {
+        clearToken();
+        toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
+        window.location.href = 'auth-login.html';
+      }
+    </script>
+  </body>
+</html>
+

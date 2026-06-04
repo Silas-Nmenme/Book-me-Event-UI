@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor Analytics - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="vendor-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+        <button class="btn btn-soft ms-auto" id="btnLogout" type="button">Logout</button>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                  <div class="badge badge-glow">Vendor analytics</div>
+                  <h1 class="h5 fw-bold mt-2 mb-0">Performance overview</h1>
+                </div>
+                <a class="btn btn-soft" href="vendor-dashboard.html">Back</a>
+              </div>
+
+              <div class="mt-4 row g-3">
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">Total bookings</div>
+                    <div class="h2 fw-bold" id="mTotalBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">Completed bookings</div>
+                    <div class="h2 fw-bold" id="mCompletedBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">Total revenue</div>
+                    <div class="h2 fw-bold" id="mTotalRevenue">—</div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">Average rating</div>
+                    <div class="h2 fw-bold" id="mAvgRating">—</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">Total reviews</div>
+                    <div class="h2 fw-bold" id="mTotalReviews">—</div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <div class="card card-glass p-3 h-100">
+                    <div class="fw-bold">SLA breach rate</div>
+                    <div class="h2 fw-bold" id="mBreachRate">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 alert alert-danger d-none" id="err"></div>
+              <div class="mt-3 text-muted-soft small" id="hint">Derived from existing bookings/payments/reviews.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+      document.getElementById('btnLogout')?.addEventListener('click', async () => {
+        try { await logoutUser(); } finally { clearToken(); }
+        window.location.href = 'auth-login.html';
+      });
+
+      const errEl = document.getElementById('err');
+
+      function fmtMoney(n) {
+        const x = Number(n);
+        if (!Number.isFinite(x)) return '—';
+        return `NGN ${x.toLocaleString()}`;
+      }
+
+      async function load() {
+        errEl.classList.add('d-none');
+        try {
+          await fetchMe();
+          const [a, s] = await Promise.all([
+            apiFetch('/api/v1/vendors/analytics', { method: 'GET' }),
+            apiFetch('/api/v1/vendors/sla', { method: 'GET' }),
+          ]);
+          const analytics = a?.data || a;
+          const sla = s?.data || s;
+
+          document.getElementById('mTotalBookings').textContent = analytics?.totalBookings ?? '0';
+          document.getElementById('mCompletedBookings').textContent = analytics?.completedBookings ?? '0';
+          document.getElementById('mTotalRevenue').textContent = fmtMoney(analytics?.totalRevenue);
+          document.getElementById('mAvgRating').textContent = analytics?.averageRating ?? '0';
+          document.getElementById('mTotalReviews').textContent = analytics?.totalReviews ?? '0';
+
+          const br = sla?.breachRate;
+          document.getElementById('mBreachRate').textContent = br === undefined ? '—' : `${Math.round(br * 100)}%`;
+        } catch (e) {
+          errEl.classList.remove('d-none');
+          errEl.textContent = e?.message || 'Failed to load analytics.';
+        }
+      }
+
+      await load();
+    </script>
+  </body>
+</html>
+

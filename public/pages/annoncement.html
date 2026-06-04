@@ -195,18 +195,43 @@
         }
       }
 
-      // "Mark as read" is role-based; backend currently doesn’t track per-user read status.
-      // So this is best-effort no-op for now. If backend support is later added, we will hook it here.
       async function markAsRead() {
-        toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
+        try {
+          const page = 1;
+          const limit = 200;
+          const role = (window.__meRole || '').toString().toUpperCase();
+
+          if (!role) throw new Error('Missing role');
+
+          // Fetch unread announcements for current role, then mark each as read.
+          const res = await apiFetch(`/api/v1/announcements?unreadOnly=true&page=${page}&limit=${limit}`, { method: 'GET' });
+          const data = res?.data || res;
+          const items = data?.data || data?.items || [];
+          if (!Array.isArray(items) || items.length === 0) {
+            toast({ title: 'Up to date', message: 'No unread announcements.', variant: 'success' });
+            return;
+          }
+
+          const ids = items.map((a) => a?._id || a?.id).filter(Boolean);
+          // Best-effort: continue even if one request fails.
+          await Promise.allSettled(ids.map((id) => apiFetch(`/api/v1/announcements/${encodeURIComponent(id)}/read`, { method: 'POST' })));
+
+          toast({ title: 'Marked', message: 'Unread announcements marked as read.', variant: 'success' });
+          await loadAnnouncements({ role });
+        } catch (e) {
+          toast({ title: 'Failed', message: e?.message || 'Could not mark announcements as read.', variant: 'danger' });
+        }
       }
+
 
       const me = await (async () => {
         try {
           const res = await fetchMe();
           const meObj = res?.data || res;
-          const role = meObj?.role || meObj?.user?.role;
+          window.__meRole = meObj?.role || meObj?.user?.role;
+          const role = window.__meRole;
           setBackLink(role);
+
           await loadAnnouncements({ role });
           document.getElementById('btnMarkAllRead')?.addEventListener('click', markAsRead);
         } catch {
