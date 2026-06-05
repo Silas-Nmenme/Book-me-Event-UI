@@ -127,11 +127,17 @@
       const pendingEmail = sessionStorage.getItem('bme_admin_2fa_email');
       const pendingPassword = sessionStorage.getItem('bme_admin_2fa_password');
 
+      // NOTE: pendingPassword must exist for /api/v1/auth/login validation.
       if (!pendingEmail || !pendingPassword) {
-        // If user refreshed without context, send them back to login.
-        toast({ title: 'Session expired', message: 'Please log in again.', variant: 'warning' });
+        toast({
+          title: 'Session expired',
+          message: 'Please log in again to verify your admin 2FA.',
+          variant: 'warning',
+        });
         window.location.href = 'auth-login.html';
+        return;
       }
+
 
       document.getElementById('email').value = pendingEmail;
 
@@ -158,16 +164,21 @@
 
         try {
           // Re-call login with email, password, and totpCode.
+          const payload = {
+            email,
+            // backend currently requires password for login validation; use the original login password
+            // if it exists. (This prevents sending an empty/undefined value.)
+            password: pendingPassword || '',
+            totpCode,
+            adminTotpCode: totpCode,
+          };
+
+
           const res = await apiFetch('/api/v1/auth/login', {
             method: 'POST',
-            body: JSON.stringify({
-              email,
-              password: pendingPassword,
-              totpCode,
-              adminTotpCode: totpCode,
-              passwordConfirm: pendingPassword,
-            }),
+            body: JSON.stringify(payload),
           });
+
 
           if (res?.token) {
             localStorage.setItem('bme_token', res.token);
