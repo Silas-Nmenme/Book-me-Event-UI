@@ -131,9 +131,11 @@
         // If user refreshed without context, send them back to login.
         toast({ title: 'Session expired', message: 'Please log in again.', variant: 'warning' });
         window.location.href = 'auth-login.html';
+        return;
       }
 
-      document.getElementById('email').value = pendingEmail || '';
+      document.getElementById('email').value = pendingEmail;
+
 
       function normalizeOtp(x) {
         // Ensure only digits; strip spaces/invisible chars from mobile inputs.
@@ -161,9 +163,12 @@
 
           if (res?.token) {
             localStorage.setItem('bme_token', res.token);
+          } else {
+            throw new Error('Authentication token missing after 2FA verification');
           }
 
           toast({ title: '2FA verified', message: 'Redirecting to admin dashboard…', variant: 'success' });
+
 
           sessionStorage.removeItem('bme_admin_2fa_email');
           sessionStorage.removeItem('bme_admin_2fa_password');
