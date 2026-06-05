@@ -138,29 +138,33 @@
           otpauthBox.textContent = otpauthUrl;
 
           // Render QR
-          const qrContainer = document.createElement('div');
-          qrWrap.innerHTML = '';
-          qrWrap.appendChild(qrContainer);
-          // QRCode library expects valid CSS colors for the `dark` value.
-          // In some themes `getComputedStyle(document.body).color` can be a non-hex format
-          // (e.g. rgb(...)), which may trigger "Invalid hex color" warnings.
-          // Prefer explicit hex from the app theme tokens when available.
-          const root = document.documentElement;
-          const themeDark = getComputedStyle(root).getPropertyValue('--text').trim();
+          // NOTE: qrcode.toCanvas(...) expects a <canvas> element. Passing a <div>
+          // triggers errors like: "o.getContext is not a function".
+          const canvas = document.createElement('canvas');
+          canvas.width = 220;
+          canvas.height = 220;
 
-          await window.QRCode.toCanvas(qrContainer, otpauthUrl, {
+          qrWrap.innerHTML = '';
+          qrWrap.appendChild(canvas);
+
+          // Prefer explicit hex-ish values from theme tokens when possible.
+          const root = document.documentElement;
+          const themeText = getComputedStyle(root).getPropertyValue('--text').trim();
+
+          // If themeText isn't usable as a color, fall back to a dark default.
+          const darkColor = themeText && themeText !== 'transparent' ? themeText : '#0b0f1c';
+
+          await window.QRCode.toCanvas(canvas, otpauthUrl, {
             margin: 1,
             errorCorrectionLevel: 'M',
             width: 220,
             color: {
-              // qrcode (and some browser/canvas stacks) expect CSS hex/rgb color strings.
-              // Using transparent here can trigger: "Invalid hex color: transparent".
-              dark: themeDark || '#0b0f1c',
+              dark: darkColor,
               light: '#ffffff',
             },
           });
 
-          if (!qrWrap.querySelector('canvas')) {
+          if (!canvas || !(qrWrap.contains(canvas) && canvas.getContext && canvas.toDataURL)) {
             qrWrap.textContent = 'Unable to render QR in this browser.';
           }
         } catch (err) {
