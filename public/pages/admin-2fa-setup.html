@@ -24,6 +24,17 @@
         <div id="navAdminOtpContent" class="collapse navbar-collapse show">
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
             <a class="btn btn-soft" href="admin-dashboard.html">Back</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
           </div>
         </div>
       </div>
@@ -103,6 +114,10 @@
     <script type="module">
       import { apiFetch } from '../js/api.js';
       import { toast } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+
+      initThemeToggle();
+
 
       const qrWrap = document.getElementById('qrWrap');
       const qrError = document.getElementById('qrError');
@@ -123,10 +138,18 @@
           otpauthBox.textContent = otpauthUrl;
 
           // Render QR
-const qrContainer = document.createElement('div');
+          const qrContainer = document.createElement('div');
           qrWrap.innerHTML = '';
           qrWrap.appendChild(qrContainer);
-          await window.QRCode.toCanvas(qrContainer, otpauthUrl);
+          await window.QRCode.toCanvas(qrContainer, otpauthUrl, {
+            margin: 1,
+            errorCorrectionLevel: 'M',
+            width: 220,
+            color: {
+              dark: getComputedStyle(document.body).color,
+              light: 'transparent',
+            },
+          });
 
           if (!qrWrap.querySelector('canvas')) {
             qrWrap.textContent = 'Unable to render QR in this browser.';
