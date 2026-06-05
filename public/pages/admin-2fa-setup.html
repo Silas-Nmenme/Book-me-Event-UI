@@ -141,12 +141,19 @@
           const qrContainer = document.createElement('div');
           qrWrap.innerHTML = '';
           qrWrap.appendChild(qrContainer);
+          // QRCode library expects valid CSS colors for the `dark` value.
+          // In some themes `getComputedStyle(document.body).color` can be a non-hex format
+          // (e.g. rgb(...)), which may trigger "Invalid hex color" warnings.
+          // Prefer explicit hex from the app theme tokens when available.
+          const root = document.documentElement;
+          const themeDark = getComputedStyle(root).getPropertyValue('--text').trim();
+
           await window.QRCode.toCanvas(qrContainer, otpauthUrl, {
             margin: 1,
             errorCorrectionLevel: 'M',
             width: 220,
             color: {
-              dark: getComputedStyle(document.body).color,
+              dark: themeDark || '#0b0f1c',
               light: 'transparent',
             },
           });
