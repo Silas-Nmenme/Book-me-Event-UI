@@ -131,7 +131,6 @@
         // If user refreshed without context, send them back to login.
         toast({ title: 'Session expired', message: 'Please log in again.', variant: 'warning' });
         window.location.href = 'auth-login.html';
-        return;
       }
 
       document.getElementById('email').value = pendingEmail;
