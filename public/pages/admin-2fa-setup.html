@@ -153,8 +153,10 @@
             errorCorrectionLevel: 'M',
             width: 220,
             color: {
+              // qrcode (and some browser/canvas stacks) expect CSS hex/rgb color strings.
+              // Using transparent here can trigger: "Invalid hex color: transparent".
               dark: themeDark || '#0b0f1c',
-              light: 'transparent',
+              light: '#ffffff',
             },
           });
 
