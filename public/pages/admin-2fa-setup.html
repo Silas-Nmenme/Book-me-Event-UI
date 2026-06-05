@@ -193,9 +193,12 @@
           toast({ title: '2FA enabled', message: 'Redirecting…', variant: 'success' });
           window.location.href = 'admin-dashboard.html';
         } catch (err) {
-          const msg = err?.message || 'Failed to verify code';
-          hint.textContent = msg;
+          const msg = err?.data?.message || err?.message || 'Failed to verify code';
+          const status = err?.status;
+          hint.textContent = status ? `(${status}) ${msg}` : msg;
           toast({ title: 'Verification failed', message: msg, variant: 'danger' });
+          // Useful when debugging auth vs invalid TOTP
+          console.error('2FA verify error:', err);
         } finally {
           btn.disabled = false;
         }
