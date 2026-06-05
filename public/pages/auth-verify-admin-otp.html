@@ -136,7 +136,8 @@
       document.getElementById('email').value = pendingEmail || '';
 
       function normalizeOtp(x) {
-        return (x || '').toString().trim();
+        // Ensure only digits; strip spaces/invisible chars from mobile inputs.
+        return (x || '').toString().replace(/\D/g, '');
       }
 
       document.getElementById('adminOtpForm').addEventListener('submit', async (e) => {
