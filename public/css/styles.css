@@ -1,26 +1,40 @@
 /* Basic theme for Book Me Events */
 
 :root{
-  /* Default: Dark theme */
+  /* Branding */
   --brand:#7c5cff;
   --brand2:#31d0aa;
 
-  /* Theme transition tuning */
-  --bme-theme-transition: 260ms;
+  /* Typography (recommended pairing)
+     Body: Plus Jakarta Sans / DM Sans
+     Headings: Clash Display / Syne
+  */
+  --font-body: "Plus Jakarta Sans", "DM Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font-headings: "Syne", "Clash Display", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
+  /* Color tokens (semantic) */
+  --color-primary: var(--brand);
+  --color-accent: var(--brand2);
+
+  --color-surface: rgba(18,26,47,.82);
+  --color-text-primary: #f0f2ff;
+  --color-text-muted: rgba(224,228,255,.72);
+  --color-border: rgba(255,255,255,.14);
+
+  --color-success: #1fd39b;
+  --color-warning: #ffbf3c;
+  --color-danger: #ff4d6d;
+
+  /* Default: Dark theme */
+  --bme-theme-transition: 260ms;
 
   --bg:#101827;
   --bg2:#121d33;
 
-  --card:rgba(255,255,255,.08);
-  --cardBorder:rgba(255,255,255,.14);
+  --text: var(--color-text-primary);
+  --mutedText: var(--color-text-muted);
 
-  --text:#f0f2ff;
-  --mutedText: rgba(224,228,255,.72);
-
-  --shadow: rgba(0,0,0,.28);
-
-  /* Forms / surfaces */
+  /* Surfaces & forms */
   --surface: rgba(18,26,47,.82);
   --surfaceBorder: rgba(255,255,255,.12);
 
@@ -29,8 +43,6 @@
   --inputText: var(--text);
   --inputPlaceholder: rgba(224,228,255,.56);
 
-  --link: #b9afff;
-
   color-scheme: dark;
 }
 
@@ -38,13 +50,8 @@
   --bg:#F2F5FF;
   --bg2:#E8EEFF;
 
-  --card: rgba(255,255,255,.86);
-  --cardBorder: rgba(15,23,42,.12);
-
   --text:#111827;
   --mutedText: rgba(17,24,39,.66);
-
-  --shadow: rgba(17,24,39,.12);
 
   --surface: rgba(255,255,255,.92);
   --surfaceBorder: rgba(15,23,42,.10);
@@ -54,11 +61,14 @@
   --inputText: var(--text);
   --inputPlaceholder: rgba(17,24,39,.48);
 
-  --link: #5b46ff;
-
   color-scheme: light;
 }
 
+/* Global font application */
+html{ font-family: var(--font-body); }
+:root[data-theme="light"]{ color: var(--color-text-primary); }
+
+h1,h2,h3,h4,h5,h6{ font-family: var(--font-headings); }
 
 body{
   background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.16), transparent 55%),
@@ -74,6 +84,127 @@ body{
 }
 
 
+/* Card elevation refresh */
+.card-glass,
+.navbar-glass{
+  /* Remove glass effect: no backdrop blur */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  background: var(--surface) !important;
+  border: 1px solid var(--surfaceBorder) !important;
+
+  border-radius: 16px;
+  box-shadow:
+    0 14px 30px rgba(0,0,0,.18),
+    0 2px 8px rgba(0,0,0,.10);
+
+  transition:
+    transform .22s ease,
+    box-shadow .22s ease,
+    border-color .22s ease,
+    background-color var(--bme-theme-transition) ease;
+}
+
+.card-glass{
+  overflow: hidden;
+}
+
+.card-glass:hover{
+  transform: translateY(-4px);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.26),
+    0 4px 14px rgba(0,0,0,.14);
+  border-color: rgba(124,92,255,.45) !important;
+}
+
+/* Keep existing hover helper but align with new elevation */
+.card-hover{transition: transform .22s ease, border-color .22s ease;}
+.card-hover:hover{transform: translateY(-4px); border-color: rgba(124,92,255,.45) !important;}
+
+.btn-brand,
+.btn-soft,
+.btn{
+  transition: transform .12s ease, filter .12s ease, background-color var(--bme-theme-transition) ease, border-color var(--bme-theme-transition) ease;
+}
+
+.btn:active,
+.btn-brand:active,
+.btn-soft:active{
+  transform: scale(.98);
+}
+
+/* Status pills */
+.bme-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .78rem;
+  line-height: 1;
+  border: 1px solid var(--color-border);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  white-space: nowrap;
+}
+
+:root[data-theme="light"] .bme-pill{ color: #111827; }
+
+.bme-pill--pending{ background: rgba(255,191,60,.16); border-color: rgba(255,191,60,.45); color: var(--color-warning); }
+.bme-pill--confirmed{ background: rgba(31,211,155,.16); border-color: rgba(31,211,155,.45); color: var(--color-success); }
+.bme-pill--cancelled{ background: rgba(255,77,109,.16); border-color: rgba(255,77,109,.45); color: var(--color-danger); }
+
+/* Skeleton loaders */
+.bme-skeleton{
+  background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.14), rgba(255,255,255,.06));
+  background-size: 200% 100%;
+  animation: bme-skeleton-shimmer 1.15s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes bme-skeleton-shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bme-skeleton{ animation: none; }
+}
+
+/* Card grid stagger */
+.bme-card-grid{ --bme-stagger: 70ms; }
+.bme-card-grid > .bme-card-item{ opacity: 0; transform: translateY(6px); animation: bme-fade-up .45s ease forwards; animation-delay: calc(var(--bme-index, 0) * var(--bme-stagger)); }
+@keyframes bme-fade-up{
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* Touch target helper: keep small buttons usable on mobile */
+.bme-touch{ min-height: 44px; display:inline-flex; align-items:center; justify-content:center; }
+
+@media (max-width: 576px){
+  .btn-sm.bme-touch{ font-size: .9rem; }
+}
+
+body{
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.16), transparent 55%),
+              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.12), transparent 50%),
+              var(--bg);
+  color:var(--text);
+}
+
+:root[data-theme="light"] body{
+  background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,.08), transparent 55%),
+              radial-gradient(900px 500px at 90% 20%, rgba(49,208,170,.08), transparent 50%),
+              var(--bg);
+}
+
+
+
+
+/* Theme transition tuning */
+
 .navbar-glass,
 .card-glass{
   /* Remove glass effect: no backdrop blur */
@@ -84,6 +215,7 @@ body{
   background: var(--surface) !important;
   border: 1px solid var(--surfaceBorder) !important;
 }
+
 
 /* Ensure navbar does not overlap content: provide safe offset and stacking */
 .bme-navbar{

@@ -112,7 +112,7 @@
                   <div class="fw-bold" id="meRole">VENDOR</div>
 
                     <div class="mt-2">
-                    <span class="badge bme-status-badge" id="vendorKycBadge" title="Vendor KYC status">KYC Not Verified</span>
+<span class="bme-pill bme-pill--pending" id="vendorKycBadge" title="Vendor KYC status">KYC Not Verified</span>
                   </div>
                 </div>
               </div>
@@ -141,6 +141,45 @@
                   <h3 class="h5 fw-bold mb-0">Turn requests into bookings</h3>
                 </div>
                 <a class="btn btn-soft" href="profile.html">Refresh session</a>
+              </div>
+
+              <div class="row g-3 mb-3" id="statsStrip">
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Incoming requests</div>
+                    <div class="h4 fw-bold mb-0" id="vStatRequests">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Accepted requests</div>
+                    <div class="h4 fw-bold mb-0" id="vStatAccepted">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">My services</div>
+                    <div class="h4 fw-bold mb-0" id="vStatServices">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Bookings pending</div>
+                    <div class="h4 fw-bold mb-0" id="vStatPendingBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Completed bookings</div>
+                    <div class="h4 fw-bold mb-0" id="vStatCompletedBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">SLA breach rate</div>
+                    <div class="h4 fw-bold mb-0" id="vStatBreachRate">—</div>
+                  </div>
+                </div>
               </div>
 
               <div class="row g-3">

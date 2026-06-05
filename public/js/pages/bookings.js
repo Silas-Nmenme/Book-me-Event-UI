@@ -52,8 +52,19 @@ function buildBookingCard(b, myRole) {
             <div class="small text-muted-soft">Amount: ${escapeHtml(amount)}</div>
           </div>
           <div>
-            <span class="badge text-bg-${variant}">${escapeHtml(text)}</span>
+            ${(() => {
+              const pillClass =
+                variant === 'warning'
+                  ? 'bme-pill--pending'
+                  : variant === 'success'
+                    ? 'bme-pill--confirmed'
+                    : variant === 'danger'
+                      ? 'bme-pill--cancelled'
+                      : 'bme-pill--cancelled';
+              return `<span class="bme-pill ${pillClass}">${escapeHtml(text)}</span>`;
+            })()}
           </div>
+
         </div>
         <div class="mt-3 d-flex flex-wrap gap-2">
           ${myRole === 'USER' ? `<button class="btn btn-danger btn-sm" type="button" data-action="cancel" data-id="${escapeHtml(id || '')}">Cancel</button>` : ''}

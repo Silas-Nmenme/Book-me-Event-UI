@@ -65,15 +65,18 @@
               </div>
 
               <h1 class="h4 fw-bold mb-1">Confirm admin login</h1>
-              <div class="text-muted-soft small mb-4">
-                Enter your 2FA code to finish signing in.
+<div class="text-muted-soft small mb-4">
+                Open your authenticator app and enter the 6-digit code to finish signing in.
+                <div class="text-muted-soft small" style="margin-top:6px;">
+                  No email is sent for this step.
+                </div>
               </div>
 
               <form id="adminOtpForm" class="row g-3" autocomplete="on">
                 <div class="col-12">
                   <label class="form-label" for="email">Email</label>
                   <input class="form-control" id="email" name="email" type="email" required readonly />
-                  <div class="form-text text-muted-soft">Prefilled from your login attempt.</div>
+<div class="form-text text-muted-soft">Email is prefilled from your login attempt.</div>
                 </div>
 
                 <div class="col-12">

@@ -117,10 +117,19 @@ function buildCard(req, { myRole } = {}) {
           </div>
 
           <div>
-            <span class="badge text-bg-${variant}">
-              ${escapeHtml(text)}
-            </span>
+            ${(() => {
+              const pillClass =
+                variant === 'warning'
+                  ? 'bme-pill--pending'
+                  : variant === 'success'
+                    ? 'bme-pill--confirmed'
+                    : variant === 'danger'
+                      ? 'bme-pill--cancelled'
+                      : 'bme-pill--cancelled';
+              return `<span class="bme-pill ${pillClass}">${escapeHtml(text)}</span>`;
+            })()}
           </div>
+
 
         </div>
 

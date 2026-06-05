@@ -37,7 +37,8 @@
                   <div class="small text-muted-soft" id="ticketMeta">—</div>
                 </div>
                 <div class="text-end">
-                  <div class="badge bg-secondary" id="ticketStatus">OPEN</div>
+                  <span class="bme-pill bme-pill--pending" id="ticketStatus">OPEN</span>
+
                   <div class="badge bg-light text-dark mt-2" id="ticketPriority">MEDIUM</div>
                 </div>
               </div>
@@ -124,8 +125,19 @@
           const createdAt = data?.createdAt ? new Date(data.createdAt).toLocaleString() : '—';
           metaEl.textContent = `Created: ${createdAt}`;
 
-          statusEl.textContent = data?.status || 'OPEN';
+          const statusRaw = data?.status || 'OPEN';
+          const statusNorm = statusRaw.toString().toLowerCase();
+          const pillClass =
+            statusNorm === 'open' || statusNorm === 'in_progress' || statusNorm === 'in progress'
+              ? 'bme-pill--pending'
+              : statusNorm === 'resolved' || statusNorm === 'closed'
+                ? 'bme-pill--confirmed'
+                : 'bme-pill--cancelled';
+          statusEl.classList.remove('bme-pill--pending','bme-pill--confirmed','bme-pill--cancelled');
+          statusEl.classList.add(pillClass);
+          statusEl.textContent = statusRaw;
           prioEl.textContent = data?.priority || 'MEDIUM';
+
 
           const reqId = data?.request?._id || data?.request;
           const bookingId = data?.booking?._id || data?.booking;

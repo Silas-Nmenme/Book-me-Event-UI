@@ -179,8 +179,20 @@
                     <div class="small text-muted-soft mt-1">Request: ${escapeHtml(t?.request?._id || '—')} • Booking: ${escapeHtml(t?.booking?._id || '—')}</div>
                   </div>
                   <div class="text-end">
-                    <div class="badge bg-secondary">${status}</div>
-                    <div class="badge bg-light text-dark mt-2">${priority}</div>
+                    ${(() => {
+                      const statusNorm = (status || '').toString().toLowerCase();
+                      const pillClass =
+                        statusNorm === 'open'
+                          ? 'bme-pill--pending'
+                          : statusNorm === 'in_progress' || statusNorm === 'in progress'
+                            ? 'bme-pill--pending'
+                            : statusNorm === 'resolved' || statusNorm === 'closed'
+                              ? 'bme-pill--confirmed'
+                              : 'bme-pill--cancelled';
+                      return `<span class="bme-pill ${pillClass}">${status}</span>`;
+                    })()}
+                    <span class="bme-pill bme-pill--confirmed">${priority}</span>
+
                   </div>
                 </div>
               </div>

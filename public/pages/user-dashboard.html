@@ -148,6 +148,46 @@
                 <a class="btn btn-soft" href="profile.html">Refresh session</a>
               </div>
 
+      <div class="row g-3 mb-3 bme-card-grid" id="statsStrip">
+
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Your requests</div>
+                    <div class="h4 fw-bold mb-0" id="statRequests">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Your bookings</div>
+                    <div class="h4 fw-bold mb-0" id="statBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Support tickets</div>
+                    <div class="h4 fw-bold mb-0" id="statTickets">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Pending requests</div>
+                    <div class="h4 fw-bold mb-0" id="statPendingRequests">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Completed bookings</div>
+                    <div class="h4 fw-bold mb-0" id="statCompletedBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="card card-glass p-3 h-100 bme-card-item">
+                    <div class="text-muted-soft small">Avg rating</div>
+                    <div class="h4 fw-bold mb-0" id="statAvgRating">—</div>
+                  </div>
+                </div>
+              </div>
+
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <div class="card card-glass p-3 card-hover h-100">
@@ -203,13 +243,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken, sendVerificationEmail, apiFetch } from '../js/api.js';
-      import { toast, setYear } from '../js/ui.js';
-      import { initThemeToggle } from '../js/theme-toggle.js';
-      import { initAnnouncements } from '../js/pages/announcements.js';
+      import { initUserDashboard } from '../js/pages/user-dashboard.js';
 
       setYear('year');
-      initThemeToggle();
+
 
 
       const avatarEl = document.getElementById('avatar');
@@ -308,41 +345,9 @@
         window.location.href = 'auth-login.html';
       });
 
-      loadMe().then(async (me) => {
-        try {
-          const role = me?.role || me?.user?.role;
-          await initAnnouncements({ role });
-
-          const viewAllLink = document.getElementById('announcementBellViewAll');
-          if (viewAllLink) {
-            viewAllLink.addEventListener('click', (e) => {
-              // Keep default navigation to annonces page.
-            });
-          }
-
-          document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            // Best-effort UX: since backend currently doesn’t track per-user read status,
-            // clear the bell badge immediately and refresh the bell dropdown preview.
-            const dotEl = document.getElementById('announcementBellDot');
-            if (dotEl) {
-              dotEl.textContent = '';
-              dotEl.style.display = 'none';
-            }
-
-            try {
-              // Refresh bell UI so it stays consistent with the current announcements.
-              // initAnnouncements will rebuild the bell dropdown.
-              await import('../js/pages/announcements.js').then(m => m.initAnnouncements({ role }));
-            } catch {}
-
-            toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
-          });
-        } catch {}
-      });
-
+      await initUserDashboard();
     </script>
+
 
   </body>
 </html>
