@@ -281,7 +281,16 @@ async function initAdminDashboard() {
       const role = (me?.role || '').toString().toUpperCase();
       document.getElementById('meRole').textContent = role || 'ADMIN';
 
+      // 2FA status (admin)
+      const me2faStatusEl = document.getElementById('me2faStatus');
+      const totpEnabled = !!me?.totpEnabled;
+      if (me2faStatusEl) {
+        me2faStatusEl.textContent = totpEnabled ? 'Enabled' : 'Not enabled';
+        me2faStatusEl.style.color = totpEnabled ? 'var(--success, #22c55e)' : 'var(--muted, #94a3b8)';
+      }
+
       if (me?.profilePicture) setAvatarUrl(me.profilePicture);
+
       else {
         avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
         avatarEl.style.backgroundImage = '';
