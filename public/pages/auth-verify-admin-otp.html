@@ -180,9 +180,24 @@
       document.getElementById('adminOtpForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        // Always read credentials from sessionStorage at submit time.
+        // This avoids cases where DOM-prefill fails and the server receives an empty password.
+        const email = (sessionStorage.getItem('bme_admin_2fa_email') || '').toString().trim();
+        const password = (sessionStorage.getItem('bme_admin_2fa_password') || '').toString();
         const totpCode = normalizeOtp(document.getElementById('totpCode').value);
+
+        if (!email || !password) {
+          const hint = document.getElementById('adminOtpHint');
+          hint.textContent = 'Session expired. Please log in again to verify your admin 2FA.';
+          toast({
+            title: 'Session expired',
+            message: 'Please log in again to verify your admin 2FA.',
+            variant: 'warning',
+          });
+          window.location.href = 'auth-login.html';
+          return;
+        }
+
 
 
         const btn = document.getElementById('btnVerify');
@@ -203,14 +218,13 @@
             method: 'POST',
             body: JSON.stringify({
               email,
-              // Ensure password is explicitly included from sessionStorage.
-              // Some flows may render it but still result in an empty string.
-              password: (password || '').toString(),
+              password: password.toString(),
               // Backend verifies ADMIN TOTP if 2FA is enabled.
               totpCode,
             }),
 
           });
+
 
 
 
