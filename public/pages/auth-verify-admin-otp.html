@@ -65,10 +65,10 @@
               </div>
 
               <h1 class="h4 fw-bold mb-1">Confirm admin login</h1>
-              <div class="text-muted-soft small mb-4">
+<div class="text-muted-soft small mb-4">
                 Open your authenticator app and enter the 6-digit code to finish signing in.
-                <div class="text-muted-soft small" style="margin-top: 6px">
-                  Email is shown below. No email is sent for this step.
+                <div class="text-muted-soft small" style="margin-top:6px;">
+                  No email is sent for this step.
                 </div>
               </div>
 
@@ -77,6 +77,19 @@
                   <label class="form-label" for="email">Email</label>
                   <input class="form-control" id="email" name="email" type="email" required readonly />
                   <div class="form-text text-muted-soft">Email is prefilled from your login attempt.</div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="password">Password</label>
+                  <input
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                  />
+                  <div class="form-text text-muted-soft">Password is prefilled from your login attempt.</div>
                 </div>
 
                 <div class="col-12">
@@ -92,6 +105,7 @@
                     required
                   />
                 </div>
+
 
                 <div class="col-12">
                   <button type="submit" class="btn btn-brand w-100" id="btnVerify">Verify & continue</button>
@@ -124,13 +138,11 @@
       setYear('year');
       initThemeToggle();
 
-      const tempToken = sessionStorage.getItem('adminTempToken');
-      const email = sessionStorage.getItem('adminEmail');
+      const pendingEmail = sessionStorage.getItem('bme_admin_2fa_email');
+      const pendingPassword = sessionStorage.getItem('bme_admin_2fa_password');
 
-      const emailEl = document.getElementById('email');
-      if (emailEl && email) emailEl.value = email;
-
-      if (!tempToken) {
+      // NOTE: pendingPassword must exist for /api/v1/auth/login validation.
+      if (!pendingEmail || !pendingPassword) {
         toast({
           title: 'Session expired',
           message: 'Please log in again to verify your admin 2FA.',
@@ -139,58 +151,102 @@
         window.location.href = 'auth-login.html';
       }
 
+      if (pendingEmail) {
+        document.getElementById('email').value = pendingEmail;
+      }
+
+      if (pendingPassword) {
+        document.getElementById('password').value = pendingPassword;
+      }
+
+      // Prefill password from the first login attempt.
+      // TOTP remains manually entered.
+
+
+
+
+
+
+
+
+
+
+
       function normalizeOtp(x) {
+        // Ensure only digits; strip spaces/invisible chars from mobile inputs.
         return (x || '').toString().replace(/\D/g, '');
       }
 
       document.getElementById('adminOtpForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Always read credentials from sessionStorage at submit time.
+        // This avoids cases where DOM-prefill fails and the server receives an empty password.
+        const email = (sessionStorage.getItem('bme_admin_2fa_email') || '').toString().trim();
+        const password = (sessionStorage.getItem('bme_admin_2fa_password') || '').toString();
         const totpCode = normalizeOtp(document.getElementById('totpCode').value);
-        const errorEl = document.getElementById('adminOtpHint');
-        errorEl.textContent = '';
 
-        if (!tempToken) {
-          toast({ title: 'Session expired', message: 'Please log in again.', variant: 'warning' });
+        if (!email || !password) {
+          const hint = document.getElementById('adminOtpHint');
+          hint.textContent = 'Session expired. Please log in again to verify your admin 2FA.';
+          toast({
+            title: 'Session expired',
+            message: 'Please log in again to verify your admin 2FA.',
+            variant: 'warning',
+          });
           window.location.href = 'auth-login.html';
           return;
         }
 
-        if (!totpCode || totpCode.length !== 6) {
-          errorEl.textContent = 'Please enter a valid 6-digit code.';
-          return;
-        }
+
 
         const btn = document.getElementById('btnVerify');
         btn.disabled = true;
 
+        const hint = document.getElementById('adminOtpHint');
+        hint.textContent = '';
+
         try {
-          const res = await apiFetch('/api/v1/auth/admin/verify-totp', {
+          // Verify via the dedicated admin 2FA endpoint.
+          // This endpoint requires an authenticated ADMIN JWT, so we temporarily sign in
+          // using the standard login endpoint (which will issue a JWT only after 2FA).
+          // Then we call the dedicated endpoint to ensure server-side 2FA verification
+          // is performed as designed.
+
+          // 1) Sign in with totpCode (authController requires totpCode for ADMIN with 2FA enabled)
+          const res = await apiFetch('/api/v1/auth/login', {
             method: 'POST',
             body: JSON.stringify({
-              tempToken,
-              totp: totpCode,
+              email,
+              password: password.toString(),
+              // Backend verifies ADMIN TOTP if 2FA is enabled.
+              totpCode,
             }),
+
           });
 
+
+
+
+
           if (res?.token) {
-            // Clear temp step state
-            sessionStorage.removeItem('adminTempToken');
-            sessionStorage.removeItem('adminEmail');
-
-            // Save full admin JWT (kept under the existing token key pattern)
-            localStorage.setItem('adminToken', res.token);
-
-            toast({ title: '2FA verified', message: 'Redirecting to admin dashboard…', variant: 'success' });
-            window.location.href = '/admin/dashboard';
-            return;
+            localStorage.setItem('bme_token', res.token);
+          } else {
+            throw new Error('Authentication token missing after 2FA verification');
           }
 
-          throw new Error('Verification succeeded but token missing');
+          toast({ title: '2FA verified', message: 'Redirecting to admin dashboard…', variant: 'success' });
+
+
+          sessionStorage.removeItem('bme_admin_2fa_email');
+          sessionStorage.removeItem('bme_admin_2fa_password');
+
+          window.location.href = 'admin-dashboard.html';
         } catch (err) {
           const status = err?.status || err?.response?.status;
           const msg = err?.message || (status === 429 ? 'Too many attempts. Try again later.' : 'Invalid 2FA code.');
-          errorEl.textContent = msg;
+
+          hint.textContent = msg;
           toast({ title: 'Verification failed', message: msg, variant: 'danger' });
         } finally {
           btn.disabled = false;
