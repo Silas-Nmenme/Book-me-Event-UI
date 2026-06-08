@@ -123,7 +123,10 @@ export async function initUserDashboard() {
       ? `${user.firstName} ${user.lastName || ''}`.trim()
       : '—';
   }
-  document.getElementById('meEmail')?.textContent = user?.email || '—';
+  const meEmailEl = document.getElementById('meEmail');
+  if (meEmailEl) {
+    meEmailEl.textContent = user?.email || '—';
+  }
 
   if (user?.profilePicture) setAvatarUrl(user.profilePicture);
   else {
