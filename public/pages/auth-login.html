@@ -113,9 +113,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { loginUser, setToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { apiFetch } from '../js/api.js';
 
       setYear('year');
       initThemeToggle();
@@ -126,53 +126,39 @@
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
+
         const btn = document.getElementById('btnLogin');
         btn.disabled = true;
         const hint = document.getElementById('loginHint');
         hint.textContent = '';
 
         try {
-          const res = await loginUser({ email, password });
+          // Step 1: attempt admin login (email + password)
+          const adminRes = await apiFetch('/api/v1/auth/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
 
-
-          if (res?.token) setToken(res.token);
-
-          const role = res?.data?.role || '';
-          const roleUpper = (role || '').toString().toUpperCase();
-          // For ADMIN accounts, if 2FA is enabled, the server will return 401/403 with a message containing 2FA/totp.
-          // In that case we redirect to auth-verify-admin-otp.html.
-          const next = roleUpper === 'ADMIN' ? 'admin-dashboard.html' : roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html';
-
-          toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
-          window.location.href = next;
-
-
-
+          if (adminRes?.requiresTOTP && adminRes?.adminToken) {
+            sessionStorage.setItem('adminTempToken', adminRes.adminToken);
+            sessionStorage.setItem('adminEmail', adminRes.email || email);
+            toast({ title: 'Admin verified', message: 'Redirecting to 2FA…', variant: 'success' });
+            window.location.href = '/pages/auth-verify-admin-otp.html';
+            return;
+          }
         } catch (err) {
+          // Admin flow rejects => show error. (Legacy user/vendor login handled by other flow.)
           const status = err?.status || err?.response?.status;
           const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many login attempts. Try again later.') : (err?.message || 'Login failed');
 
-          // Admin accounts require TOTP for login. When that happens, prompt for OTP on a dedicated page.
-          const messageLc = (err?.message || '').toString().toLowerCase();
-          const is2faRequired = messageLc.includes('2fa') || messageLc.includes('totp') || messageLc.includes('2fa required');
-
-          if (is2faRequired && status && (status === 401 || status === 403)) {
-            // Preserve email + password for the second step.
-            // Email is prefilled on the OTP page; password is kept so /api/v1/auth/login can validate again.
-            sessionStorage.setItem('bme_admin_2fa_email', email);
-            sessionStorage.setItem('bme_admin_2fa_password', password);
-            toast({ title: 'Admin 2FA required', message: 'Enter your 2FA code.', variant: 'warning' });
-            window.location.href = 'auth-verify-admin-otp.html';
-            return;
-          }
-
-
           hint.textContent = msg;
           toast({ title: status === 429 ? 'Too many attempts' : 'Login failed', message: msg, variant: status === 429 ? 'warning' : 'danger' });
+          return;
         } finally {
           btn.disabled = false;
         }
       });
+
     </script>
   </body>
 </html>
