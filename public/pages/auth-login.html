@@ -152,16 +152,16 @@
           const status = err?.status || err?.response?.status;
           const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many login attempts. Try again later.') : (err?.message || 'Login failed');
 
-          // Admin accounts require TOTP for login. When that happens, prompt for OTP on a dedicated page.
+          // Admin accounts require 2FA confirmation.
+          // New behavior: send an OTP to the admin email and prompt on the dedicated page.
           const messageLc = (err?.message || '').toString().toLowerCase();
-          const is2faRequired = messageLc.includes('2fa') || messageLc.includes('totp') || messageLc.includes('2fa required');
+          const is2faRequired = messageLc.includes('2fa') || messageLc.includes('otp required') || messageLc.includes('admin_otp_required');
 
           if (is2faRequired && status && (status === 401 || status === 403)) {
-            // Preserve email + password for the second step.
-            // Email is prefilled on the OTP page; password is kept so /api/v1/auth/login can validate again.
             sessionStorage.setItem('bme_admin_2fa_email', email);
             sessionStorage.setItem('bme_admin_2fa_password', password);
-            toast({ title: 'Admin 2FA required', message: 'Enter your 2FA code.', variant: 'warning' });
+
+            toast({ title: 'Admin OTP required', message: 'Check your email for the OTP code.', variant: 'warning' });
             window.location.href = 'auth-verify-admin-otp.html';
             return;
           }
