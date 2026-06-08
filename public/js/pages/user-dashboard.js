@@ -117,9 +117,12 @@ export async function initUserDashboard() {
   const user = me?.data || me;
   if (!user) return;
 
-  document.getElementById('meName')?.textContent = user?.firstName
-    ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : '—';
+  const meNameEl = document.getElementById('meName');
+  if (meNameEl) {
+    meNameEl.textContent = user?.firstName
+      ? `${user.firstName} ${user.lastName || ''}`.trim()
+      : '—';
+  }
   document.getElementById('meEmail')?.textContent = user?.email || '—';
 
   if (user?.profilePicture) setAvatarUrl(user.profilePicture);
