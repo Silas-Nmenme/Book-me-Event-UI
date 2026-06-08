@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Login - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navAdminLoginContent"
+          aria-controls="navAdminLoginContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navAdminLoginContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="index.html">Back</a>
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-7 col-lg-5">
+            <div class="card card-glass p-4 p-md-5 fade-slide">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="brand-pill">
+                  <span class="brand-dot"></span>
+                  <span class="fw-bold">Admin Login</span>
+                </span>
+                <span class="badge text-bg-dark border badge-outline-brand">Secure</span>
+              </div>
+
+              <h1 class="h4 fw-bold mb-1">Welcome, admin</h1>
+              <div class="text-muted-soft small mb-4">
+                Enter your email and password. If your account has 2FA enabled, you’ll be asked for an OTP next.
+              </div>
+
+              <form id="adminLoginForm" class="row g-3" autocomplete="on">
+                <div class="col-12">
+                  <label class="form-label" for="email">Email</label>
+                  <input
+                    class="form-control"
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="admin@example.com"
+                    required
+                    autocomplete="email"
+                  />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="password">Password</label>
+                  <input
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                    autocomplete="current-password"
+                  />
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-brand w-100" id="btnNext">Next</button>
+                </div>
+
+                <div class="col-12 text-center">
+                  <div class="small text-muted-soft" id="adminLoginHint"></div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Admin Login</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { loginUser, setToken } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+
+      setYear('year');
+      initThemeToggle();
+
+      function normalizeMessage(err) {
+        if (!err) return 'Login failed';
+        return err?.message || (err?.data?.message ?? 'Login failed');
+      }
+
+      const form = document.getElementById('adminLoginForm');
+      const hint = document.getElementById('adminLoginHint');
+      const btn = document.getElementById('btnNext');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        btn.disabled = true;
+        hint.textContent = '';
+
+        try {
+          const res = await loginUser({ email, password });
+
+          if (res?.token) setToken(res.token);
+
+          // If login succeeded immediately, redirect.
+          // (Admin accounts without 2FA enabled will land here.)
+          toast({ title: 'Logged in', message: 'Redirecting to admin dashboard…', variant: 'success' });
+          window.location.href = 'admin-dashboard.html';
+        } catch (err) {
+          const status = err?.status || err?.response?.status;
+          const messageLc = (err?.message || '').toString().toLowerCase();
+          const is2faRequired = messageLc.includes('2fa') || messageLc.includes('totp') || messageLc.includes('2fa required');
+
+          // If admin requires 2FA, preserve creds and continue to OTP step.
+          if (is2faRequired && status && (status === 401 || status === 403)) {
+            sessionStorage.setItem('bme_admin_2fa_email', email);
+            sessionStorage.setItem('bme_admin_2fa_password', password);
+
+            toast({ title: 'Admin 2FA required', message: 'Enter your 2FA code.', variant: 'warning' });
+            window.location.href = 'auth-verify-admin-otp.html';
+            return;
+          }
+
+          const msg = status === 429 ? normalizeMessage(err) : normalizeMessage(err) || 'Login failed';
+          hint.textContent = msg;
+          toast({
+            title: status === 429 ? 'Too many attempts' : 'Login failed',
+            message: msg,
+            variant: status === 429 ? 'warning' : 'danger',
+          });
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
+
