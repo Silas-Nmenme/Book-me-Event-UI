@@ -66,9 +66,9 @@
 
               <h1 class="h4 fw-bold mb-1">Confirm admin login</h1>
 <div class="text-muted-soft small mb-4">
-Enter the 6-digit OTP sent to your admin email to finish signing in.
+                Open your authenticator app and enter the 6-digit code to finish signing in.
                 <div class="text-muted-soft small" style="margin-top:6px;">
-                  If you don’t see the email, check spam or request a new OTP from the login page.
+                  No email is sent for this step.
                 </div>
               </div>
 
@@ -93,11 +93,11 @@ Enter the 6-digit OTP sent to your admin email to finish signing in.
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label" for="otpCode">6-digit OTP code</label>
+                  <label class="form-label" for="totpCode">6-digit TOTP code</label>
                   <input
                     class="form-control"
-                    id="otpCode"
-                    name="otpCode"
+                    id="totpCode"
+                    name="totpCode"
                     type="text"
                     inputmode="numeric"
                     maxlength="6"
@@ -184,8 +184,7 @@ Enter the 6-digit OTP sent to your admin email to finish signing in.
         // This avoids cases where DOM-prefill fails and the server receives an empty password.
         const email = (sessionStorage.getItem('bme_admin_2fa_email') || '').toString().trim();
         const password = (sessionStorage.getItem('bme_admin_2fa_password') || '').toString();
-        const otpCode = normalizeOtp(document.getElementById('otpCode').value);
-
+        const totpCode = normalizeOtp(document.getElementById('totpCode').value);
 
         if (!email || !password) {
           const hint = document.getElementById('adminOtpHint');
@@ -214,13 +213,16 @@ Enter the 6-digit OTP sent to your admin email to finish signing in.
           // Then we call the dedicated endpoint to ensure server-side 2FA verification
           // is performed as designed.
 
-          const res = await apiFetch('/api/v1/auth/admin-login-otp', {
+          // 1) Sign in with totpCode (authController requires totpCode for ADMIN with 2FA enabled)
+          const res = await apiFetch('/api/v1/auth/login', {
             method: 'POST',
             body: JSON.stringify({
               email,
               password: password.toString(),
-              otpCode,
+              // Backend verifies ADMIN TOTP if 2FA is enabled.
+              totpCode,
             }),
+
           });
 
 
