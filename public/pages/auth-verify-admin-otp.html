@@ -137,10 +137,10 @@
         window.location.href = 'auth-login.html';
       }
 
-      // Only set email when session context is present.
-      if (pendingEmail && pendingPassword) {
+      if (pendingEmail) {
         document.getElementById('email').value = pendingEmail;
       }
+
 
 
 
@@ -178,14 +178,13 @@
             method: 'POST',
             body: JSON.stringify({
               email,
-              // Some backend request validators require `password` specifically.
-              // Use the original password stored during the pre-2FA login attempt.
+              // Backend login expects a `password` field name in many validators.
               password: pendingPassword,
-              // The backend admin 2FA logic accepts totpCode (and a few aliases).
+              // Backend verifies ADMIN TOTP if 2FA is enabled.
               totpCode,
-              adminTotpCode: totpCode,
             }),
           });
+
 
 
 

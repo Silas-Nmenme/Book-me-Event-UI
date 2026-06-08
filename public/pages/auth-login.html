@@ -139,9 +139,14 @@
 
           const role = res?.data?.role || '';
           const roleUpper = (role || '').toString().toUpperCase();
+          // For ADMIN accounts, if 2FA is enabled, the server will return 401/403 with a message containing 2FA/totp.
+          // In that case we redirect to auth-verify-admin-otp.html.
           const next = roleUpper === 'ADMIN' ? 'admin-dashboard.html' : roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html';
+
           toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
           window.location.href = next;
+
+
 
         } catch (err) {
           const status = err?.status || err?.response?.status;
