@@ -141,6 +141,11 @@
         document.getElementById('email').value = pendingEmail;
       }
 
+      // Prefill: admin login HTML doesn't include a password field on this 2FA page.
+      // The backend expects the admin's password to be present for the first login step,
+      // and this page re-submits the stored password when calling /api/v1/auth/login.
+
+
 
 
 
