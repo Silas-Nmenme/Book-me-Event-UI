@@ -76,7 +76,20 @@
                 <div class="col-12">
                   <label class="form-label" for="email">Email</label>
                   <input class="form-control" id="email" name="email" type="email" required readonly />
-<div class="form-text text-muted-soft">Email is prefilled from your login attempt.</div>
+                  <div class="form-text text-muted-soft">Email is prefilled from your login attempt.</div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="password">Password</label>
+                  <input
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                  />
+                  <div class="form-text text-muted-soft">Password is prefilled from your login attempt.</div>
                 </div>
 
                 <div class="col-12">
@@ -92,6 +105,7 @@
                     required
                   />
                 </div>
+
 
                 <div class="col-12">
                   <button type="submit" class="btn btn-brand w-100" id="btnVerify">Verify & continue</button>
@@ -141,9 +155,13 @@
         document.getElementById('email').value = pendingEmail;
       }
 
-      // Prefill: admin login HTML doesn't include a password field on this 2FA page.
-      // The backend expects the admin's password to be present for the first login step,
-      // and this page re-submits the stored password when calling /api/v1/auth/login.
+      if (pendingPassword) {
+        document.getElementById('password').value = pendingPassword;
+      }
+
+      // Prefill password from the first login attempt.
+      // TOTP remains manually entered.
+
 
 
 
@@ -163,7 +181,9 @@
         e.preventDefault();
 
         const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
         const totpCode = normalizeOtp(document.getElementById('totpCode').value);
+
 
         const btn = document.getElementById('btnVerify');
         btn.disabled = true;
@@ -184,10 +204,11 @@
             body: JSON.stringify({
               email,
               // Backend login expects a `password` field name in many validators.
-              password: pendingPassword,
+              password,
               // Backend verifies ADMIN TOTP if 2FA is enabled.
               totpCode,
             }),
+
           });
 
 
