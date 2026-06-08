@@ -66,6 +66,10 @@
                 <span class="badge text-bg-dark border badge-outline-brand">Secure</span>
               </div>
 
+              <!-- NOTE: Keep this login UI identical for all roles (USER/VENDOR/ADMIN).
+                   Role-specific behavior happens only after auth success + redirect. -->
+
+
               <h1 class="h4 fw-bold mb-1">Welcome back</h1>
               <div class="text-muted-soft small mb-4">Log in to request services, chat vendors, and book confidently.</div>
 
@@ -112,7 +116,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module">
+    <script type=module>
       import { loginUser, setToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
@@ -141,28 +145,17 @@
           const role = res?.data?.role || '';
 
           const roleUpper = (role || '').toString().toUpperCase();
-          // For ADMIN accounts, if 2FA is enabled, the server will return 401/403 with a message containing 2FA/totp.
-          // In that case we redirect to auth-verify-admin-otp.html.
-          if (roleUpper === 'ADMIN') {
-            // Admin login now uses dedicated email OTP flow.
-            sessionStorage.setItem('bme_admin_email', email);
-            sessionStorage.setItem('bme_admin_password', password);
-            toast({ title: '2FA required', message: 'Check your admin email for the OTP.', variant: 'warning' });
-            // Start OTP (best-effort then redirect)
-            try {
-              await fetch(`${BACKEND_URL}/api/v1/admin/login/start-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ email, password }),
-              });
-            } catch {}
-            window.location.href = 'auth-verify-admin-otp.html';
-            return;
-          }
+          // NOTE: All roles (USER/VENDOR/ADMIN) authenticate via ONE endpoint:
+          // POST /api/v1/auth/login
+          // Role-specific behavior happens only after auth success + redirect.
 
-          const next = roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html';
+          const next = roleUpper === 'ADMIN'
+            ? 'admin-dashboard.html'
+            : (roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html');
+
           toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
           window.location.href = next;
+
 
 
 
@@ -171,31 +164,9 @@
           const status = err?.status || err?.response?.status;
           const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many login attempts. Try again later.') : (err?.message || 'Login failed');
 
-          // Admin TOTP flow removed. Backend now directs admins to email OTP flow.
-          const messageLc = (err?.message || '').toString().toLowerCase();
-          const adminOtpFlow = messageLc.includes('use admin backend') || messageLc.includes('2fa required');
-          if (adminOtpFlow && status && (status === 401 || status === 403)) {
-            sessionStorage.setItem('bme_admin_email', email);
-            sessionStorage.setItem('bme_admin_password', password);
-
-            // Kick off email OTP and redirect to verification page.
-            try {
-              await fetch(`${BACKEND_URL}/api/v1/admin/login/start-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ email, password }),
-              });
-            } catch {}
-
-            toast({ title: '2FA required', message: 'Check your admin email for the OTP.', variant: 'warning' });
-            window.location.href = 'auth-verify-admin-otp.html';
-            return;
-          }
-
-
-
           hint.textContent = msg;
           toast({ title: status === 429 ? 'Too many attempts' : 'Login failed', message: msg, variant: status === 429 ? 'warning' : 'danger' });
+
         } finally {
           btn.disabled = false;
         }
