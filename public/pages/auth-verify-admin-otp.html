@@ -203,8 +203,9 @@
             method: 'POST',
             body: JSON.stringify({
               email,
-              // Backend login expects a `password` field name in many validators.
-              password,
+              // Ensure password is explicitly included from sessionStorage.
+              // Some flows may render it but still result in an empty string.
+              password: (password || '').toString(),
               // Backend verifies ADMIN TOTP if 2FA is enabled.
               totpCode,
             }),
