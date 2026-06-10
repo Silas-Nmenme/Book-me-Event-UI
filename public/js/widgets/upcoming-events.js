@@ -1,6 +1,14 @@
 import { apiFetch } from '../api.js';
 import { toast } from '../ui.js';
 
+function escapeHtml(s) {
+  return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+    const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+    return m[c] || c;
+  });
+}
+
+
 function formatDate(d) {
   const dt = new Date(d);
   return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -112,8 +120,38 @@ export function initUpcomingEventsWidget() {
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                  <pre class="mb-0" style="white-space:pre-wrap;">${JSON.stringify(b, null, 2)}</pre>
+                  <div class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-wrap gap-2">
+                      <div><span class="text-muted-soft small">Booking ID</span><div class="fw-bold">${b?._id || '—'}</div></div>
+                      <div><span class="text-muted-soft small">Event type</span><div class="fw-bold">${b?.eventType || b?.type || 'Event'}</div></div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                      <div><span class="text-muted-soft small">Vendor</span><div class="fw-bold">${b?.vendor?.name || b?.vendorName || '—'}</div></div>
+                      <div><span class="text-muted-soft small">Date</span><div class="fw-bold">${formatDate(date)}</div></div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                      <div>
+                        <span class="text-muted-soft small">Status</span>
+                        <div class="fw-bold">${String(b?.status || b?.bookingStatus || '—').toUpperCase()}</div>
+                      </div>
+                      <div>
+                        <span class="text-muted-soft small">Booking status</span>
+                        <div class="fw-bold">${String(b?.bookingStatus || '—').toUpperCase()}</div>
+                      </div>
+                    </div>
+
+                    <div class="mt-2">
+                      <div class="text-muted-soft small mb-1">Raw payload (for debugging)</div>
+                      <details>
+                        <summary class="text-muted-soft small" style="cursor:pointer;">Show JSON</summary>
+                        <pre class="mb-0 mt-2" style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(b, null, 2))}</pre>
+                      </details>
+                    </div>
+                  </div>
                 </div>
+
                 <div class="modal-footer">
                   <button type="button" class="btn btn-soft" data-bs-dismiss="modal">Close</button>
                 </div>
