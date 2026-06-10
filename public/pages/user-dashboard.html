@@ -4,232 +4,380 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>User Dashboard - Book Me Events</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/styles.css" />
     <link rel="stylesheet" href="../css/landing-professional.css" />
+
+    <style>
+      /* Dashboard layout */
+      :root { --bme-sidebar-w: 240px; }
+      @media (max-width: 768px) {
+        :root { --bme-sidebar-w: 0px; }
+      }
+
+      .bme-dashboard {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--bme-sidebar-w) 1fr;
+      }
+
+      @media (max-width: 768px) {
+        .bme-dashboard { grid-template-columns: 1fr; }
+      }
+
+      .bme-sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 16px;
+        border-right: 1px solid rgba(255,255,255,.08);
+        overflow: hidden;
+      }
+
+      @media (max-width: 768px) {
+        .bme-sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: min(86vw, 320px);
+          transform: translateX(-110%);
+          transition: transform 220ms ease;
+          z-index: 1100;
+          background: var(--surface);
+        }
+        .bme-sidebar.open { transform: translateX(0); }
+.bme-sidebar-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.45);
+          display: none;
+          z-index: 1090;
+        }
+        .bme-sidebar-backdrop.show { display: block; }
+        /* When closed, prevent any accidental interaction */
+        .bme-sidebar:not(.open) {
+          pointer-events: none;
+        }
+        .bme-sidebar.open {
+          pointer-events: auto;
+        }
+      }
+
+
+      .bme-main {
+        overflow: auto;
+        padding-bottom: 48px;
+      }
+
+      .bme-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1050;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      .bme-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 12px;
+        border-radius: 12px;
+        color: inherit;
+        text-decoration: none;
+        transition: background-color 200ms ease, color 200ms ease;
+      }
+
+      .bme-nav-link:hover { background: rgba(124,58,237,.10); }
+
+      .bme-nav-link.active {
+        background: var(--clr-primary);
+        color: #fff;
+      }
+
+      .bme-role-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(124,58,237,.35);
+        background: rgba(124,58,237,.12);
+        font-weight: 900;
+        font-size: .78rem;
+      }
+
+      /* Widgets grid */
+      .bme-widgets-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+      @media (min-width: 992px) {
+        .bme-widgets-grid {
+          grid-template-columns: 1.2fr 0.8fr;
+          align-items: start;
+        }
+      }
+
+      .widget-card { border-radius: 18px; }
+      .widget-shell { padding: 14px; }
+
+      /* Count-up cards */
+      .dashboard-card { border-radius: 16px; padding: 16px; }
+
+      /* Stagger animation hook from styles.css already */
+
+      /* Upcoming cards scroll */
+      .bme-horizontal-scroll {
+        display: flex;
+        gap: 12px;
+        overflow: auto;
+        padding-bottom: 6px;
+      }
+      .bme-horizontal-scroll > * { min-width: 280px; }
+
+      /* Chart */
+      .bme-chart-wrap { height: 260px; }
+
+      /* Confetti canvas for review nudge */
+      #widgetConfettiCanvas {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2005;
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
     <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 
-    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
-      <div class="container">
-        <a class="navbar-brand" href="user-dashboard.html">
-          <span class="brand-pill">
-            <span class="brand-dot"></span>
-            <span class="fw-bold">Book Me Events</span>
-          </span>
-        </a>
-
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navUserDashboardContent"
-          aria-controls="navUserDashboardContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div id="navUserDashboardContent" class="collapse navbar-collapse">
-          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
-            <a class="btn btn-soft" href="services.html">Browse</a>
-
-            <div class="dropdown">
-              <button
-                class="btn btn-soft position-relative"
-                type="button"
-                id="announcementBellBtn"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                aria-label="Announcements"
-                title="Announcements"
-              >
-                <span aria-hidden="true">🔔</span>
-                <span
-                  id="announcementBellDot"
-                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
-                >!</span>
-              </button>
-              <div class="dropdown-menu dropdown-menu-end bme-popover-menu">
-                <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
-                <div id="announcementBellList" class="px-3 bme-scroll-panel">
-                  <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
-                </div>
-                <div class="px-3 pb-2">
-                  <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
-                  <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              id="themeToggleBtn"
-              class="btn btn-soft btn-sm bme-theme-toggle"
-              type="button"
-              aria-label="Toggle dark/light theme"
-              title="Toggle theme"
-            >
-              <span data-icon="sun">☀️</span>
-              <span data-icon="moon">🌙</span>
-            </button>
-
-            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
-          </div>
+    <div class="bme-dashboard">
+      <div id="bmeSidebar" class="bme-sidebar card-glass">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <a class="navbar-brand" href="user-dashboard.html">
+            <span class="brand-pill">
+              <span class="brand-dot" aria-hidden="true"></span>
+              <span class="fw-bold">Book Me Events</span>
+            </span>
+          </a>
+          <button class="btn btn-soft btn-sm d-md-none" id="bmeSidebarClose" aria-label="Close sidebar">✕</button>
         </div>
-      </div>
-    </nav>
 
-<section class="section">
-      <div class="container">
-        <div class="row g-4 align-items-start">
-          <div class="col-12 col-lg-4">
-            <div class="card card-glass p-4 fade-slide">
-              <div class="badge badge-glow mb-3">User dashboard</div>
-              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
-              <div class="text-muted-soft" id="meEmail">—</div>
-              <div id="emailVerifyBanner" class="alert alert-warning mt-3 d-none">
-                <div class="fw-bold mb-1">Verify your email to unlock full access</div>
-                <div class="small">Click below to resend verification email.</div>
-                <div class="mt-2 d-flex gap-2">
-                  <button class="btn btn-brand btn-sm" id="btnResendVerification" type="button">Resend email</button>
-                  <a class="btn btn-soft btn-sm" href="verify-email.html">Check status</a>
-                </div>
-              </div>
-              <hr />
+        <div class="d-flex flex-column gap-1">
+          <a class="bme-nav-link active" href="user-dashboard.html">Dashboard</a>
+          <a class="bme-nav-link" href="bookings.html">My Bookings</a>
+          <a class="bme-nav-link" href="services.html">Browse Vendors</a>
+          <a class="bme-nav-link" href="user-message.html">Messages</a>
+          <a class="bme-nav-link" href="payments.html">Payments</a>
+          <a class="bme-nav-link" href="user-tickets.html">Support</a>
+          <a class="bme-nav-link" href="settings.html">Settings</a>
+        </div>
 
-
-              <div class="d-flex gap-3 align-items-center">
-                <div class="d-flex flex-column align-items-center">
-                  <div id="avatar" class="rounded-circle border bme-avatar" aria-label="Profile picture">BME</div>
-                  <div class="mt-2">
-                    <label class="btn btn-soft btn-sm" for="profilePictureInput">Change</label>
-                    <input
-                      id="profilePictureInput"
-                      class="d-none"
-                      type="file"
-                      name="image"
-                      accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div class="small text-muted-soft">Role</div>
-                  <div class="fw-bold" id="meRole">USER</div>
-                </div>
-              </div>
-
-            </div>
-
-            <div class="mt-4 card card-glass p-4 fade-slide">
-              <div class="fw-bold mb-2">Next steps</div>
-              <div class="small text-muted-soft">Request services, chat vendors, and book your event.</div>
-              <div class="mt-3 d-grid gap-2">
-<a class="btn btn-brand" href="services.html">Explore services</a>
-                <a class="btn btn-soft" href="user-service.html">Create request</a>
-<a class="btn btn-soft" href="user-request.html">Your requests</a>
-                <a class="btn btn-soft" href="user-message.html">Messages</a>
-                <a class="btn btn-soft" href="user-tickets.html">Support tickets</a>
-                <a class="btn btn-soft" href="bookings.html">Bookings</a>
-
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 col-lg-8">
-            <div class="card card-glass p-4 fade-slide bme-chat-panel">
-              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                <div>
-                  <div class="badge badge-glow text-white mb-2">Professional workflow</div>
-                  <h3 class="h5 fw-bold mb-0">Manage your event journey</h3>
-                </div>
-                <a class="btn btn-soft" href="profile.html">Refresh session</a>
-              </div>
-
-      <div class="row g-3 mb-3 bme-card-grid" id="statsStrip">
-
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Your requests</div>
-                    <div class="h4 fw-bold mb-0" id="statRequests">—</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Your bookings</div>
-                    <div class="h4 fw-bold mb-0" id="statBookings">—</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Support tickets</div>
-                    <div class="h4 fw-bold mb-0" id="statTickets">—</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Pending requests</div>
-                    <div class="h4 fw-bold mb-0" id="statPendingRequests">—</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Completed bookings</div>
-                    <div class="h4 fw-bold mb-0" id="statCompletedBookings">—</div>
-                  </div>
-                </div>
-                <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Avg rating</div>
-                    <div class="h4 fw-bold mb-0" id="statAvgRating">—</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row g-3">
-                <div class="col-12 col-md-6">
-                  <div class="card card-glass p-3 card-hover h-100">
-                    <div class="fw-bold mb-2">1) Request</div>
-                    <div class="text-muted-soft small">Share your event details so vendors can respond accurately.</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="card card-glass p-3 card-hover h-100">
-                    <div class="fw-bold mb-2">2) Chat</div>
-                    <div class="text-muted-soft small">Discuss pricing, availability, and schedules directly.</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="card card-glass p-3 card-hover h-100">
-                    <div class="fw-bold mb-2">3) Book</div>
-                    <div class="text-muted-soft small">Confirm and track booking progress end-to-end.</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-6">
-                  <div class="card card-glass p-3 card-hover h-100">
-                    <div class="fw-bold mb-2">4) Review</div>
-                    <div class="text-muted-soft small">Leave feedback and help future organizers choose well.</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-4 text-muted-soft small">
-                Note: Your existing detailed Pages (services, requests, messages, bookings) will connect to the backend APIs.
-              </div>
-
-              <div id="announcementsShell" class="mt-4 d-none">
-                <div class="fw-bold mb-2">Announcements</div>
-                <div class="row g-3" id="announcementsList"></div>
-                <div id="announcementsEmpty" class="text-muted-soft small d-none">No announcements at the moment.</div>
-              </div>
-
+        <div class="mt-auto pt-3">
+          <div class="d-flex align-items-center gap-3">
+            <div id="avatar" class="rounded-circle border bme-avatar" style="width:64px;height:64px;">BME</div>
+            <div>
+              <div class="small text-muted-soft">Signed in as</div>
+              <div class="fw-bold" id="meName">—</div>
+              <div class="bme-role-badge" id="meRole">USER</div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+
+      <div id="bmeSidebarBackdrop" class="bme-sidebar-backdrop"></div>
+
+      <div class="bme-main">
+        <!-- Top bar -->
+        <div class="bme-topbar card-glass" style="border-radius:0;">
+          <div class="container py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-12 col-lg-5">
+                <input id="dashboardSearch" class="form-control" placeholder="Search your dashboard…" />
+              </div>
+              <div class="col-12 col-lg-7">
+                <div class="d-flex justify-content-lg-end align-items-center gap-2">
+                  <button class="btn btn-soft position-relative" id="btnNotif" aria-label="Notifications">
+                    <span aria-hidden="true">🔔</span>
+                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                  </button>
+
+                  <button id="themeToggleBtn" class="btn btn-soft bme-theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
+                    <span data-icon="sun">☀️</span>
+                    <span data-icon="moon">🌙</span>
+                  </button>
+
+                  <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="container">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <div>
+                <div class="badge badge-glow text-white mb-2">Your dashboard</div>
+                <h2 class="fw-bold mb-0" id="dashboardTitle">Manage your event journey</h2>
+              </div>
+              <button class="btn btn-soft d-md-none" id="bmeSidebarOpen" aria-label="Open sidebar">☰</button>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="row g-3">
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Requests</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">📄</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statRequests">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Bookings</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">📅</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statBookings">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Support</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">🎫</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statTickets">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Pending</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);">⏳</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statPendingRequests">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Completed</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.35);">✅</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statCompletedBookings">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="widget-card card-glass h-100 p-3">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="text-muted-soft small">Rating</div>
+                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(236,72,153,.16);border:1px solid rgba(236,72,153,.35);">⭐</div>
+                  </div>
+                  <div class="h3 fw-bold mt-2" id="statAvgRating">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Widgets -->
+            <div class="mt-4 bme-widgets-grid">
+              <!-- Left column -->
+              <div class="d-flex flex-column gap-3">
+                <div class="card-glass widget-card p-0" id="widgetUpcomingEvents">
+                  <div class="widget-shell">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div>
+                        <div class="fw-bold">Upcoming events</div>
+                        <div class="text-muted-soft small">Countdowns and booking status</div>
+                      </div>
+                      <div class="badge badge-glow text-white">Widget</div>
+                    </div>
+                    <div class="mt-3">
+                      <div class="skeleton" style="height:110px;"></div>
+                    </div>
+                    <div class="mt-3 bme-horizontal-scroll" id="upcomingEventsContainer"></div>
+                  </div>
+                </div>
+
+                <div class="card-glass widget-card p-0" id="widgetActivityFeed">
+                  <div class="widget-shell">
+                    <div class="d-flex align-items-center justify-content-between">
+                      <div>
+                        <div class="fw-bold">Activity feed</div>
+                        <div class="text-muted-soft small">Latest updates on your bookings</div>
+                      </div>
+                    </div>
+                    <div class="mt-3 skeleton" style="height:260px;"></div>
+                    <div id="activityFeedContainer" class="mt-3"></div>
+                    <div class="mt-3 d-grid">
+                      <button class="btn btn-soft" id="activityFeedLoadMore" type="button">Load more</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right column -->
+              <div class="d-flex flex-column gap-3">
+                <div class="card-glass widget-card" id="widgetChatPreview">
+                  <div class="widget-shell">
+                    <div class="fw-bold">Chat inbox</div>
+                    <div class="text-muted-soft small">Quick replies per vendor thread</div>
+                    <div class="mt-3 skeleton" style="height:220px;"></div>
+                    <div id="chatPreviewContainer" class="mt-3"></div>
+                    <a href="user-message.html" class="btn btn-soft w-100 mt-3">Open full chat</a>
+                  </div>
+                </div>
+
+                <div class="card-glass widget-card" id="widgetSpendChart">
+                  <div class="widget-shell">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                      <div>
+                        <div class="fw-bold">Monthly spend</div>
+                        <div class="text-muted-soft small">Payments summary for this year</div>
+                      </div>
+                      <div class="badge badge-glow text-white" id="spendChartTotal">—</div>
+                    </div>
+                    <div class="mt-3 skeleton" style="height:260px;"></div>
+                    <div class="bme-chart-wrap mt-2" id="spendChartWrap">
+                      <canvas id="spendChartCanvas"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-glass widget-card" id="widgetReviewNudge">
+                  <div class="widget-shell">
+                    <div class="fw-bold">Review reminder</div>
+                    <div class="text-muted-soft small">Tell us how it went</div>
+                    <div id="reviewNudgeContainer" class="mt-3"></div>
+                  </div>
+                </div>
+
+                <div class="card-glass widget-card" id="widgetVendorMap">
+                  <div class="widget-shell">
+                    <div class="fw-bold">Nearby vendors</div>
+                    <div class="text-muted-soft small">Request vendors near your city</div>
+                    <div class="mt-3 skeleton" style="height:220px;"></div>
+                    <div id="vendorMapWrap" class="mt-3" style="height:220px;border-radius:14px;overflow:hidden;">
+                      <div id="vendorMap" style="height:220px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <canvas id="widgetConfettiCanvas" aria-hidden="true"></canvas>
 
     <footer class="footer">
       <div class="container">
@@ -240,20 +388,46 @@
       </div>
     </footer>
 
+    <!-- Bootstrap bundle (for dropdowns) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Chart + Leaflet in widgets (CDN load from widgets) -->
+
     <script type="module">
-      import { initUserDashboard } from '../js/pages/user-dashboard.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { fetchMe, clearToken, logoutUser, apiFetch } from '../js/api.js';
+      import { toast } from '../js/ui.js';
+
+      // Widgets
+      import { initUpcomingEventsWidget } from '../js/widgets/upcoming-events.js';
+      import { initChatPreviewWidget } from '../js/widgets/chat-preview.js';
+      import { initSpendChartWidget } from '../js/widgets/spend-chart.js';
+      import { initActivityFeedWidget } from '../js/widgets/activity-feed.js';
+      import { initReviewNudgeWidget } from '../js/widgets/review-nudge.js';
+      import { initVendorMapWidget } from '../js/widgets/vendor-map.js';
 
       const yearEl = document.getElementById('year');
       if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
 
+      initThemeToggle();
 
+      // Sidebar mobile behavior
+      const sidebar = document.getElementById('bmeSidebar');
+      const backdrop = document.getElementById('bmeSidebarBackdrop');
+      const openBtn = document.getElementById('bmeSidebarOpen');
+      const closeBtn = document.getElementById('bmeSidebarClose');
 
+      if (openBtn) {
+        openBtn.addEventListener('click', () => { sidebar?.classList.add('open'); backdrop?.classList.add('show'); });
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => { sidebar?.classList.remove('open'); backdrop?.classList.remove('show'); });
+      }
+      if (backdrop) {
+        backdrop.addEventListener('click', () => { sidebar?.classList.remove('open'); backdrop?.classList.remove('show'); });
+      }
 
-
-
-
+      // Basic profile + stats loader (keeps existing backend /api/v1/dashboard/user)
       const avatarEl = document.getElementById('avatar');
       const avatarFileInput = document.getElementById('profilePictureInput');
 
@@ -265,96 +439,75 @@
           avatarEl.style.backgroundPosition = 'center';
           avatarEl.textContent = '';
           avatarEl.style.fontWeight = 'normal';
-          return;
+        } else {
+          avatarEl.style.backgroundImage = '';
+          avatarEl.textContent = 'BME';
+          avatarEl.style.fontWeight = '900';
         }
-        avatarEl.style.backgroundImage = '';
-        avatarEl.textContent = 'BME';
-        avatarEl.style.fontWeight = '900';
       }
-
 
       function getAvatarInitials(name) {
-        return (name || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
+        return (name || 'BME')
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((x) => x[0].toUpperCase())
+          .join('');
       }
 
-      async function loadMe() {
-        try {
-          const res = await fetchMe();
-          const me = res?.data || res;
-          document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
-          document.getElementById('meEmail').textContent = me?.email || '—';
-
-          if (me?.profilePicture) {
-            setAvatarUrl(me.profilePicture);
-          } else {
-            avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
-            avatarEl.style.backgroundImage = '';
-            avatarEl.style.background = 'rgba(124,92,255,0.12)';
-          }
-
-          const banner = document.getElementById('emailVerifyBanner');
-
-          const isVerified = !!me?.isVerified;
-          if (!isVerified) {
-            banner.style.display = 'block';
-            const btnResend = document.getElementById('btnResendVerification');
-            btnResend?.addEventListener('click', async () => {
-              try {
-                btnResend.disabled = true;
-                await sendVerificationEmail();
-                toast({ title: 'Sent', message: 'Verification email sent. Check your inbox.', variant: 'success' });
-              } catch (e) {
-                toast({ title: 'Failed', message: e?.message || 'Could not resend verification.', variant: 'danger' });
-              } finally {
-                btnResend.disabled = false;
-              }
-            });
-          }
-        } catch {
+      async function loadMeAndStats() {
+        const me = await fetchMe().catch(() => {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
           window.location.href = 'auth-login.html';
+          return null;
+        });
+        if (!me) return;
+
+        const user = me?.data || me;
+        document.getElementById('meName').textContent = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '—';
+        document.getElementById('meRole').textContent = user?.role || 'USER';
+
+        if (user?.profilePicture) setAvatarUrl(user.profilePicture);
+        else setAvatarUrl(null);
+      
+        try {
+          const res = await apiFetch('/api/v1/dashboard/user', { method: 'GET' });
+          const data = res?.data || res;
+          document.getElementById('statRequests').textContent = data?.requestsTotal ?? '—';
+          document.getElementById('statBookings').textContent = data?.bookingsTotal ?? '—';
+          document.getElementById('statTickets').textContent = data?.ticketsTotal ?? '—';
+          document.getElementById('statPendingRequests').textContent = data?.requestsPending ?? '—';
+          document.getElementById('statCompletedBookings').textContent = data?.bookingsCompleted ?? '—';
+          document.getElementById('statAvgRating').textContent = data?.averageRating ?? '—';
+        } catch (e) {
+          console.warn('Failed to load dashboard stats', e?.message || e);
         }
-      }
 
-
-      if (avatarFileInput) {
-        avatarFileInput.addEventListener('change', async () => {
-          const file = avatarFileInput.files?.[0];
-          if (!file) return;
-
-          try {
-            avatarFileInput.disabled = true;
-            toast({ title: 'Uploading', message: 'Updating profile picture…', variant: 'warning' });
-
-            const fd = new FormData();
-            fd.append('image', file);
-
-            const res = await apiFetch('/api/v1/uploads/profile-picture', { method: 'POST', body: fd });
-            const data = res?.data || res;
-
-            if (data?.url) setAvatarUrl(data.url);
-            toast({ title: 'Updated', message: 'Profile picture updated.', variant: 'success' });
-          } catch (e) {
-            toast({ title: 'Upload failed', message: e?.message || 'Try again.', variant: 'danger' });
-          } finally {
-            avatarFileInput.disabled = false;
-            avatarFileInput.value = '';
-          }
+        // Logout
+        document.getElementById('btnLogout')?.addEventListener('click', async () => {
+          try { await logoutUser(); } finally { clearToken(); }
+          toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+          window.location.href = 'auth-login.html';
         });
       }
 
-      document.getElementById('btnLogout').addEventListener('click', async () => {
-        try { await logoutUser(); } finally { clearToken(); }
-        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+      async function bootWidgets(user) {
+        // Widgets will fetch their own data; they show skeleton first and render on success.
+        initUpcomingEventsWidget();
+        initChatPreviewWidget();
+        initSpendChartWidget();
+        initActivityFeedWidget();
+        initReviewNudgeWidget();
+        initVendorMapWidget();
+      }
+
+      loadMeAndStats().then(async () => {
+        const me = await fetchMe().catch(() => null);
+        const user = me?.data || me;
+        await bootWidgets(user);
       });
-
-      await initUserDashboard();
     </script>
-
-
   </body>
 </html>
-
 

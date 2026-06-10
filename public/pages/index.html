@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,219 +10,334 @@
     <link rel="stylesheet" href="../css/styles.css" />
 
     <style>
-      /* Mobile-app feel + new color palette (page-scoped so other pages are unaffected) */
-      :root{
-        --bme-brand3:#ff4d8d;     /* magenta-pink */
-        --bme-brand4:#2ee9a6;     /* mint */
-        --bme-hero-grad: linear-gradient(135deg, var(--bme-brand3), var(--bme-brand4));
-        --bme-kicker-bg: rgba(255,77,141,.14);
-        --bme-kicker-brd: rgba(255,77,141,.38);
+      /* Landing scoped styles */
+      .bme-navbar {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.55) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      }
+      html[data-theme="light"] .bme-navbar {
+        background: rgba(248, 247, 255, 0.70) !important;
+        border-bottom-color: rgba(15, 23, 42, 0.10);
       }
 
-      .bme-hero{
-        padding: 72px 0 26px;
+      .bme-logo {
+        text-decoration: none;
+      }
+
+      .bme-logo .brand-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--clr-primary), var(--clr-highlight));
+        box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+        transition: transform 200ms ease;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: .95; }
+        60% { transform: scale(1.35); opacity: .65; }
+        100% { transform: scale(1); opacity: .95; }
+      }
+      .bme-logo:hover .brand-dot { animation: pulse 800ms ease-out infinite; }
+
+      .bme-nav-link {
         position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.55rem 0.65rem !important;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: background-color 180ms ease, color 180ms ease;
+        color: rgba(248, 250, 255, 0.85) !important;
+      }
+      html[data-theme="light"] .bme-nav-link { color: rgba(30, 27, 75, 0.78) !important; }
+      .bme-nav-link:hover { background: rgba(124, 58, 237, 0.12); color: var(--clr-highlight) !important; }
+
+      .bme-nav-link[data-active="true"]::after {
+        content: "";
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 6px;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--clr-primary), var(--clr-highlight));
+        transform: scaleX(0);
+        transform-origin: left;
+        animation: slideIn 420ms ease forwards;
+      }
+      @keyframes slideIn { to { transform: scaleX(1); } }
+
+      /* Hero */
+      .bme-hero {
+        padding: 82px 0 34px;
+        position: relative;
+        overflow: hidden;
       }
 
-      /* Soft app-like gradient background card */
-      .bme-hero::before{
-        content:"";
-        position:absolute;
-        inset:-40px -20px auto -20px;
-        height: 280px;
+      .bme-hero::before {
+        content: "";
+        position: absolute;
+        left: -10px;
+        right: -10px;
+        top: -60px;
+        height: 360px;
         background:
-          radial-gradient(700px 240px at 20% 20%, rgba(255,77,141,.18), transparent 55%),
-          radial-gradient(650px 240px at 90% 20%, rgba(46,233,166,.16), transparent 50%),
-          linear-gradient(180deg, rgba(255,255,255,.00), rgba(255,255,255,.00));
-        pointer-events:none;
+          radial-gradient(700px 260px at 18% 30%, rgba(124, 58, 237, 0.25), transparent 58%),
+          radial-gradient(650px 260px at 90% 20%, rgba(236, 72, 153, 0.18), transparent 52%);
+        pointer-events: none;
       }
 
-      .bme-hero-kicker{
+      /* Confetti canvas */
+      #landingConfetti {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .bme-hero > .container { position: relative; z-index: 1; }
+
+      .bme-hero h1 {
+        font-weight: 950;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      .landing-typewriter__cursor {
+        display: inline-block;
+        margin-left: 10px;
+        color: var(--clr-accent);
+        animation: cursorBlink 900ms steps(2) infinite;
+      }
+      @keyframes cursorBlink {
+        0%, 45% { opacity: 1; }
+        55%, 100% { opacity: 0; }
+      }
+
+      /* Counters */
+      .bme-counter {
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      html[data-theme="light"] .bme-counter {
+        background: rgba(255, 255, 255, 0.80);
+        border-color: rgba(15, 23, 42, 0.10);
+      }
+
+      /* Search */
+      .bme-search-row {
+        border-radius: 18px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      html[data-theme="light"] .bme-search-row {
+        background: rgba(255, 255, 255, 0.78);
+        border-color: rgba(15, 23, 42, 0.10);
+      }
+
+      /* Marquee */
+      .bme-marquee {
+        overflow: hidden;
+        border-top: 1px solid rgba(255,255,255,.08);
+        border-bottom: 1px solid rgba(255,255,255,.08);
+      }
+      .bme-marquee__track {
+        display: flex;
+        gap: 22px;
+        padding: 14px 0;
+        width: max-content;
+        animation: scroll-left linear infinite;
+        animation-duration: 26s;
+      }
+      @keyframes scroll-left {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+
+      /* Vendor logo pills */
+      .bme-vendor-logo {
         display: inline-flex;
         align-items: center;
         gap: 10px;
         padding: 10px 14px;
         border-radius: 999px;
-        background: var(--bme-kicker-bg);
-        border: 1px solid var(--bme-kicker-brd);
+        border: 1px solid rgba(124,58,237,.18);
+        background: rgba(237,233,254,.10);
+        color: rgba(248,250,255,.86);
+        white-space: nowrap;
+        font-weight: 800;
+      }
+      html[data-theme="light"] .bme-vendor-logo {
+        background: rgba(124,58,237,.06);
+        border-color: rgba(124,58,237,.20);
+        color: rgba(30,27,75,.82);
       }
 
-      .bme-hero-kicker .dot{
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--bme-hero-grad);
-        box-shadow: 0 0 0 4px rgba(255,77,141,.16);
-      }
-
-      .bme-hero-title{
-        font-weight: 950;
-        line-height: 1.05;
-        letter-spacing: -0.02em;
-        margin-top: 16px;
-        margin-bottom: 14px;
-        font-size: clamp(2rem, 5vw, 2.7rem);
-      }
-
-      .bme-hero-lead{
-        max-width: 62ch;
-        font-size: 1.02rem;
-      }
-
-      .gradient-text{
-        background: var(--bme-hero-grad);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-      }
-
-      .bme-cta-row{ gap: 12px; flex-wrap: wrap; }
-
-      /* App-like bottom-sheet spacing on mobile */
-      .bme-hero .card-glass{
-        border-radius: 20px;
-      }
-
-      .bme-stat-card{
-        height: 100%;
-        padding: 18px;
-        border-radius: 16px;
-        background: rgba(255,255,255,.06);
-      }
-
-      .bme-section-title{
-        font-weight: 900;
-        letter-spacing: -0.01em;
-        margin-bottom: 8px;
-      }
-
-      .bme-muted{
-        color: var(--mutedText);
-      }
-
-      .bme-service-tile{
-        padding: 18px;
-        border-radius: 16px;
-      }
-
-      .bme-icon{
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,77,141,.10);
-        border: 1px solid rgba(255,77,141,.25);
-        font-size: 18px;
-      }
-
-      .bme-steps-card{
-        border-radius: 18px;
-      }
-
-      .bme-step-badge{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 88px;
-        padding: 10px 12px;
+      /* Chips */
+      .bme-chip-row button {
         border-radius: 999px;
-        background: rgba(255,77,141,.14);
-        border: 1px solid rgba(255,77,141,.34);
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(255,255,255,.05);
+        color: inherit;
+        padding: 10px 14px;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+      html[data-theme="light"] .bme-chip-row button {
+        background: rgba(255,255,255,.75);
+        border-color: rgba(15,23,42,.12);
+      }
+      .bme-chip-row button:hover {
+        transform: translateY(-2px);
+        border-color: rgba(124,58,237,.45);
+        box-shadow: 0 8px 18px rgba(124,58,237,.12);
+      }
+
+      .bme-category-card {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.04);
+        transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+      }
+      html[data-theme="light"] .bme-category-card {
+        background: rgba(255,255,255,.72);
+        border-color: rgba(15,23,42,.10);
+      }
+      .bme-category-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(124,58,237,0.15);
+        border-color: rgba(124,58,237,.55);
+      }
+
+      .bme-emoji {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(124,58,237,.12);
+        border: 1px solid rgba(124,58,237,.26);
+        font-size: 22px;
+      }
+
+      .bme-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(124,58,237,.35);
+        background: rgba(237,233,254,.25);
+        color: var(--clr-accent);
         font-weight: 900;
-        letter-spacing: .2px;
+        font-size: .8rem;
       }
 
-      /* Mobile app spacing + safe areas */
-      main{ padding-bottom: env(safe-area-inset-bottom); }
-
-      /* Make the layout feel like a phone app: stack content, slightly larger touch targets */
-      .bme-cta-row .btn{ min-height: 48px; }
-
-      /* Better tap/reading on small screens */
-      @media (max-width: 576px){
-        .bme-hero{ padding-top: 56px; }
-        .bme-hero-title{ margin-top: 10px; margin-bottom: 10px; }
-        .bme-hero-lead{ font-size: 1rem; }
-        .bme-stat-card{ padding: 16px; }
-        .bme-service-tile{ padding: 16px; }
+      /* Testimonials */
+      .bme-testimonial-card {
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.04);
+        min-height: 220px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 420ms ease, transform 420ms ease;
+      }
+      html[data-theme="light"] .bme-testimonial-card {
+        background: rgba(255,255,255,.78);
+        border-color: rgba(15,23,42,.10);
+      }
+      .bme-testimonial-card.in {
+        opacity: 1;
+        transform: translateY(0);
       }
 
-      /* Ensure cards don't feel cramped on intermediate tablets */
-      @media (min-width: 577px) and (max-width: 991px){
-        .bme-hero{ padding-top: 64px; }
+      /* Toast mini stack */
+      #landingToastStack {
+        position: fixed;
+        top: 80px;
+        right: 18px;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .landing-mini-toast {
+        width: 320px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(124,58,237,.25);
+        background: rgba(255,255,255,.05);
+        opacity: 0;
+        transform: translateX(18px);
+        transition: opacity 260ms ease, transform 260ms ease;
+      }
+      html[data-theme="light"] .landing-mini-toast {
+        background: rgba(255,255,255,.85);
+        border-color: rgba(124,58,237,.20);
+      }
+      .landing-mini-toast.show {
+        opacity: 1;
+        transform: translateX(0);
       }
 
-      .bme-footer{
-        padding: 46px 0;
+      .landing-mini-toast__check {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(20,184,166,.16);
+        border: 1px solid rgba(20,184,166,.35);
+        font-weight: 900;
       }
 
-      /* Bottom nav hint (visual only; no behavior) */
-      .bme-mobile-nav-shadow{
-        display:none;
+      footer {
+        background: var(--clr-dark);
+        color: #fff;
       }
-      @media (max-width: 768px){
-        .bme-mobile-nav-shadow{
-          display:block;
-          position: sticky;
-          bottom: 0;
-          z-index: 5;
-          height: 16px;
-          background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.18));
-          pointer-events:none;
-          margin-top: -10px;
-        }
-      }
+      footer a { color: rgba(255,255,255,.85); text-decoration: none; }
+      footer a:hover { color: #fff; }
 
-      /* Reduce motion for users who prefer it */
-      @media (prefers-reduced-motion: reduce){
-        .fade-slide{ transition: none !important; }
+      /* Reduce motion */
+      @media (prefers-reduced-motion: reduce) {
+        .bme-marquee__track { animation: none; }
+        .landing-mini-toast { transition: none; }
       }
     </style>
   </head>
 
   <body>
     <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+    <div id="landingToastStack" aria-live="polite"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar" role="navigation">
       <div class="container">
-        <a class="navbar-brand" href="index.html" aria-label="Book Me Events home">
+        <a class="navbar-brand bme-logo" href="index.html" aria-label="Book Me Events home">
           <span class="brand-pill">
-            <span class="brand-dot"></span>
+            <span class="brand-dot" aria-hidden="true"></span>
             <span class="fw-bold">Book Me Events</span>
           </span>
         </a>
 
-        <div class="ms-auto d-flex gap-2 align-items-center justify-content-end">
-          <!-- Quick links (hidden on small screens) -->
-          <div class="d-none d-lg-flex gap-2">
-            <a class="btn btn-soft" href="#howItWorks" aria-label="How it works">How it works</a>
-            <a class="btn btn-soft" href="#serviceCategories" aria-label="What we offer">What we offer</a>
-            <a class="btn btn-soft" href="#trusted" aria-label="Trusted and secure">Trusted</a>
+        <div class="d-flex gap-2 align-items-center ms-auto">
+          <div class="d-none d-lg-flex gap-2 align-items-center">
+            <a class="bme-nav-link" href="#howItWorks">How it works</a>
+            <a class="bme-nav-link" href="#categories">Browse</a>
+            <a class="bme-nav-link" href="auth-login.html">Login</a>
+            <a class="btn btn-brand" href="auth-register.html">Get Started</a>
           </div>
 
-          <!-- Account actions (kept as a dropdown) -->
-          <div class="dropdown d-none d-md-block">
-            <button
-              class="btn btn-soft dropdown-toggle"
-              type="button"
-              id="authDropdown"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              aria-label="Account actions"
-            >
-              <span class="badge text-bg-secondary">Account</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="authDropdown">
-              <li><a class="dropdown-item" href="auth-login.html">Login</a></li>
-              <li><a class="dropdown-item" href="auth-register.html">User sign up</a></li>
-              <li><a class="dropdown-item" href="vendor-register-page1.html">Vendor sign up</a></li>
-
-            </ul>
-          </div>
-
-          <!-- Theme toggle -->
           <button
             id="themeToggleBtn"
             class="btn btn-soft btn-sm bme-theme-toggle"
@@ -233,24 +348,6 @@
             <span data-icon="sun">☀️</span>
             <span data-icon="moon">🌙</span>
           </button>
-
-          <!-- Mobile: single button to access account actions -->
-          <div class="dropdown d-md-none">
-            <button
-              class="btn btn-soft dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              aria-label="Account actions"
-            >
-              <span class="badge text-bg-secondary">Account</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="auth-login.html">Login</a></li>
-              <li><a class="dropdown-item" href="auth-register.html">User sign up</a></li>
-              <li><a class="dropdown-item" href="vendor-register-page1.html">Vendor sign up</a></li>
-            </ul>
-          </div>
         </div>
       </div>
     </nav>
@@ -258,277 +355,368 @@
     <main>
       <!-- HERO -->
       <section class="bme-hero">
+        <canvas id="landingConfetti" aria-hidden="true"></canvas>
+
         <div class="container">
           <div class="row g-4 align-items-center">
             <div class="col-lg-7">
-              <div class="bme-hero-kicker mb-3" role="note" aria-label="Nigerian event marketplace">
-                <span class="dot" aria-hidden="true"></span>
-                <span class="fw-semibold">Nigerian event marketplace</span>
-                <span class="text-muted-soft">Planners • DJs • Caterers • Security &amp; more</span>
+              <div class="d-inline-flex align-items-center gap-3 mb-3">
+                <span class="bme-kicker" style="background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.35)">
+                  <span class="dot" aria-hidden="true"></span>
+                  <span class="fw-semibold">Nigerian event marketplace</span>
+                </span>
               </div>
 
-              <h1 class="bme-hero-title">
-                Find trusted event services in minutes—
-                <span class="gradient-text">request, chat, and book</span>
+              <h1>
+                Find trusted vendors for <span id="landingTypewriterText" class="gradient-text landing-typewriter__word"></span>
               </h1>
-
-              <p class="lead text-muted-soft bme-hero-lead">
+              <p class="lead hero-lead text-muted-soft mt-3">
                 Book Me Events connects event lovers with verified service providers across Nigeria.
-                Share your event details, get proposals, communicate with vendors, and manage your booking
-                in one clean dashboard.
+                Share your event details, get proposals, chat with vendors, and manage everything in one dashboard.
               </p>
 
-              <div class="d-flex bme-cta-row mt-4">
-                <a href="services.html" class="btn btn-brand btn-lg" aria-label="Explore Services">
-                  Explore Services
-                </a>
-                <a href="auth-register.html" class="btn btn-soft btn-lg" aria-label="Join and request services">
-                  Join &amp; Request Services
-                </a>
+              <div class="row g-3 mt-4">
+                <div class="col-6 col-md-3">
+                  <div class="bme-counter">
+                    <div class="text-muted-soft small">Events booked</div>
+                    <div class="h3 fw-bold mb-0" id="statEvents">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-counter">
+                    <div class="text-muted-soft small">Verified vendors</div>
+                    <div class="h3 fw-bold mb-0" id="statVendors">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-counter">
+                    <div class="text-muted-soft small">Cities covered</div>
+                    <div class="h3 fw-bold mb-0" id="statCities">0</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-counter">
+                    <div class="text-muted-soft small">Satisfaction</div>
+                    <div class="h3 fw-bold mb-0" id="statSatisfaction">0%</div>
+                  </div>
+                </div>
               </div>
 
-              <div class="row g-3 mt-4">
-                <div class="col-12 col-md-4">
-                  <div class="card card-glass bme-stat-card">
-                    <div class="fw-bold">Verified vendors</div>
-                    <div class="bme-muted small mt-1">Trust through vendor KYC</div>
+              <form id="landingSearchForm" class="bme-search-row mt-4">
+                <div class="row g-2 align-items-end">
+                  <div class="col-12 col-md-4">
+                    <label class="form-label small text-muted-soft">City</label>
+                    <select class="form-select" name="city">
+                      <option value="">Select city</option>
+                      <option value="Lagos">Lagos</option>
+                      <option value="Abuja">Abuja</option>
+                      <option value="Port Harcourt">Port Harcourt</option>
+                      <option value="Ibadan">Ibadan</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <label class="form-label small text-muted-soft">Event type</label>
+                    <select class="form-select" name="type">
+                      <option value="">Select type</option>
+                      <option value="weddings">Weddings</option>
+                      <option value="concerts">Concerts</option>
+                      <option value="birthdays">Birthdays</option>
+                      <option value="corporate events">Corporate events</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <label class="form-label small text-muted-soft">Date</label>
+                    <input class="form-control" type="date" name="date" />
+                  </div>
+                  <div class="col-12 col-md-1 d-grid">
+                    <button class="btn btn-brand btn-hero-primary btn-lg" type="submit" aria-label="Search">
+                      Search
+                    </button>
                   </div>
                 </div>
-                <div class="col-12 col-md-4">
-                  <div class="card card-glass bme-stat-card">
-                    <div class="fw-bold">Clear requests</div>
-                    <div class="bme-muted small mt-1">Share what vendors understand</div>
-                  </div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <div class="card card-glass bme-stat-card">
-                    <div class="fw-bold">Fast communication</div>
-                    <div class="bme-muted small mt-1">Chat and confirm in-app</div>
-                  </div>
-                </div>
-              </div>
+              </form>
             </div>
 
             <div class="col-lg-5">
-              <div class="card card-glass p-4 fade-slide">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                  <div>
-                    <div class="fw-bold">Why you’ll love Book Me Events</div>
-                    <div class="bme-muted small">Built for speed • Designed for clarity</div>
-                  </div>
-                  <span class="badge text-bg-secondary">Dashboard-ready</span>
+              <div class="card card-glass p-4 fade-slide widget-card">
+                <div class="badge badge-glow text-white mb-2">Trusted & verified</div>
+                <div class="fw-bold h4 mb-2">Request, chat, and book</div>
+                <div class="text-muted-soft">
+                  Get matched with the right vendors, confirm details in-app, and track your booking journey.
                 </div>
-
-                <ul class="list-unstyled mb-4">
-                  <li class="mb-2"><span class="fw-bold">1.</span> Tell us about your event</li>
-                  <li class="mb-2"><span class="fw-bold">2.</span> Get service proposals</li>
-                  <li class="mb-2"><span class="fw-bold">3.</span> Chat and finalize details</li>
-                  <li class="mb-2"><span class="fw-bold">4.</span> Book, pay, and track progress</li>
-                </ul>
-
-                <a href="auth-login.html" class="btn btn-brand w-100" aria-label="Sign in to start">
-                  Sign in to start
-                </a>
-                <p class="bme-muted small mt-3 mb-0">
-                  Tip: After login, manage requests, messages, and bookings in your dashboard.
-                </p>
+                <div class="mt-4 d-grid gap-2">
+                  <a href="auth-register.html" class="btn btn-brand">Get Started</a>
+                  <a href="auth-login.html" class="btn btn-soft">Login</a>
+                </div>
+                <div class="small text-muted-soft mt-3">
+                  Tip: Login to unlock your dashboard.
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div class="bme-mobile-nav-shadow" aria-hidden="true"></div>
+      <!-- SOCIAL PROOF MARQUEE -->
+      <section class="section pt-4">
+        <div class="container">
+          <div class="bme-marquee rounded-4">
+            <div id="landingVendorMarquee" class="bme-marquee__track">
+              <!-- Duplicate items for seamless scroll -->
+              <span class="bme-vendor-logo">DJ Lagos</span>
+              <span class="bme-vendor-logo">Kola Events</span>
+              <span class="bme-vendor-logo">Amaka Catering</span>
+              <span class="bme-vendor-logo">Ibadan Venue Co.</span>
+              <span class="bme-vendor-logo">Port Harcourt Security</span>
 
-      <!-- SERVICES -->
-      <section id="serviceCategories" class="section">
+              <span class="bme-vendor-logo">DJ Lagos</span>
+              <span class="bme-vendor-logo">Kola Events</span>
+              <span class="bme-vendor-logo">Amaka Catering</span>
+              <span class="bme-vendor-logo">Ibadan Venue Co.</span>
+              <span class="bme-vendor-logo">Port Harcourt Security</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CATEGORY GRID -->
+      <section id="categories" class="section">
         <div class="container">
           <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
             <div>
-              <h2 class="bme-section-title">Services offered</h2>
-              <div class="bme-muted">From event planning to last-minute security—find everything you need.</div>
+              <h2 class="fw-bold">Browse categories</h2>
+              <div class="text-muted-soft">Find vendors for every event moment.</div>
             </div>
-            <a class="btn btn-soft" href="services.html">Browse services</a>
+            <div class="bme-chip-row d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-soft">All</button>
+              <button type="button" class="btn btn-soft" data-city="Lagos">Lagos</button>
+              <button type="button" class="btn btn-soft" data-city="Abuja">Abuja</button>
+              <button type="button" class="btn btn-soft" data-city="Port Harcourt">Port Harcourt</button>
+              <button type="button" class="btn btn-soft" data-city="Ibadan">Ibadan</button>
+            </div>
           </div>
 
           <div class="row g-3">
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">📋</div>
-                  <div>
-                    <div class="fw-bold mb-1">Event Planners</div>
-                    <div class="bme-muted small">Full planning, timelines, budgeting guidance, and vendor coordination.</div>
+            <!-- Static badges; wired later to API -->
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=DJs&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🎛️</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">DJs</div>
+                    <div class="bme-badge">1,200 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🎛️</div>
-                  <div>
-                    <div class="fw-bold mb-1">DJs &amp; Music</div>
-                    <div class="bme-muted small">Live DJ setup, sound engineering, playlist support, and entertainment flow.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Caterers&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🍽️</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Caterers</div>
+                    <div class="bme-badge">340 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🧾</div>
-                  <div>
-                    <div class="fw-bold mb-1">Ushers &amp; Guest Service</div>
-                    <div class="bme-muted small">Professional ushering, guest directions, registration support, VIP handling.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Photographers&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">📸</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Photographers</div>
+                    <div class="bme-badge">180 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🍽️</div>
-                  <div>
-                    <div class="fw-bold mb-1">Caterers</div>
-                    <div class="bme-muted small">Menu design, food supply, serving staff, and event-grade presentation.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=MCs&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🎤</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">MCs</div>
+                    <div class="bme-badge">210 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
 
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🛡️</div>
-                  <div>
-                    <div class="fw-bold mb-1">Security &amp; Crowd Control</div>
-                    <div class="bme-muted small">Security personnel, access control, and safety supervision.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Decorators&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🎨</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Decorators</div>
+                    <div class="bme-badge">260 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🎨</div>
-                  <div>
-                    <div class="fw-bold mb-1">Decorators &amp; Styling</div>
-                    <div class="bme-muted small">Tables, stage styling, branding, lighting ambience, and theme execution.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Security&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🛡️</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Security</div>
+                    <div class="bme-badge">95 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🎤</div>
-                  <div>
-                    <div class="fw-bold mb-1">MC/Host &amp; Entertainment</div>
-                    <div class="bme-muted small">Emceeing, guest engagement, schedule delivery, hype &amp; entertainment support.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Planners&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🗓️</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Planners</div>
+                    <div class="bme-badge">75 vendors available</div>
                   </div>
                 </div>
-              </div>
+              </a>
             </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">📸</div>
-                  <div>
-                    <div class="fw-bold mb-1">Photography &amp; Videography</div>
-                    <div class="bme-muted small">Event coverage, highlights, and professional photo/video delivery.</div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <a class="bme-category-card text-decoration-none text-reset" href="services.html?category=Venues&city=Lagos">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="bme-emoji">🏟️</div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">Venues</div>
+                    <div class="bme-badge">120 vendors available</div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-              <div class="card card-glass bme-service-tile card-hover h-100">
-                <div class="d-flex align-items-start gap-3">
-                  <div class="bme-icon" aria-hidden="true">🚐</div>
-                  <div>
-                    <div class="fw-bold mb-1">Transportation</div>
-                    <div class="bme-muted small">Shuttle planning, driver sourcing, and guest movement coordination.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-4 card card-glass p-4">
-            <div class="fw-bold mb-2">How vendors get requests</div>
-            <div class="bme-muted">
-              Share your event date, location, guest count, budget, and key notes. Vendors respond with proposals.
-              You then chat, confirm availability, and proceed to booking.
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- HOW IT WORKS -->
+      <!-- TESTIMONIALS -->
+      <section class="section" id="testimonials">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+            <div>
+              <h2 class="fw-bold">What people say</h2>
+              <div class="text-muted-soft">Trusted experiences across Nigeria.</div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <div class="bme-testimonial-card fade-up in" style="opacity:1">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex gap-2 align-items-center">
+                    <div class="rounded-circle border" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;">JB</div>
+                    <div>
+                      <div class="fw-bold">John B.</div>
+                      <div class="small text-muted-soft">Lagos</div>
+                    </div>
+                  </div>
+                  <div class="text-warning">★★★★★</div>
+                </div>
+                <div class="mt-3 text-muted-soft">“Booked a DJ in minutes and everything went smoothly on the day.”</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="bme-testimonial-card fade-up in" style="opacity:1">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex gap-2 align-items-center">
+                    <div class="rounded-circle border" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;">AT</div>
+                    <div>
+                      <div class="fw-bold">Amaka T.</div>
+                      <div class="small text-muted-soft">Abuja</div>
+                    </div>
+                  </div>
+                  <div class="text-warning">★★★★★</div>
+                </div>
+                <div class="mt-3 text-muted-soft">“Reliable vendors, clear communication, and great satisfaction.”</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="bme-testimonial-card fade-up in" style="opacity:1">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex gap-2 align-items-center">
+                    <div class="rounded-circle border" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;">IS</div>
+                    <div>
+                      <div class="fw-bold">Ibrahim S.</div>
+                      <div class="small text-muted-soft">Port Harcourt</div>
+                    </div>
+                  </div>
+                  <div class="text-warning">★★★★★</div>
+                </div>
+                <div class="mt-3 text-muted-soft">“Smooth booking journey and vendors that actually show up!”</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS (required anchor) -->
       <section id="howItWorks" class="section">
         <div class="container">
-          <h2 class="bme-section-title mb-3">How it works</h2>
+          <h2 class="fw-bold mb-3">How it works</h2>
           <div class="row g-3">
             <div class="col-12 col-md-4">
-              <div class="card card-glass p-4 h-100 bme-steps-card">
-                <div class="bme-step-badge mb-3">Step 1</div>
+              <div class="card card-glass p-4 h-100 bme-steps-card widget-card">
+                <div class="badge badge-glow text-white mb-3">Step 1</div>
                 <div class="fw-bold mb-2">Create a request</div>
-                <div class="bme-muted small">Tell us what you need for your event.</div>
+                <div class="text-muted-soft small">Tell us what you need for your event.</div>
               </div>
             </div>
             <div class="col-12 col-md-4">
-              <div class="card card-glass p-4 h-100 bme-steps-card">
-                <div class="bme-step-badge mb-3">Step 2</div>
-                <div class="fw-bold mb-2">Chat &amp; confirm</div>
-                <div class="bme-muted small">Discuss details with the right vendor.</div>
+              <div class="card card-glass p-4 h-100 bme-steps-card widget-card">
+                <div class="badge badge-glow text-white mb-3">Step 2</div>
+                <div class="fw-bold mb-2">Chat & confirm</div>
+                <div class="text-muted-soft small">Discuss details with the right vendor.</div>
               </div>
             </div>
             <div class="col-12 col-md-4">
-              <div class="card card-glass p-4 h-100 bme-steps-card">
-                <div class="bme-step-badge mb-3">Step 3</div>
-                <div class="fw-bold mb-2">Book &amp; track</div>
-                <div class="bme-muted small">Manage booking status and updates in your dashboard.</div>
+              <div class="card card-glass p-4 h-100 bme-steps-card widget-card">
+                <div class="badge badge-glow text-white mb-3">Step 3</div>
+                <div class="fw-bold mb-2">Book & track</div>
+                <div class="text-muted-soft small">Manage booking progress in your dashboard.</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- TRUSTED -->
-      <section id="trusted" class="section">
+      <!-- FOOTER (required 4-column) -->
+      <footer class="pt-5 pb-4">
         <div class="container">
-          <div class="row g-4 align-items-center">
-            <div class="col-12 col-lg-7">
-              <h2 class="bme-section-title mb-2">Trusted, professional, and role-based</h2>
-              <div class="bme-muted">
-                User dashboards focus on requests, messages, and bookings.
-                Vendor dashboards focus on service availability and vendor responses.
-                Admin dashboards help manage platform oversight.
+          <div class="row g-4">
+            <div class="col-12 col-md-3">
+              <div class="fw-bold mb-2">Book Me Events</div>
+              <div class="text-white-50 small">Trusted vendors for every Nigerian celebration.</div>
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="fw-bold mb-2">Links</div>
+              <div class="d-flex flex-column gap-2 small">
+                <a href="#howItWorks">How it works</a>
+                <a href="services.html">Browse</a>
+                <a href="auth-login.html">Login</a>
+                <a href="auth-register.html">Get Started</a>
               </div>
             </div>
-            <div class="col-12 col-lg-5">
-              <div class="card card-glass p-4 h-100">
-                <div class="fw-bold mb-2">Ready to start?</div>
-                <div class="bme-muted small mb-3">Login to access your professional dashboard.</div>
-                <a href="auth-login.html" class="btn btn-brand w-100">Login</a>
+            <div class="col-12 col-md-3">
+              <div class="fw-bold mb-2">Cities we serve</div>
+              <div class="d-flex flex-column gap-2 small text-white-50">
+                <span>Lagos</span>
+                <span>Abuja</span>
+                <span>Port Harcourt</span>
+                <span>Ibadan</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-3">
+              <div class="fw-bold mb-2">Social</div>
+              <div class="d-flex gap-3">
+                <a class="text-white" href="#" aria-label="Twitter">𝕏</a>
+                <a class="text-white" href="#" aria-label="Instagram">⌁</a>
+                <a class="text-white" href="#" aria-label="Facebook">f</a>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <footer class="footer bme-footer">
-        <div class="container">
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div>© <span id="year"></span> Book Me Events</div>
-          </div>
+          <div class="mt-4 text-white-50 small">© <span id="year"></span> Book Me Events</div>
         </div>
       </footer>
     </main>
@@ -537,19 +725,19 @@
     <script type="module">
       import { setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
-
-      // Keep existing landing header toggle hook (no-op if no toggles exist)
-      import { initLandingHeaderDetailsToggle } from '../js/pages/landing-header-toggle.js';
+      import { initLandingRedesign } from '../js/landing-redesign.js';
 
       setYear('year');
       initThemeToggle();
-      initLandingHeaderDetailsToggle();
 
-      // Defensive cleanup for any previous collapse state
-      try {
-        const navContent = document.getElementById('navContent');
-        if (navContent) navContent.classList.remove('show');
-      } catch {}
+      // Navbar underline active state
+      document.querySelectorAll('a.bme-nav-link').forEach((a) => {
+        if (a.getAttribute('href') && a.getAttribute('href').startsWith('#')) {
+          if (a.getAttribute('href') === window.location.hash) a.dataset.active = 'true';
+        }
+      });
+
+      initLandingRedesign();
     </script>
   </body>
 </html>

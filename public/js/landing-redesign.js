@@ -1,0 +1,292 @@
+/* Landing redesign behaviors: confetti, typewriter, stats counter, marquee, toasts, filters */
+
+const STATIC_PLATFORM_STATS = {
+  totalEvents: 2400,
+  totalVendors: 850,
+  cities: 24,
+  satisfaction: 98,
+};
+
+function escapeHtml(s) {
+  return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
+    const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
+    return m[c] || c;
+  });
+}
+
+function showMiniToast({ name, action }) {
+  const host = document.getElementById('landingToastStack');
+  if (!host) return;
+
+  const el = document.createElement('div');
+  el.className = 'landing-mini-toast widget-card';
+  el.innerHTML = `
+    <div class="d-flex align-items-center gap-2">
+      <span class="landing-mini-toast__check" aria-hidden="true">✓</span>
+      <div class="small">
+        <span class="fw-bold">${escapeHtml(name)}</span> ${escapeHtml(action)}
+      </div>
+    </div>
+  `;
+
+  host.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 260);
+  }, 8000);
+}
+
+function animateCounter(el, target, duration = 1200) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) {
+      el.textContent = formatNumber(target);
+      clearInterval(timer);
+      return;
+    }
+    el.textContent = formatNumber(Math.floor(start));
+  }, 16);
+}
+
+function formatNumber(n) {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '0';
+  return n.toLocaleString();
+}
+
+function initTypewriter() {
+  const el = document.getElementById('landingTypewriterText');
+  if (!el) return;
+
+  const words = ['weddings', 'concerts', 'birthdays', 'corporate events'];
+  let idx = 0;
+
+  // Cursor
+  el.classList.add('landing-typewriter');
+
+  function renderWord() {
+    const word = words[idx % words.length];
+    el.innerHTML = `
+      <span class="landing-typewriter__word">${escapeHtml(word)}</span>
+      <span class="landing-typewriter__cursor" aria-hidden="true">|</span>
+    `;
+  }
+
+  renderWord();
+
+  setInterval(() => {
+    idx += 1;
+    renderWord();
+  }, 2500);
+}
+
+function initConfetti() {
+  const canvas = document.getElementById('landingConfetti');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if (prefersReduced) return;
+
+  const resize = () => {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(canvas.clientWidth * dpr);
+    canvas.height = Math.floor(canvas.clientHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  const colors = [
+    '#7C3AED', '#EC4899', '#F59E0B', '#14B8A6', '#60A5FA', '#A78BFA', '#F472B6'
+  ];
+
+  const particles = [];
+  const makeParticle = () => {
+    const x = Math.random() * canvas.clientWidth;
+    const y = canvas.clientHeight + Math.random() * 60;
+    const r = 3 + Math.random() * 4;
+    const vy = 0.6 + Math.random() * 1.6;
+    const vx = -0.6 + Math.random() * 1.2;
+    return {
+      x,
+      y,
+      vx,
+      vy,
+      r,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      vr: -0.08 + Math.random() * 0.16,
+    };
+  };
+
+  for (let i = 0; i < 60; i++) particles.push(makeParticle());
+
+  let raf = 0;
+  const tick = () => {
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y -= p.vy;
+      p.rot += p.vr;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.95;
+      ctx.fillRect(-p.r, -p.r, p.r * 2, p.r);
+      ctx.restore();
+
+      if (p.y < -80) {
+        Object.assign(p, makeParticle(), { y: canvas.clientHeight + 50 });
+      }
+    }
+
+    raf = requestAnimationFrame(tick);
+  };
+
+  raf = requestAnimationFrame(tick);
+
+  // Expose trigger for booking confirmed / review submitted
+  window.__bmeConfettiBurst = () => {
+    for (let i = 0; i < particles.length; i++) {
+      particles[i] = makeParticle();
+      particles[i].y = canvas.clientHeight + 30;
+    }
+  };
+}
+
+function initMarquee() {
+  const marquee = document.getElementById('landingVendorMarquee');
+  if (!marquee) return;
+
+  // Expect the HTML already includes duplicated items.
+  marquee.classList.add('show');
+}
+
+function initPlatformStats() {
+  const ids = {
+    statEvents: 'totalEvents',
+    statVendors: 'totalVendors',
+    statCities: 'cities',
+    statSatisfaction: 'satisfaction',
+  };
+
+  const domEls = Object.keys(ids)
+    .map((k) => [k, document.getElementById(k)])
+    .filter(([, el]) => !!el);
+
+  if (!domEls.length) return;
+
+  domEls.forEach(([, el]) => (el.textContent = '0'));
+
+  const fetcher = async () => {
+    try {
+      const res = await fetch('/api/v1/stats/platform', { method: 'GET' });
+      const json = await res.json();
+      return json?.data;
+    } catch {
+      return null;
+    }
+  };
+
+  fetcher()
+    .then((data) => data || STATIC_PLATFORM_STATS)
+    .then((data) => {
+      animateCounter(document.getElementById('statEvents'), Number(data.totalEvents || STATIC_PLATFORM_STATS.totalEvents));
+      animateCounter(document.getElementById('statVendors'), Number(data.totalVendors || STATIC_PLATFORM_STATS.totalVendors));
+      animateCounter(document.getElementById('statCities'), Number(data.cities || STATIC_PLATFORM_STATS.cities));
+      animateCounter(document.getElementById('statSatisfaction'), Number(data.satisfaction || STATIC_PLATFORM_STATS.satisfaction));
+    })
+    .catch(() => {
+      animateCounter(document.getElementById('statEvents'), STATIC_PLATFORM_STATS.totalEvents);
+      animateCounter(document.getElementById('statVendors'), STATIC_PLATFORM_STATS.totalVendors);
+      animateCounter(document.getElementById('statCities'), STATIC_PLATFORM_STATS.cities);
+      animateCounter(document.getElementById('statSatisfaction'), STATIC_PLATFORM_STATS.satisfaction);
+    });
+}
+
+function initPublicActivityToasts() {
+  const rotating = [
+    { name: 'John B.', action: 'just booked a DJ in Lagos ✓' },
+    { name: 'Amaka T.', action: 'requested catering in Abuja ✓' },
+    { name: 'Ibrahim S.', action: 'booked a photographer in Port Harcourt ✓' },
+    { name: 'Chiamaka O.', action: 'just confirmed a venue in Ibadan ✓' },
+  ];
+
+  // Fetch best-effort.
+  const tryFetch = async () => {
+    try {
+      const r = await fetch('/api/v1/activity-feed?public=true');
+      const j = await r.json();
+      const data = j?.data || j;
+      return Array.isArray(data) ? data : null;
+    } catch {
+      return null;
+    }
+  };
+
+  (async () => {
+    const fetched = await tryFetch();
+    const pool = fetched?.length ? fetched : rotating;
+    let i = 0;
+
+    // Immediate first
+    const pick = pool[i % pool.length];
+    if (pick?.name || pick?.vendorName) {
+      showMiniToast({
+        name: pick.name || pick.vendorName,
+        action: pick.action || pick.text || pick.message || pick.activityText || 'just booked ✓',
+      });
+    } else {
+      showMiniToast(rotating[0]);
+    }
+
+    setInterval(() => {
+      const item = pool[i % pool.length];
+      i += 1;
+
+      if (item?.name || item?.vendorName) {
+        showMiniToast({
+          name: item.name || item.vendorName,
+          action: item.action || item.text || item.message || item.activityText || 'just booked ✓',
+        });
+      } else {
+        showMiniToast(rotating[i % rotating.length]);
+      }
+    }, 8000);
+  })();
+}
+
+export function initLandingRedesign() {
+  initConfetti();
+  initTypewriter();
+  initPlatformStats();
+  initMarquee();
+  initPublicActivityToasts();
+
+  // Search form: submit redirects to services/browse page.
+  const form = document.getElementById('landingSearchForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const city = form.querySelector('[name="city"]')?.value || '';
+      const type = form.querySelector('[name="type"]')?.value || '';
+      const date = form.querySelector('[name="date"]')?.value || '';
+      const params = new URLSearchParams();
+      if (city) params.set('city', city);
+      if (type) params.set('category', type);
+      if (date) params.set('date', date);
+      window.location.href = `services.html?${params.toString()}`;
+    });
+  }
+}
+
+
