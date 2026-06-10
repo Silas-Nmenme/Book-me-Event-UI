@@ -141,15 +141,6 @@ export function initUpcomingEventsWidget() {
                         <div class="fw-bold">${String(b?.bookingStatus || '—').toUpperCase()}</div>
                       </div>
                     </div>
-
-                    <div class="mt-2">
-                      <div class="text-muted-soft small mb-1">Raw payload (for debugging)</div>
-                      <details>
-                        <summary class="text-muted-soft small" style="cursor:pointer;">Show JSON</summary>
-                        <pre class="mb-0 mt-2" style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(b, null, 2))}</pre>
-                      </details>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="modal-footer">
