@@ -24,13 +24,18 @@ function qs(name) {
 }
 
 async function loadMeIfPossible() {
+  // Avoid noisy 401s on the public landing page when no token exists.
   try {
+    const token = localStorage.getItem('bme_token');
+    if (!token) return null;
+
     const meRes = await fetchMe();
     return meRes?.data || meRes;
   } catch {
     return null;
   }
 }
+
 
 async function loadReviews({ page = 1, limit = 6 } = {}) {
   const res = await apiFetch(`/api/v1/reviews?page=${page}&limit=${limit}`, { method: 'GET' });
