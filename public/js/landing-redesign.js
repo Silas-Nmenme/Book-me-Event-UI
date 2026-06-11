@@ -1,17 +1,16 @@
 /* Landing redesign behaviors: confetti, typewriter, stats counter, marquee, toasts, filters */
 
-const STATIC_PLATFORM_STATS = {
-  totalEvents: 2400,
-  totalVendors: 850,
-  cities: 24,
-  satisfaction: 98,
-};
+import { BACKEND_URL } from '../constant.js';
+
 
 async function fetchPlatformStats() {
-  const res = await fetch('/api/v1/stats/platform', { method: 'GET' });
+  // Use the shared API helper so it targets the deployed backend URL.
+  // landing-redesign.js is imported by index.html, so relative fetch may hit the wrong origin.
+  const res = await fetch(`${BACKEND_URL}/api/v1/stats/platform`, { method: 'GET' });
   const json = await res.json();
   return json?.data;
 }
+
 
 function setMarqueeFromVendors(vendors = []) {
   const marquee = document.getElementById('landingVendorMarquee');
