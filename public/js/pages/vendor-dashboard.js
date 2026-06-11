@@ -128,8 +128,21 @@ export async function initVendorDashboard({ me, role } = {}) {
   const avatarEl = document.getElementById('avatar');
   setVendorProfileAvatar(avatarEl, me);
 
-  // Stats strip
+  // Stats strip (show graceful loading placeholders)
+  const vStatIds = [
+    'vStatRequests',
+    'vStatAccepted',
+    'vStatServices',
+    'vStatPendingBookings',
+    'vStatCompletedBookings',
+    'vStatBreachRate',
+  ];
+  vStatIds.forEach((id) => setText(id, '—'));
+  const breachRateEl = document.getElementById('vStatBreachRate');
+  if (breachRateEl) breachRateEl.textContent = '—';
+
   fetchVendorStats({ me, role });
+
 
   // --- Service CRUD UI (existing file in repo may differ; keep minimal and non-breaking) ---
   const shell = document.getElementById('vendorServicesShell');
