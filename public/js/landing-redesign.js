@@ -224,34 +224,29 @@ function initMarquee() {
 
 
 function initPlatformStats() {
-  const ids = {
-    statEvents: 'totalEvents',
-    statVendors: 'totalVendors',
-    statCities: 'cities',
-    statSatisfaction: 'satisfaction',
-  };
-
-  const domEls = Object.keys(ids)
-    .map((k) => [k, document.getElementById(k)])
-    .filter(([, el]) => !!el);
+  // Ensure landing counters always display DB-driven values when backend is reachable.
+  const domEls = ['statEvents', 'statVendors', 'statCities', 'statSatisfaction']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
 
   if (!domEls.length) return;
 
-  domEls.forEach(([, el]) => (el.textContent = '0'));
+  domEls.forEach((el) => (el.textContent = '0'));
 
   // No static fallback: display real DB-driven stats.
   fetchPlatformStats()
     .then((data) => {
       animateCounter(document.getElementById('statEvents'), Number(data?.totalEvents ?? 0));
       animateCounter(document.getElementById('statVendors'), Number(data?.totalVendors ?? 0));
-      // Backend returns cities array; normalize to count if needed.
+
       const cities = data?.cities;
       const citiesCount = Array.isArray(cities) ? cities.length : Number(cities ?? 0);
       animateCounter(document.getElementById('statCities'), citiesCount);
+
+      // Controller returns satisfaction as number.
       animateCounter(document.getElementById('statSatisfaction'), Number(data?.satisfaction ?? 0));
     })
     .catch(() => {
-      // Keep 0s if the API fails.
       animateCounter(document.getElementById('statEvents'), 0);
       animateCounter(document.getElementById('statVendors'), 0);
       animateCounter(document.getElementById('statCities'), 0);
