@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payments - Book Me Events</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+
+    <style>
+      .bme-pill { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(124,58,237,.35); background: rgba(124,58,237,.12); font-weight: 800; font-size: .78rem; }
+      .bme-pill--confirmed { border-color: rgba(20,184,166,.35); background: rgba(20,184,166,.16); }
+      .bme-pill--pending { border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.16); }
+      .bme-pill--cancelled { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.16); }
+      .bme-pill--refunded { border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.16); }
+
+      .bme-table th { color: rgba(255,255,255,.85); }
+      .bme-muted { color: rgba(255,255,255,.7); }
+
+      .bme-empty { border: 1px dashed rgba(255,255,255,.16); border-radius: 14px; padding: 16px; }
+
+      .bme-loading {
+        min-height: 140px;
+      }
+
+      @media (max-width: 576px) {
+        .bme-table td, .bme-table th { font-size: .92rem; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navPaymentsContent"
+          aria-controls="navPaymentsContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navPaymentsContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="bookings.html">Bookings</a>
+            <a class="btn btn-soft" href="user-tickets.html">Support</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="badge badge-glow mb-3" id="roleBadge">Payments</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+              <hr />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div id="avatar" class="rounded-circle border bme-avatar">BME</div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">—</div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <div class="fw-bold mb-2">Payments summary</div>
+                <div class="small text-muted-soft">Total spend this year</div>
+                <div class="h3 fw-bold mt-2" id="paymentsTotal">—</div>
+              </div>
+
+              <div class="mt-4">
+                <div class="fw-bold mb-2">What you can do</div>
+                <ul class="small text-muted-soft mb-0">
+                  <li class="mb-1">View your payment history.</li>
+                  <li class="mb-1">Retry payment for pending bookings.</li>
+                  <li class="mb-0">Refund eligible payments.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="card card-glass p-4 fade-slide">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">Your payments</div>
+                  <h3 class="h5 fw-bold mb-0" id="pageTitle">Track payments and receipts</h3>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                  <select id="statusFilter" class="form-select form-select-sm" style="min-width: 180px;" title="Filter by status">
+                    <option value="">All statuses</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="FAILED">FAILED</option>
+                    <option value="REFUNDED">REFUNDED</option>
+                  </select>
+
+                  <button id="btnRefresh" class="btn btn-soft btn-sm" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
+
+              <div id="paymentsError" class="alert alert-danger d-none" role="alert"></div>
+
+              <div id="paymentsLoading" class="bme-loading d-flex align-items-center">
+                <div class="text-muted-soft small">Loading…</div>
+              </div>
+
+              <div id="paymentsEmpty" class="bme-empty d-none">
+                <div class="fw-bold mb-1">No payments found</div>
+                <div class="small text-muted-soft">When you complete payments, they will appear here.</div>
+              </div>
+
+              <div class="table-responsive mt-3 d-none" id="paymentsTableWrap">
+                <table class="table bme-table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Payment</th>
+                      <th>Booking</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Amount</th>
+                      <th style="width: 220px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="paymentsTbody"></tbody>
+                </table>
+              </div>
+
+              <div class="mt-3 d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <div class="small text-muted-soft" id="paymentsMeta">—</div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-soft btn-sm" id="btnPrev" type="button">Prev</button>
+                  <button class="btn btn-soft btn-sm" id="btnNext" type="button">Next</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Payments</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+      import { initPaymentsPage } from '../js/pages/payments.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+      document.getElementById('btnLogout')?.addEventListener('click', async () => {
+        try {
+          await logoutUser();
+        } finally {
+          clearToken();
+        }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      const me = await fetchMe().catch(() => null);
+      if (!me) {
+        clearToken();
+        window.location.href = 'auth-login.html';
+      } else {
+        const meData = me?.data || me;
+        document.getElementById('meName').textContent = meData?.firstName ? `${meData.firstName} ${meData.lastName || ''}`.trim() : '—';
+        document.getElementById('meEmail').textContent = meData?.email || '—';
+        document.getElementById('meRole').textContent = (meData?.role || meData?.user?.role || 'USER').toString().toUpperCase();
+
+        const avatarEl = document.getElementById('avatar');
+        if (meData?.profilePicture) {
+          avatarEl.style.backgroundImage = `url(${meData.profilePicture})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+        } else {
+          avatarEl.textContent = (meData?.firstName || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
+          avatarEl.style.backgroundImage = '';
+          avatarEl.style.background = 'rgba(124,92,255,0.12)';
+        }
+      }
+
+      await initPaymentsPage();
+    </script>
+  </body>
+</html>
+

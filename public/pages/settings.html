@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings - Book Me Events</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+
+    <style>
+      .bme-form-label { color: rgba(255,255,255,0.8); font-weight: 700; }
+      .bme-section { border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px; }
+    </style>
+  </head>
+
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html">
+          <span class="brand-pill">
+            <span class="brand-dot"></span>
+            <span class="fw-bold">Book Me Events</span>
+          </span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navSettingsContent"
+          aria-controls="navSettingsContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div id="navSettingsContent" class="collapse navbar-collapse">
+          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="payments.html">Payments</a>
+            <a class="btn btn-soft" href="bookings.html">Bookings</a>
+
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft btn-sm bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
+            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-4 align-items-start">
+          <div class="col-12 col-lg-4">
+            <div class="bme-section fade-slide">
+              <div class="badge badge-glow mb-3" id="roleBadge">Settings</div>
+              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
+              <div class="text-muted-soft" id="meEmail">—</div>
+              <hr />
+
+              <div class="d-flex gap-3 align-items-center">
+                <div id="avatar" class="rounded-circle border bme-avatar">BME</div>
+                <div>
+                  <div class="small text-muted-soft">Role</div>
+                  <div class="fw-bold" id="meRole">—</div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <div class="fw-bold mb-2">Profile picture</div>
+                <div class="small text-muted-soft mb-2">Upload an image to update your avatar.</div>
+                <input id="profilePictureInput" class="form-control" type="file" accept="image/*" />
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-8">
+            <div class="bme-section fade-slide">
+              <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                <div>
+                  <div class="badge badge-glow text-white mb-2">Account</div>
+                  <h3 class="h5 fw-bold mb-0">Update your details</h3>
+                </div>
+              </div>
+
+              <div class="alert alert-danger d-none" id="formError" role="alert"></div>
+              <div class="alert alert-info d-none" id="formInfo" role="alert"></div>
+
+              <form id="settingsForm" autocomplete="off">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="bme-form-label form-label" for="firstName">First name</label>
+                    <input class="form-control" id="firstName" type="text" maxlength="60" required />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="bme-form-label form-label" for="lastName">Last name</label>
+                    <input class="form-control" id="lastName" type="text" maxlength="60" />
+                  </div>
+
+                  <div class="col-12">
+                    <label class="bme-form-label form-label" for="email">Email</label>
+                    <input class="form-control" id="email" type="email" disabled />
+                    <div class="small text-muted-soft mt-2">Email changes may require verification.</div>
+                  </div>
+
+<div class="col-12">
+                    <label class="bme-form-label form-label" for="phone">Phone</label>
+                    <input class="form-control" id="phone" type="text" maxlength="40" placeholder="Phone" />
+                  </div>
+
+                  <div class="col-12 d-flex gap-2 flex-wrap">
+                    <button id="btnSave" class="btn btn-brand" type="submit">Save changes</button>
+                    <button id="btnRefresh" class="btn btn-soft" type="button" title="Refresh form">Refresh</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>© <span id="year"></span> Book Me Events</div>
+          <div class="text-muted-soft small">Settings</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+      import { fetchMe, logoutUser, clearToken, updateUser } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
+
+      setYear('year');
+      initThemeToggle();
+      initNavbarBrandRoleRedirect();
+
+      document.getElementById('btnLogout')?.addEventListener('click', async () => {
+        try {
+          await logoutUser();
+        } finally {
+          clearToken();
+        }
+        toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
+        window.location.href = 'auth-login.html';
+      });
+
+      const form = document.getElementById('settingsForm');
+      const formError = document.getElementById('formError');
+      const formInfo = document.getElementById('formInfo');
+
+      const firstNameEl = document.getElementById('firstName');
+      const lastNameEl = document.getElementById('lastName');
+      const emailEl = document.getElementById('email');
+      const phoneEl = document.getElementById('phone');
+
+      const avatarEl = document.getElementById('avatar');
+      const avatarFileInput = document.getElementById('profilePictureInput');
+      const meNameEl = document.getElementById('meName');
+      const meEmailEl = document.getElementById('meEmail');
+      const meRoleEl = document.getElementById('meRole');
+
+      function setAvatarUrl(url) {
+        if (!avatarEl) return;
+        if (url) {
+          avatarEl.style.backgroundImage = `url(${url})`;
+          avatarEl.style.backgroundSize = 'cover';
+          avatarEl.style.backgroundPosition = 'center';
+          avatarEl.textContent = '';
+          avatarEl.style.fontWeight = 'normal';
+          return;
+        }
+        avatarEl.style.backgroundImage = '';
+        avatarEl.textContent = 'BME';
+        avatarEl.style.fontWeight = '900';
+      }
+
+      function initials(name) {
+        return (name || 'BME')
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((x) => x[0].toUpperCase())
+          .join('');
+      }
+
+      async function loadMe() {
+        const me = await fetchMe().catch(() => null);
+        if (!me) {
+          clearToken();
+          window.location.href = 'auth-login.html';
+          return null;
+        }
+        const data = me?.data || me;
+
+        const firstName = data?.firstName || '';
+        const lastName = data?.lastName || '';
+
+        meNameEl.textContent = firstName || lastName
+          ? `${firstName} ${lastName}`.trim()
+          : '—';
+        meEmailEl.textContent = data?.email || '—';
+        meRoleEl.textContent = (data?.role || data?.user?.role || 'USER').toString().toUpperCase();
+
+        emailEl.value = data?.email || '';
+        firstNameEl.value = firstName;
+        lastNameEl.value = lastName;
+        phoneEl.value = data?.phone || data?.phoneNumber || '';
+
+        if (data?.profilePicture) setAvatarUrl(data.profilePicture);
+        else {
+          avatarEl.textContent = initials(firstName || 'BME');
+          avatarEl.style.backgroundImage = '';
+          avatarEl.style.background = 'rgba(124,92,255,0.12)';
+          avatarEl.style.fontWeight = '900';
+        }
+
+        return data;
+      }
+
+      let meCache = null;
+
+      if (avatarFileInput) {
+        avatarFileInput.addEventListener('change', async () => {
+          const file = avatarFileInput.files?.[0];
+          if (!file) return;
+          try {
+            avatarFileInput.disabled = true;
+            toast({ title: 'Uploading', message: 'Updating profile picture…', variant: 'warning' });
+
+            const fd = new FormData();
+            fd.append('image', file);
+            const r = await apiFetch('/api/v1/uploads/profile-picture', { method: 'POST', body: fd });
+            const d = r?.data || r;
+
+            if (d?.url) setAvatarUrl(d.url);
+            toast({ title: 'Updated', message: 'Profile picture updated.', variant: 'success' });
+          } catch (e) {
+            toast({ title: 'Upload failed', message: e?.message || 'Try again.', variant: 'danger' });
+          } finally {
+            avatarFileInput.disabled = false;
+            avatarFileInput.value = '';
+          }
+        });
+      }
+
+      document.getElementById('btnRefresh')?.addEventListener('click', async () => {
+        meCache = await loadMe();
+      });
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        formError.classList.add('d-none');
+        formInfo.classList.add('d-none');
+
+        try {
+          const userId = meCache?._id || meCache?.id;
+          if (!userId) throw new Error('User not loaded');
+
+          const payload = {
+            firstName: firstNameEl.value.trim(),
+            lastName: lastNameEl.value.trim() || undefined,
+            phone: phoneEl.value.trim() || undefined,
+          };
+
+          document.getElementById('btnSave').disabled = true;
+          document.getElementById('btnSave').textContent = 'Saving…';
+
+          await updateUser(userId, payload);
+
+          toast({ title: 'Saved', message: 'Settings updated.', variant: 'success' });
+          meCache = await loadMe();
+        } catch (err) {
+          const msg = err?.message || 'Failed to save settings.';
+          formError.textContent = msg;
+          formError.classList.remove('d-none');
+          toast({ title: 'Save failed', message: msg, variant: 'danger' });
+        } finally {
+          document.getElementById('btnSave').disabled = false;
+          document.getElementById('btnSave').textContent = 'Save changes';
+        }
+      });
+
+      // initial load
+      meCache = await loadMe();
+    </script>
+  </body>
+</html>
+

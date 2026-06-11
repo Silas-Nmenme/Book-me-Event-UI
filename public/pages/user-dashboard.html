@@ -36,6 +36,11 @@
       }
 
       @media (max-width: 768px) {
+        .bme-dashboard {
+          grid-template-columns: 1fr;
+          overflow-x: hidden;
+        }
+
         .bme-sidebar {
           position: fixed;
           top: 0;
@@ -47,7 +52,8 @@
           background: var(--surface);
         }
         .bme-sidebar.open { transform: translateX(0); }
-.bme-sidebar-backdrop {
+
+        .bme-sidebar-backdrop {
           position: fixed;
           inset: 0;
           background: rgba(0,0,0,.45);
@@ -55,13 +61,13 @@
           z-index: 1090;
         }
         .bme-sidebar-backdrop.show { display: block; }
+
         /* When closed, prevent any accidental interaction */
-        .bme-sidebar:not(.open) {
-          pointer-events: none;
-        }
-        .bme-sidebar.open {
-          pointer-events: auto;
-        }
+        .bme-sidebar:not(.open) { pointer-events: none; }
+        .bme-sidebar.open { pointer-events: auto; }
+
+        /* Keep main content usable when sidebar is fixed */
+        .bme-main { padding-left: 0; }
       }
 
 
