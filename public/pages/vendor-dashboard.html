@@ -367,10 +367,17 @@
             await initVendorDashboard({ me, role });
           } catch {}
 
-          if (me?.profilePicture) {
-            setAvatarUrl(me.profilePicture);
+          const avatarUrl =
+            me?.profilePicture ||
+            me?.user?.profilePicture ||
+            me?.vendor?.user?.profilePicture ||
+            me?.vendor?.profilePicture ||
+            null;
+
+          if (avatarUrl) {
+            setAvatarUrl(avatarUrl);
           } else {
-            avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
+            avatarEl.textContent = getAvatarInitials(me?.firstName || me?.user?.firstName || 'BME');
             avatarEl.style.backgroundImage = '';
             avatarEl.style.background = 'rgba(124,92,255,0.12)';
           }
