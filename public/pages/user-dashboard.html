@@ -16,14 +16,24 @@
         :root { --bme-sidebar-w: 0px; }
       }
 
+      /* Desktop should keep sidebar + 2-column layout.
+         If some global CSS overrides our grid, ensure it stays on desktop. */
       .bme-dashboard {
         min-height: 100vh;
         display: grid;
         grid-template-columns: var(--bme-sidebar-w) 1fr;
+        align-items: start;
+      }
+
+      /* On desktop, prevent accidental mobile stacking */
+      @media (min-width: 769px) {
+        .bme-dashboard { grid-template-columns: 240px 1fr; }
+        .bme-sidebar { position: sticky; left: auto; width: 240px; transform: none !important; }
+        .bme-sidebar-backdrop { display: none; }
       }
 
       @media (max-width: 768px) {
-        .bme-dashboard { grid-template-columns: 1fr; }
+        .bme-dashboard { grid-template-columns: 1fr; overflow-x: hidden; }
       }
 
       .bme-sidebar {
