@@ -7,6 +7,40 @@ const STATIC_PLATFORM_STATS = {
   satisfaction: 98,
 };
 
+async function fetchPlatformStats() {
+  const res = await fetch('/api/v1/stats/platform', { method: 'GET' });
+  const json = await res.json();
+  return json?.data;
+}
+
+function setMarqueeFromVendors(vendors = []) {
+  const marquee = document.getElementById('landingVendorMarquee');
+  if (!marquee) return;
+
+  // Clear placeholders
+  marquee.innerHTML = '';
+
+  const names = vendors
+    .map((v) => v?.name || v?.vendorName || v?.businessName)
+    .filter(Boolean);
+
+  // Create enough items to satisfy the seamless scroll width.
+  const unique = Array.from(new Set(names));
+  const pool = unique.length ? unique : ['Verified vendors'];
+
+  const doubled = [...pool, ...pool];
+
+  for (const name of doubled) {
+    const span = document.createElement('span');
+    span.className = 'bme-vendor-logo';
+    span.textContent = name;
+    marquee.appendChild(span);
+  }
+
+  marquee.dataset.marqueeState = 'ready';
+}
+
+
 function escapeHtml(s) {
   return (s ?? '').toString().replace(/[&<>"']/g, (c) => {
     const m = { '&': '&amp;', '<': '<', '>': '>', '"': '"', "'": '&#039;' };
@@ -167,9 +201,27 @@ function initMarquee() {
   const marquee = document.getElementById('landingVendorMarquee');
   if (!marquee) return;
 
-  // Expect the HTML already includes duplicated items.
-  marquee.classList.add('show');
+  // Populate marquee with real vendors if backend allows.
+  // Widgets endpoints for activity/messages are protected; keep this best-effort.
+  (async () => {
+    try {
+      // Reuse existing vendor map endpoint if it returns vendor list.
+      // Auth may be required; failures are swallowed.
+      const res = await fetch('/api/v1/widgets/vendors?limit=12');
+      const json = await res.json();
+      const vendors = json?.data || json;
+      if (Array.isArray(vendors) && vendors.length) {
+        setMarqueeFromVendors(vendors);
+      }
+    } catch {
+      // ignore
+    } finally {
+      marquee.classList.add('show');
+    }
+  })();
 }
+
+
 
 function initPlatformStats() {
   const ids = {
@@ -187,31 +239,26 @@ function initPlatformStats() {
 
   domEls.forEach(([, el]) => (el.textContent = '0'));
 
-  const fetcher = async () => {
-    try {
-      const res = await fetch('/api/v1/stats/platform', { method: 'GET' });
-      const json = await res.json();
-      return json?.data;
-    } catch {
-      return null;
-    }
-  };
-
-  fetcher()
-    .then((data) => data || STATIC_PLATFORM_STATS)
+  // No static fallback: display real DB-driven stats.
+  fetchPlatformStats()
     .then((data) => {
-      animateCounter(document.getElementById('statEvents'), Number(data.totalEvents || STATIC_PLATFORM_STATS.totalEvents));
-      animateCounter(document.getElementById('statVendors'), Number(data.totalVendors || STATIC_PLATFORM_STATS.totalVendors));
-      animateCounter(document.getElementById('statCities'), Number(data.cities || STATIC_PLATFORM_STATS.cities));
-      animateCounter(document.getElementById('statSatisfaction'), Number(data.satisfaction || STATIC_PLATFORM_STATS.satisfaction));
+      animateCounter(document.getElementById('statEvents'), Number(data?.totalEvents ?? 0));
+      animateCounter(document.getElementById('statVendors'), Number(data?.totalVendors ?? 0));
+      // Backend returns cities array; normalize to count if needed.
+      const cities = data?.cities;
+      const citiesCount = Array.isArray(cities) ? cities.length : Number(cities ?? 0);
+      animateCounter(document.getElementById('statCities'), citiesCount);
+      animateCounter(document.getElementById('statSatisfaction'), Number(data?.satisfaction ?? 0));
     })
     .catch(() => {
-      animateCounter(document.getElementById('statEvents'), STATIC_PLATFORM_STATS.totalEvents);
-      animateCounter(document.getElementById('statVendors'), STATIC_PLATFORM_STATS.totalVendors);
-      animateCounter(document.getElementById('statCities'), STATIC_PLATFORM_STATS.cities);
-      animateCounter(document.getElementById('statSatisfaction'), STATIC_PLATFORM_STATS.satisfaction);
+      // Keep 0s if the API fails.
+      animateCounter(document.getElementById('statEvents'), 0);
+      animateCounter(document.getElementById('statVendors'), 0);
+      animateCounter(document.getElementById('statCities'), 0);
+      animateCounter(document.getElementById('statSatisfaction'), 0);
     });
 }
+
 
 function initPublicActivityToasts() {
   const rotating = [
