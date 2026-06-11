@@ -56,8 +56,9 @@ async function fetchVendorStats({ me, role }) {
   // Ensure values for the dashboard strip always load.
   try {
     const [analyticsRes, slaRes] = await Promise.all([
-      apiFetch('/api/v1/vendors/analytics', { method: 'GET' }),
-      apiFetch('/api/v1/vendors/sla', { method: 'GET' }),
+      apiFetch('/api/v1/vendor/analytics', { method: 'GET' }),
+      apiFetch('/api/v1/vendor/sla', { method: 'GET' }),
+
     ]);
 
     const analytics = analyticsRes?.data || analyticsRes;
@@ -143,8 +144,8 @@ export async function initVendorDashboard({ me, role } = {}) {
 
   fetchVendorStats({ me, role });
 
-
   // --- Service CRUD UI (existing file in repo may differ; keep minimal and non-breaking) ---
+
   const shell = document.getElementById('vendorServicesShell');
   const serviceList = document.getElementById('vendorServiceList');
   const noServices = document.getElementById('vendorNoServices');
@@ -178,7 +179,20 @@ export async function initVendorDashboard({ me, role } = {}) {
   const hideForm = () => formEl?.classList.add('d-none');
   const showForm = () => formEl?.classList.remove('d-none');
 
-  const isVerified = !!(me?.vendor?.isVerified ?? me?.isVerified ?? me?.vendorIsVerified);
+  const isVerified = !!(me?.vendor?.isVerified ?? me?.isVerified ?? me?.vendorIsVerified ?? me?.vendor?.kycVerified ?? me?.kycVerified);
+  const kycBadgeEl = document.getElementById('vendorKycBadge');
+  if (kycBadgeEl) {
+    if (isVerified) {
+      kycBadgeEl.textContent = 'KYC Verified';
+      kycBadgeEl.classList.remove('bme-pill--pending');
+      kycBadgeEl.classList.add('bme-pill--verified');
+    } else {
+      kycBadgeEl.textContent = 'KYC Not Verified';
+      kycBadgeEl.classList.remove('bme-pill--verified');
+      kycBadgeEl.classList.add('bme-pill--pending');
+    }
+  }
+
   if (!isVerified) {
     roleNotice?.classList.remove('d-none');
     if (roleNotice) roleNotice.textContent = 'Your vendor account is not verified by admin yet. Service creation is locked until verification.';
