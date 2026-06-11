@@ -584,6 +584,77 @@
 
       <!-- TESTIMONIALS -->
       <section class="section" id="testimonials">
+        <div class="container" id="landingReviewsSection">
+          <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+            <div>
+              <h2 class="fw-bold">What people say</h2>
+              <div class="text-muted-soft">Trusted experiences across Nigeria.</div>
+            </div>
+          </div>
+
+          <div class="row g-4 align-items-stretch">
+            <div class="col-12 col-lg-7">
+              <div class="card card-glass p-4 h-100">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                  <div class="badge badge-glow text-white">Latest reviews</div>
+                  <div class="small text-muted-soft">Submitted by users after completed bookings</div>
+                </div>
+
+                <div id="landingReviewsLoading" class="text-muted-soft small">Loading…</div>
+                <div class="row g-3 mt-1" id="landingReviewsList"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+              <div class="card card-glass p-4 h-100" id="landingCreateReviewCard">
+                <div class="badge badge-glow text-white mb-2">Leave a review</div>
+                <div class="small text-muted-soft mb-3">Select a completed booking and share your experience.</div>
+
+                <div id="landingReviewsAuthzError" class="alert alert-danger d-none" role="alert"></div>
+
+                <div id="landingCreateReviewCardInner">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Booking</label>
+                    <select id="landingReviewBookingSelect" class="form-select" disabled>
+                      <option value="">Login to create a review</option>
+                    </select>
+                    <div class="small text-muted-soft mt-2" id="landingReviewBookingMeta"></div>
+                  </div>
+
+                  <form id="landingCreateReviewForm">
+                    <input id="landingReviewBooking" type="hidden" />
+                    <input id="landingReviewVendor" type="hidden" />
+                    <input id="landingReviewService" type="hidden" />
+
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Rating (1-5)</label>
+                    <input id="landingReviewRating" class="form-control" type="number" min="1" max="5" step="1" value="5" disabled aria-label="Rating (1-5)" />
+
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Title</label>
+                      <input id="landingReviewTitle" class="form-control" type="text" placeholder="Short summary" required disabled />
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Comment</label>
+                      <textarea id="landingReviewComment" class="form-control" rows="3" placeholder="What went well?" required disabled></textarea>
+                    </div>
+
+                    <button class="btn btn-brand w-100" type="submit" disabled>
+                      Submit review
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Old static testimonials replaced by dynamic widget -->
+        <div class="d-none"></div>
+      
         <div class="container">
           <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
             <div>
@@ -717,6 +788,7 @@
       import { setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
       import { initLandingRedesign } from '../js/landing-redesign.js';
+      import { initLandingReviewsWidget } from '../js/widgets/landing-reviews.js';
 
       setYear('year');
       initThemeToggle();
@@ -729,6 +801,7 @@
       });
 
       initLandingRedesign();
+      initLandingReviewsWidget();
     </script>
   </body>
 </html>
