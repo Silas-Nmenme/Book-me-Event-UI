@@ -20,9 +20,24 @@
             <span class="fw-bold">Book Me Events</span>
           </span>
         </a>
-        <button class="btn btn-soft ms-auto" id="btnLogout" type="button">Logout</button>
+
+        <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+          <button
+            id="themeToggleBtn"
+            class="btn btn-soft bme-theme-toggle"
+            type="button"
+            aria-label="Toggle dark/light theme"
+            title="Toggle theme"
+          >
+            <span data-icon="sun">☀️</span>
+            <span data-icon="moon">🌙</span>
+          </button>
+
+          <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+        </div>
       </div>
     </nav>
+
 
     <section class="section">
       <div class="container">
@@ -73,6 +88,7 @@
 
       setYear('year');
       initThemeToggle();
+
 
       document.getElementById('btnLogout')?.addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }

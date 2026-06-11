@@ -34,11 +34,23 @@
 
         <div id="navAdminStatsContent" class="collapse navbar-collapse">
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <button
+              id="themeToggleBtn"
+              class="btn btn-soft bme-theme-toggle"
+              type="button"
+              aria-label="Toggle dark/light theme"
+              title="Toggle theme"
+            >
+              <span data-icon="sun">☀️</span>
+              <span data-icon="moon">🌙</span>
+            </button>
+
             <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
           </div>
         </div>
       </div>
     </nav>
+
 
     <section class="section">
       <div class="container">
@@ -139,6 +151,7 @@
       setYear('year');
       initThemeToggle();
       initNavbarBrandRoleRedirect();
+
 
       const avatarEl = document.getElementById('avatar');
       const authzErrorEl = document.getElementById('authzError');

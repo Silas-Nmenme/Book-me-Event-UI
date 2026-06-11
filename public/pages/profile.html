@@ -95,8 +95,11 @@
       import { fetchMe, logoutUser } from '../js/api.js';
       import { clearToken } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
 
       setYear('year');
+      initThemeToggle();
+
 
       async function routeToRole() {
         const hint = document.getElementById('hint');
