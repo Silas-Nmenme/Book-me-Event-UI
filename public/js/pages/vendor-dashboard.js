@@ -63,11 +63,20 @@ async function fetchVendorStats({ me, role }) {
     const analytics = analyticsRes?.data || analyticsRes;
     const sla = slaRes?.data || slaRes;
 
-    setText('vStatRequests', analytics?.totalBookings ?? '0');
-    setText('vStatAccepted', analytics?.totalBookings ?? '0');
+    // Map backend analytics to the dashboard strip.
+    // Current backend vendor analytics endpoint only returns totalBookings + completedBookings.
+    const totalBookings = analytics?.totalBookings ?? 0;
+    const completedBookings = analytics?.completedBookings ?? 0;
+
+    // Best-effort mapping until backend provides request states counts.
+    // - Incoming requests / Accepted requests: currently approximated by totalBookings.
+    // - Bookings pending: approximated by (totalBookings - completedBookings).
+    setText('vStatRequests', totalBookings);
+    setText('vStatAccepted', totalBookings);
     setText('vStatServices', '—');
-    setText('vStatPendingBookings', '—');
-    setText('vStatCompletedBookings', analytics?.completedBookings ?? '0');
+    setText('vStatPendingBookings', Math.max(0, totalBookings - completedBookings));
+    setText('vStatCompletedBookings', completedBookings);
+
     setPct('vStatBreachRate', sla?.breachRate);
 
     // NOTE: analytics endpoint only provides bookings counts. If you later add a more detailed
