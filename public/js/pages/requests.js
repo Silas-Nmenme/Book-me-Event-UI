@@ -257,6 +257,9 @@ export async function initRequestsPage({ me, role } = {}) {
   // (normalizeReqStatus is defined at module scope)
 
   shell?.classList.remove('d-none');
+  if (noRequests) noRequests.classList.add('d-none');
+  if (requestList) requestList.innerHTML = '';
+
 
   if (roleNotice) {
 
@@ -429,15 +432,18 @@ export async function initRequestsPage({ me, role } = {}) {
         data?.items ||
         [];
 
-      if (!Array.isArray(items) || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
 
         noRequests?.classList.remove('d-none');
 
+        requestList.innerHTML = '';
         return;
       }
 
+      noRequests?.classList.add('d-none');
       requestList.innerHTML =
         items.map((r) => buildCard(r, { myRole })).join('');
+
 
       requestList
         .querySelectorAll('[data-action]')
