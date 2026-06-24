@@ -271,29 +271,26 @@ export async function initRequestsPage({ me, role } = {}) {
     }
   }
 
-  const prefillServiceId = qs('prefillServiceId');
-
-  // Prefill from services.html: requests.html?prefillServiceId=...
-  // IMPORTANT: Users should NOT be able to submit the form in “prefilled direct-from-services” flow.
-  // So we only prefill the field for display/traceability, and we DO NOT auto-open the modal.
-  if (prefillServiceId && document.getElementById('service')) {
-    const serviceEl = document.getElementById('service');
-    serviceEl.value = prefillServiceId;
-
-    // Give immediate feedback that the modal will be prefilled once opened.
-    toast({
-      title: 'Service selected',
-      message: `Service ID ${prefillServiceId} is prefilled. Click Create Request to continue.`,
-      variant: 'info',
-    });
-  }
-
   btnCreateRequest?.addEventListener('click', () => {
-    // Allow manual opening via the explicit “Create Request” button.
+    // If we have a prefill request from a service card, keep it.
     requestModal?.show();
   });
 
+  // Prefill from services.html: requests.html?prefillServiceId=...
+  const prefillServiceId = qs('prefillServiceId');
+  const prefillShouldOpen = !!prefillServiceId;
 
+
+  if (prefillServiceId && document.getElementById('service')) {
+    const serviceEl = document.getElementById('service');
+    serviceEl.value = prefillServiceId;
+  }
+
+
+  if (prefillShouldOpen) {
+    // Ensure modal opens after bootstrap init.
+    setTimeout(() => requestModal?.show(), 0);
+  }
 
   requestForm?.addEventListener('submit', async (e) => {
 
