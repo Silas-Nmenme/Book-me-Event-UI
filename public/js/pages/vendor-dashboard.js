@@ -225,6 +225,34 @@ export async function initVendorDashboard({ me, role } = {}) {
           const id = btn.getAttribute('data-id');
           if (!id) return;
 
+          if (action === 'edit') {
+            // Populate inline editor (modal) from the locally-rendered data.
+            // If the list doesn't include full fields, we fall back to a best-effort PUT payload.
+            const svc = myServices.find((s) => (s?._id || s?.id) === id) || {};
+            modeInput && (modeInput.value = 'edit');
+            serviceIdInput && (serviceIdInput.value = id);
+
+            inpServiceName && (inpServiceName.value = svc?.serviceName || '');
+            inpServiceCategory && (inpServiceCategory.value = svc?.serviceCategory || '');
+            inpDescription && (inpDescription.value = svc?.description || '');
+            inpBasePrice && (inpBasePrice.value = svc?.basePrice ?? '');
+            inpPriceCurrency && (inpPriceCurrency.value = svc?.priceCurrency || 'NGN');
+
+            // Images: keep current (if any) but the input should be cleared for re-upload.
+            if (inpImagesFiles) inpImagesFiles.value = '';
+            if (inpImages) inpImages.value = '';
+
+            hideForm();
+            showForm();
+            btnSubmit && (btnSubmit.disabled = false);
+
+            // Scroll editor into view for better UX.
+            try {
+              formEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch {}
+            return;
+          }
+
           if (action === 'delete') {
             const ok = window.confirm('Delete this service?');
             if (!ok) return;
