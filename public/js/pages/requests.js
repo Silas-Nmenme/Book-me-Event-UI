@@ -227,6 +227,17 @@ function buildCard(req, { myRole } = {}) {
 
 export async function initRequestsPage({ me, role } = {}) {
 
+  // Only render requests when logged-in user is the current user.
+  // Backend already filters by req.user.
+  if (!me?.id) {
+    const authzError = document.getElementById('authzError');
+    if (authzError) {
+      authzError.classList.remove('d-none');
+      authzError.textContent = 'Please log in to view your requests.';
+    }
+    return;
+  }
+
   const shell = document.getElementById('requestsShell');
   const roleNotice = document.getElementById('roleNotice');
   const authzError = document.getElementById('authzError');
