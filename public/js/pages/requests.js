@@ -175,7 +175,7 @@ function buildCard(req, { myRole } = {}) {
           ${
             myRoleNorm === 'USER' && statusNorm === 'accepted'
               ? `
-            <a class="btn btn-primary btn-sm" href="create-booking.html?requestId=${encodeURIComponent(id)}">Book</a>
+            <a class="btn btn-primary btn-sm" href="bookings.html?requestId=${encodeURIComponent(id)}">Book now</a>
           `
               : ''
           }
