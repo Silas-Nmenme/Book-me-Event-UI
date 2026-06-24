@@ -279,12 +279,20 @@ export async function initRequestsPage({ me, role } = {}) {
   if (prefillServiceId && document.getElementById('service')) {
     const serviceEl = document.getElementById('service');
     serviceEl.value = prefillServiceId;
+
+    // Give immediate feedback that the modal will be prefilled once opened.
+    toast({
+      title: 'Service selected',
+      message: `Service ID ${prefillServiceId} is prefilled. Click Create Request to continue.`,
+      variant: 'info',
+    });
   }
 
   btnCreateRequest?.addEventListener('click', () => {
     // Allow manual opening via the explicit “Create Request” button.
     requestModal?.show();
   });
+
 
 
   requestForm?.addEventListener('submit', async (e) => {
