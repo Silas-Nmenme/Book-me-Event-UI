@@ -108,9 +108,17 @@ async function renderPendingVendors() {
     bodyEl.innerHTML = vendors
       .map((v) => {
         const user = v?.user;
-        const requested = formatDateMaybe(v?.createdAt || v?.verificationRequestedAt);
+        const requested = formatDateMaybe(
+          v?.createdAt ||
+            v?.verificationRequestedAt ||
+            v?.kycReviewedAt ||
+            v?.kycSubmittedAt
+        );
 
-        const kycUrl = v?.kycDocumentUrl;
+        // Vendor schema field is `kycDocumentUrl` (uploaded by vendor).
+        // Keep UI resilient to alternate naming.
+        const kycUrl = v?.kycDocumentUrl || v?.kycDocUrl;
+
         const hasKyc = !!kycUrl;
         return `
           <tr>

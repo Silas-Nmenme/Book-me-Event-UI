@@ -183,10 +183,11 @@ export async function initVendorDashboard({ me, role } = {}) {
   const kycBadgeEl = document.getElementById('vendorKycBadge');
   if (kycBadgeEl) {
     if (isVerified) {
-      kycBadgeEl.textContent = 'KYC Verified';
-      kycBadgeEl.classList.remove('bme-pill--pending');
-      kycBadgeEl.classList.add('bme-pill--verified');
-    } else {
+    kycBadgeEl.textContent = 'KYC Verified';
+    kycBadgeEl.classList.remove('bme-pill--pending');
+    // CSS token in styles.css is bme-pill--confirmed
+    kycBadgeEl.classList.add('bme-pill--confirmed');
+  } else {
       kycBadgeEl.textContent = 'KYC Not Verified';
       kycBadgeEl.classList.remove('bme-pill--verified');
       kycBadgeEl.classList.add('bme-pill--pending');

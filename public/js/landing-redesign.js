@@ -204,9 +204,8 @@ function initMarquee() {
   // Widgets endpoints for activity/messages are protected; keep this best-effort.
   (async () => {
     try {
-      // Reuse existing vendor map endpoint if it returns vendor list.
-      // Auth may be required; failures are swallowed.
-      const res = await fetch('/api/v1/widgets/vendors?limit=12');
+      // Public endpoint (no auth required) for landing marquee vendors.
+      const res = await fetch(`${BACKEND_URL}/api/v1/widgets/landing/vendor-marquee?limit=12`);
       const json = await res.json();
       const vendors = json?.data || json;
       if (Array.isArray(vendors) && vendors.length) {
@@ -219,6 +218,7 @@ function initMarquee() {
     }
   })();
 }
+
 
 
 
