@@ -33,8 +33,10 @@ function formatPaymentStatus(status) {
 
 function buildBookingCard(b, myRole) {
   const id = b?._id || b?.id;
-  const status = b?.status || b?.bookingStatus;
-  const { text, variant } = statusLabel(status);
+  const bookingStatus = b?.status || b?.bookingStatus;
+  const paymentStatus = b?.paymentStatus || b?.payment?.status;
+  const { text, variant } = statusLabel(bookingStatus);
+
 
   const title = b?.serviceName || b?.service?.name || b?.title || b?.requestTitle || `Booking ${id || ''}`.trim();
   const scheduledAt = b?.scheduledAt || b?.eventDate || b?.date || b?.request?.eventDate;
@@ -69,8 +71,19 @@ function buildBookingCard(b, myRole) {
         <div class="mt-3 d-flex flex-wrap gap-2">
           ${myRole === 'USER' ? `<button class="btn btn-danger btn-sm" type="button" data-action="cancel" data-id="${escapeHtml(id || '')}">Cancel</button>` : ''}
           ${myRole === 'VENDOR' ? `<button class="btn btn-success btn-sm" type="button" data-action="complete" data-id="${escapeHtml(id || '')}">Mark complete</button>` : ''}
+          ${(() => {
+            const bookingCompleted = (bookingStatus || '').toString().toUpperCase() === 'COMPLETED';
+            const paymentCompleted = (paymentStatus || '').toString().toUpperCase() === 'COMPLETED';
+            const canReview = myRole === 'USER' && bookingCompleted && paymentCompleted;
+            if (!canReview) return '';
+            const vendorId = b?.vendor?._id || b?.vendor?.id || b?.vendor || '';
+            const serviceId = b?.service?._id || b?.service?.id || b?.service || '';
+            return `<a class="btn btn-brand btn-sm" href="reviews.html?bookingId=${encodeURIComponent(id)}&vendor=${encodeURIComponent(vendorId)}&service=${encodeURIComponent(serviceId)}">Create review</a>`;
+
+          })()}
           <a class="btn btn-soft btn-sm" href="bookings.html?bookingId=${encodeURIComponent(id)}">Details</a>
         </div>
+
       </div>
     </div>
   `;
@@ -221,17 +234,34 @@ export async function initBookingsPage({ me, role } = {}) {
       const res = await getBooking(bookingId);
       const booking = res?.data || res;
       const bookingStatus = booking?.bookingStatus || booking?.status || '—';
-      const paymentStatus = booking?.paymentStatus || '—';
+      const paymentStatus = booking?.paymentStatus || booking?.payment?.status || '—';
+
       const paymentStatusDisplay = formatPaymentStatus(paymentStatus);
       const serviceName = booking?.service?.serviceName || booking?.service?.name || '—';
       const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || '—';
       const customerName = booking?.user?.firstName ? `${booking.user.firstName} ${booking.user.lastName || ''}`.trim() : booking?.user?.email || '—';
       const requestIdValue = booking?.request?._id || booking?.request?.id || '—';
       const isBookingOwner = (booking?.user?._id || booking?.user?.id || '').toString() === (me?._id || me?.id || '').toString();
+
       const canPay = paymentStatus.toString().toUpperCase() === 'PENDING';
+      const isCompleted = bookingStatus.toString().toUpperCase() === 'COMPLETED';
+
+      // After completion, show review CTA instead of pay.
+      const canReview = myRole === 'USER' && isBookingOwner && isCompleted;
+      const reviewButtonHtml = canReview
+        ? `
+          <a class="btn btn-brand btn-sm mt-3" href="reviews.html?bookingId=${encodeURIComponent(booking._id || booking.id)}&vendor=${encodeURIComponent(booking?.vendor?._id || booking?.vendor?.id || '')}&service=${encodeURIComponent(booking?.service?._id || booking?.service?.id || '')}">
+            Create review
+          </a>
+        `
+        : '';
+
       const paymentActionButton = (canPay && myRole === 'USER' && isBookingOwner)
         ? `<button id="btnPayBookingDetail" class="btn btn-primary btn-sm mt-3">Pay now</button>`
         : '';
+
+      const bookingActionsHtml = `${paymentActionButton}${reviewButtonHtml}`;
+
 
       bookingDetailsShell.classList.remove('d-none');
       bookingDetailsShell.innerHTML = `
@@ -249,8 +279,9 @@ export async function initBookingsPage({ me, role } = {}) {
           <div class="col-12 col-md-6"><strong>Amount</strong><div class="small text-muted-soft">${booking?.totalAmount != null ? `₦${Number(booking.totalAmount).toLocaleString()} ${escapeHtml(booking.amountCurrency || '')}` : '—'}</div></div>
           <div class="col-12"><strong>Special requests</strong><div class="small text-muted-soft">${escapeHtml(booking?.specialRequests || 'None')}</div></div>
         </div>
-        ${paymentActionButton}
+        ${bookingActionsHtml}
       `;
+
 
       if (canPay) {
         const btnPayBookingDetail = document.getElementById('btnPayBookingDetail');
