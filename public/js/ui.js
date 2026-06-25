@@ -1,5 +1,5 @@
 export function toast({ title = 'Notice', message = '', variant = 'success' } = {}) {
-  // Minimal toast using Bootstrap
+  // Uniform toast using Bootstrap markup (no dependency on bootstrap JS)
   const host = document.getElementById('toastHost');
   if (!host) return;
 
@@ -10,9 +10,15 @@ export function toast({ title = 'Notice', message = '', variant = 'success' } = 
   el.className = `toast align-items-center text-bg-dark border-0 show position-relative ${bg}`;
   el.style.marginBottom = '12px';
   el.id = id;
+
+  // Ensure consistent stacking/readability even when placed near sticky headers
+  el.style.maxWidth = '420px';
+  el.style.width = '100%';
+
   el.setAttribute('role', 'alert');
   el.setAttribute('aria-live', 'assertive');
   el.setAttribute('aria-atomic', 'true');
+
   el.innerHTML = `
     <div class="d-flex">
       <div class="toast-body">
@@ -33,6 +39,7 @@ export function toast({ title = 'Notice', message = '', variant = 'success' } = 
     } catch {}
   }, 3000);
 }
+
 
 function escapeHtml(s) {
   return (s ?? '').toString().replace(/[&<>"']/g, (c) => {

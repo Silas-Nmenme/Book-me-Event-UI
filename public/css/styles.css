@@ -281,8 +281,16 @@ html { scroll-padding-top: var(--bme-navbar-height); }
 
 .bme-theme-toggle [data-icon] { display: none; }
 
-/* Toast host z-index */
-#toastHost { z-index: 1080; }
+/* Toast host: keep toast stack consistently below the sticky header/navbar */
+#toastHost {
+  z-index: 1082; /* below .bme-navbar (1085) so header stays visible */
+  top: var(--bme-navbar-height);
+  right: 0;
+  left: auto;
+  padding: 0.75rem !important;
+  width: auto;
+}
+
 
 /* Modal stacking */
 .modal { z-index: 1080; }
