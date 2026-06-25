@@ -69,10 +69,6 @@
               <div class="small text-muted-soft">
                 Reviews are tied to your completed bookings. Use “Create review” where available for the vendor/service you’ve booked.
               </div>
-              <div class="mt-3 small text-muted-soft">
-                You can filter reviews by vendor via URL query:
-                <code>?vendor=VENDOR_ID</code>
-              </div>
             </div>
           </div>
 
@@ -123,10 +119,11 @@
                           <textarea id="reviewComment" class="form-control" rows="3" placeholder="Your experience" required></textarea>
                         </div>
                         <div class="col-12">
-                          <label class="form-label fw-bold">Photos (comma-separated URLs)</label>
-                          <input id="reviewPhotos" class="form-control" type="text" placeholder="https://... , https://..." />
-                          <div class="small text-muted-soft mt-1">Backend stores `photos` as an array. Provide URLs if you have them.</div>
+                          <label class="form-label fw-bold" for="reviewPhotos">Photos</label>
+                          <input id="reviewPhotos" class="form-control" type="file" accept="image/*" multiple />
+                          <div class="small text-muted-soft mt-1">Upload images (no URLs).</div>
                         </div>
+
 
                         <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
                           <button id="btnCreateReview" class="btn btn-brand" type="submit">Create review</button>
@@ -164,6 +161,7 @@
 
     <script type="module">
       import { fetchMe, logoutUser, clearToken, apiFetch, createReview } from '../js/api.js';
+
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
 
@@ -283,7 +281,25 @@
 
                     <div class="text-muted-soft mt-2" style="white-space: pre-wrap;">${escapeHtml(comment)}</div>
 
+                    ${r?.photos?.length ? `
+                      <div class="mt-3">
+                        <div class="small text-muted-soft mb-2">Photos</div>
+                        <div class="d-flex flex-wrap gap-2">
+                          ${r.photos.map((p) => {
+                            const src = p;
+                            if (!src) return '';
+                            return `
+                              <a href="${escapeHtml(src)}" target="_blank" rel="noreferrer" class="text-decoration-none">
+                                <img src="${escapeHtml(src)}" alt="Review photo" style="width:110px; height:80px; object-fit:cover; border-radius:10px;" />
+                              </a>
+                            `;
+                          }).join('')}
+                        </div>
+                      </div>
+                    ` : ''}
+
                     ${vendorResponse}
+
 
                     <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
                       <button class="btn btn-soft btn-sm" type="button" data-action="helpful" data-review-id="${escapeHtml(r?._id || '')}">
@@ -322,24 +338,51 @@
       const createReviewForm = document.getElementById('createReviewForm');
       const btnReset = document.getElementById('btnResetCreateReview');
 
-      if (vendorFilter) {
-        const vendorInput = document.getElementById('reviewVendor');
-        if (vendorInput) vendorInput.value = vendorFilter;
+      const reviewBookingInput = document.getElementById('reviewBooking');
+      const reviewVendorInput = document.getElementById('reviewVendor');
+      const reviewServiceInput = document.getElementById('reviewService');
+      const reviewPhotosInput = document.getElementById('reviewPhotos');
+
+      // Optional prefill via query params when user clicks “Create review” from a booking.
+      // Expected params (any can be omitted): ?booking=<id>&vendor=<id>&service=<id>
+      const bookingPrefill = qs('booking');
+      const vendorPrefill = qs('vendor');
+      const servicePrefill = qs('service');
+
+      if (vendorFilter && reviewVendorInput) reviewVendorInput.value = vendorFilter;
+      if (vendorPrefill && reviewVendorInput) reviewVendorInput.value = vendorPrefill;
+      if (bookingPrefill && reviewBookingInput) reviewBookingInput.value = bookingPrefill;
+      if (servicePrefill && reviewServiceInput) reviewServiceInput.value = servicePrefill;
+
+      // Upload photos to backend (/api/v1/uploads/generic) and send returned URLs as `photos`.
+      async function uploadSelectedPhotos(files) {
+        if (!Array.isArray(files) || files.length === 0) return [];
+
+        const uploadedUrls = [];
+        for (const file of files) {
+          if (!file) continue;
+          const form = new FormData();
+          // Backend expects field name `image`
+          form.set('image', file);
+          const res = await apiFetch('/api/v1/uploads/generic', {
+            method: 'POST',
+            body: form,
+          });
+          const data = res?.data || res;
+          if (data?.url) uploadedUrls.push(data.url);
+        }
+        return uploadedUrls;
       }
 
       createReviewForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const booking = document.getElementById('reviewBooking')?.value?.trim();
-        const vendor = document.getElementById('reviewVendor')?.value?.trim();
-        const service = document.getElementById('reviewService')?.value?.trim();
+        const booking = reviewBookingInput?.value?.trim();
+        const vendor = reviewVendorInput?.value?.trim();
+        const service = reviewServiceInput?.value?.trim();
         const rating = Number(document.getElementById('reviewRating')?.value);
         const title = document.getElementById('reviewTitle')?.value?.trim();
         const comment = document.getElementById('reviewComment')?.value?.trim();
-        const photosStr = document.getElementById('reviewPhotos')?.value?.trim();
-        const photos = photosStr
-          ? photosStr.split(',').map((x) => x.trim()).filter(Boolean)
-          : undefined;
 
         if (!booking || !vendor || !service || !Number.isFinite(rating) || !title || !comment) {
           toast({ title: 'Missing fields', message: 'Please fill booking, vendor, service, rating, title, and comment.', variant: 'warning' });
@@ -347,12 +390,22 @@
         }
 
         try {
+          const selectedFiles = reviewPhotosInput?.files ? Array.from(reviewPhotosInput.files) : [];
+          const photos = await uploadSelectedPhotos(selectedFiles);
+
           const payload = { booking, vendor, service, rating, title, comment };
-          if (photos?.length) payload.photos = photos;
+          if (photos.length) payload.photos = photos;
+
           await createReview(payload);
           toast({ title: 'Review created', message: 'Your review has been posted.', variant: 'success' });
           createReviewForm.reset();
-          if (vendorFilter) document.getElementById('reviewVendor').value = vendorFilter;
+
+          // Reapply prefill after reset.
+          if (vendorFilter && reviewVendorInput) reviewVendorInput.value = vendorFilter;
+          if (vendorPrefill && reviewVendorInput) reviewVendorInput.value = vendorPrefill;
+          if (bookingPrefill && reviewBookingInput) reviewBookingInput.value = bookingPrefill;
+          if (servicePrefill && reviewServiceInput) reviewServiceInput.value = servicePrefill;
+
           await loadReviews();
         } catch (err) {
           toast({ title: 'Create failed', message: err?.message || 'Try again.', variant: 'danger' });
@@ -361,8 +414,12 @@
 
       btnReset?.addEventListener('click', () => {
         createReviewForm.reset();
-        if (vendorFilter) document.getElementById('reviewVendor').value = vendorFilter;
+        if (vendorFilter && reviewVendorInput) reviewVendorInput.value = vendorFilter;
+        if (vendorPrefill && reviewVendorInput) reviewVendorInput.value = vendorPrefill;
+        if (bookingPrefill && reviewBookingInput) reviewBookingInput.value = bookingPrefill;
+        if (servicePrefill && reviewServiceInput) reviewServiceInput.value = servicePrefill;
       });
+
 
       btnRefreshReviews?.addEventListener('click', () => loadReviews());
 
