@@ -498,9 +498,17 @@
           document.getElementById('statPendingRequests').textContent = data?.requestsPending ?? '—';
           document.getElementById('statCompletedBookings').textContent = data?.bookingsCompleted ?? '—';
 
-          // Rating: backend returns averageRating (number). Ensure we show 0.0 if it is 0.
+          // Rating
+          // If backend returns averageRating: render it (including 0). Otherwise show —.
+          // Also log payload to catch shape mismatches.
           const ratingVal = data?.averageRating;
-          document.getElementById('statAvgRating').textContent = (ratingVal === null || ratingVal === undefined) ? '—' : String(ratingVal);
+          if (ratingVal === null || ratingVal === undefined) {
+            console.warn('Dashboard stats: missing averageRating in response', { data });
+            document.getElementById('statAvgRating').textContent = '—';
+          } else {
+            document.getElementById('statAvgRating').textContent = String(ratingVal);
+          }
+
         } catch (e) {
           console.warn('Failed to load dashboard stats', e?.message || e);
         }
