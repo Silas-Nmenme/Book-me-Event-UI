@@ -497,7 +497,10 @@
           document.getElementById('statTickets').textContent = data?.ticketsTotal ?? '—';
           document.getElementById('statPendingRequests').textContent = data?.requestsPending ?? '—';
           document.getElementById('statCompletedBookings').textContent = data?.bookingsCompleted ?? '—';
-          document.getElementById('statAvgRating').textContent = data?.averageRating ?? '—';
+
+          // Rating: backend returns averageRating (number). Ensure we show 0.0 if it is 0.
+          const ratingVal = data?.averageRating;
+          document.getElementById('statAvgRating').textContent = (ratingVal === null || ratingVal === undefined) ? '—' : String(ratingVal);
         } catch (e) {
           console.warn('Failed to load dashboard stats', e?.message || e);
         }
