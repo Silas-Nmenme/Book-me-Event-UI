@@ -291,6 +291,21 @@ html { scroll-padding-top: var(--bme-navbar-height); }
   width: auto;
 }
 
+/* Ensure a consistent positioning hook even if pages add Bootstrap utility classes */
+.bme-toast-host {
+  position: fixed;
+  top: var(--bme-navbar-height);
+  right: 0;
+  left: auto;
+  z-index: 1082;
+  padding: 0.75rem !important;
+  width: auto;
+}
+
+#toastHost.bme-toast-host {
+  /* authoritative override */
+  position: fixed;
+}
 
 /* Modal stacking */
 .modal { z-index: 1080; }

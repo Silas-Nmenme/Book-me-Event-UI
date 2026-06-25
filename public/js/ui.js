@@ -3,13 +3,24 @@ export function toast({ title = 'Notice', message = '', variant = 'success' } = 
   const host = document.getElementById('toastHost');
   if (!host) return;
 
-  const id = `t_${Math.random().toString(16).slice(2)}`;
-  const bg = variant === 'danger' ? 'bg-danger' : variant === 'warning' ? 'bg-warning' : 'bg-success';
+  // Make host resilient: pages may have different bootstrap utilities.
+  // CSS (.bme-toast-host and #toastHost) should do the real work, but this ensures class presence.
+  host.classList.add('bme-toast-host');
+
+  const bg =
+    variant === 'danger'
+      ? 'bg-danger'
+      : variant === 'warning'
+        ? 'bg-warning'
+        : variant === 'success'
+          ? 'bg-success'
+          : 'bg-success';
 
   const el = document.createElement('div');
   el.className = `toast align-items-center text-bg-dark border-0 show position-relative ${bg}`;
   el.style.marginBottom = '12px';
-  el.id = id;
+  // id helps debugging; not required for layout
+  el.id = `t_${Math.random().toString(16).slice(2)}`;
 
   // Ensure consistent stacking/readability even when placed near sticky headers
   el.style.maxWidth = '420px';
