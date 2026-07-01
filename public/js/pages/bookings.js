@@ -156,7 +156,7 @@ export async function initBookingsPage({ me, role } = {}) {
       const btnPayBooking = document.getElementById('btnPayBooking');
       const requestBookingResult = document.getElementById('requestBookingResult');
 
-      btnCreateBooking?.addEventListener('click', async () => {
+      const handleCreateBooking = async () => {
         const totalAmount = Number(document.getElementById('bookingTotalAmount')?.value || 0);
         const specialRequests = document.getElementById('bookingSpecialRequests')?.value.trim() || undefined;
 
@@ -165,6 +165,7 @@ export async function initBookingsPage({ me, role } = {}) {
           return;
         }
 
+        if (!btnCreateBooking) return;
         btnCreateBooking.setAttribute('disabled', 'disabled');
         const prev = btnCreateBooking.textContent;
         btnCreateBooking.textContent = 'Creating…';
@@ -181,7 +182,9 @@ export async function initBookingsPage({ me, role } = {}) {
           });
 
           const booking = bookingRes?.data || bookingRes;
-          requestBookingResult.textContent = 'Booking created successfully. You can now pay.';
+          if (requestBookingResult) {
+            requestBookingResult.textContent = 'Booking created successfully. You can now pay.';
+          }
           btnPayBooking?.classList.remove('d-none');
           btnPayBooking?.setAttribute('data-booking-id', booking?._id || booking?.id || '');
           await load();
@@ -192,9 +195,9 @@ export async function initBookingsPage({ me, role } = {}) {
           btnCreateBooking.removeAttribute('disabled');
           btnCreateBooking.textContent = prev;
         }
-      });
+      };
 
-      btnPayBooking?.addEventListener('click', async () => {
+      const handlePayBooking = async () => {
         const bookingId = btnPayBooking?.getAttribute('data-booking-id');
         if (!bookingId) {
           toast({ title: 'Missing booking', message: 'Create the booking first.', variant: 'warning' });
@@ -212,7 +215,13 @@ export async function initBookingsPage({ me, role } = {}) {
         } catch (e) {
           toast({ title: 'Payment failed', message: e?.message || 'Try again.', variant: 'danger' });
         }
-      });
+      };
+
+      btnCreateBooking?.removeEventListener('click', handleCreateBooking);
+      btnCreateBooking?.addEventListener('click', handleCreateBooking);
+
+      btnPayBooking?.removeEventListener('click', handlePayBooking);
+      btnPayBooking?.addEventListener('click', handlePayBooking);
     } catch (e) {
       authzError?.classList.remove('d-none');
       if (authzError) authzError.textContent = e?.message || 'Failed to load request for booking.';
@@ -285,21 +294,23 @@ export async function initBookingsPage({ me, role } = {}) {
 
       if (canPay) {
         const btnPayBookingDetail = document.getElementById('btnPayBookingDetail');
-        btnPayBookingDetail?.addEventListener('click', async () => {
-          try {
-            toast({ title: 'Checkout', message: 'Redirecting to payment...', variant: 'info' });
-            const session = await initializeFlutterwavePayment(
-              booking._id || booking.id
-            );
-            if (session?.link) {
-              window.location.href = session.link;
-              return;
+        if (btnPayBookingDetail) {
+          btnPayBookingDetail.onclick = async () => {
+            try {
+              toast({ title: 'Checkout', message: 'Redirecting to payment...', variant: 'info' });
+              const session = await initializeFlutterwavePayment(
+                booking._id || booking.id
+              );
+              if (session?.link) {
+                window.location.href = session.link;
+                return;
+              }
+              throw new Error('Unable to initialize payment.');
+            } catch (e) {
+              toast({ title: 'Payment failed', message: e?.message || 'Try again.', variant: 'danger' });
             }
-            throw new Error('Unable to initialize payment.');
-          } catch (e) {
-            toast({ title: 'Payment failed', message: e?.message || 'Try again.', variant: 'danger' });
-          }
-        });
+          };
+        }
       }
     } catch (e) {
       const bookingDetailsShell = document.getElementById('bookingDetailsShell');
@@ -327,7 +338,7 @@ export async function initBookingsPage({ me, role } = {}) {
       bookingList.innerHTML = items.map((it) => buildBookingCard(it, myRole)).join('');
 
       bookingList.querySelectorAll('[data-action]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
+        btn.onclick = async () => {
           const action = btn.getAttribute('data-action');
           const id = btn.getAttribute('data-id');
           if (!id) return;
@@ -345,7 +356,7 @@ export async function initBookingsPage({ me, role } = {}) {
           } catch (e) {
             toast({ title: 'Action failed', message: e?.message || 'Try again.', variant: 'danger' });
           }
-        });
+        };
       });
     } catch (e) {
       authzError?.classList.remove('d-none');
