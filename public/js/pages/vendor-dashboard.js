@@ -80,10 +80,12 @@ async function fetchVendorStats({ me, role }) {
 
     const totalBookings = Number(analytics?.totalBookings ?? 0);
     const completedBookings = Number(analytics?.completedBookings ?? 0);
-    const pendingBookings = Math.max(0, totalBookings - completedBookings);
+    const pendingBookings = Number(analytics?.pendingBookings ?? Math.max(0, totalBookings - completedBookings));
+    const incomingRequests = Number(analytics?.incomingRequests ?? 0);
+    const acceptedRequests = Number(analytics?.acceptedRequests ?? 0);
 
-    setText('vStatRequests', totalBookings);
-    setText('vStatAccepted', totalBookings);
+    setText('vStatRequests', incomingRequests);
+    setText('vStatAccepted', acceptedRequests);
     setText('vStatServices', serviceCount);
     setText('vStatPendingBookings', pendingBookings);
     setText('vStatCompletedBookings', completedBookings);
@@ -153,7 +155,7 @@ export async function initVendorDashboard({ me, role } = {}) {
   const breachRateEl = document.getElementById('vStatBreachRate');
   if (breachRateEl) breachRateEl.textContent = '—';
 
-  fetchVendorStats({ me, role });
+  await fetchVendorStats({ me, role });
 
   // --- Service CRUD UI (existing file in repo may differ; keep minimal and non-breaking) ---
 
