@@ -33,7 +33,7 @@ function buildServiceCard(svc, { hideCreateRequest = false } = {}) {
   const image = Array.isArray(svc?.images) && svc.images[0] ? svc.images[0] : '';
   const price = formatPrice(svc);
 
-  const href = `requests.html?prefillServiceId=${encodeURIComponent(id)}`;
+  const href = `requests.html?prefillServiceId=${encodeURIComponent(id || '')}`;
 
   const createRequestHtml = hideCreateRequest
     ? ''
@@ -133,7 +133,7 @@ export async function initServicesPage({ me, role } = {}) {
 
     const preselectServiceId = getPreselectServiceId();
     if (preselectServiceId) {
-      toast({ title: 'Pick a request', message: `Selected service: ${preselectServiceId}`, variant: 'info' });
+      toast({ title: 'Request ready', message: `Selected service: ${preselectServiceId}`, variant: 'info' });
     }
 
     serviceList.querySelectorAll('[data-action="loadServiceDetails"]').forEach((btn) => {

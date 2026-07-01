@@ -70,6 +70,32 @@ function normalizeReqStatus(s) {
   return v;
 }
 
+function getUserIdentity(me) {
+  return me?.id || me?._id || me?.user?.id || me?.user?._id || me?.userId || me?.user_id || null;
+}
+
+async function renderServicePreview(serviceId, hintEl) {
+  if (!hintEl) return;
+
+  const value = (serviceId || '').toString().trim();
+  if (!value) {
+    hintEl.innerHTML = '<span class="text-muted-soft">Choose a service from Browse services to prefill the request.</span>';
+    return;
+  }
+
+  hintEl.innerHTML = '<span class="text-muted-soft">Loading service details…</span>';
+
+  try {
+    const res = await apiFetch(`/api/v1/services/${encodeURIComponent(value)}`, { method: 'GET' });
+    const service = res?.data || res;
+    const title = service?.serviceName || 'Service';
+    const vendorName = service?.vendor?.businessName || 'Vendor';
+    hintEl.innerHTML = `<span class="text-success">Selected service: <strong>${escapeHtml(title)}</strong> from ${escapeHtml(vendorName)}</span>`;
+  } catch {
+    hintEl.innerHTML = '<span class="text-warning">Service could not be resolved from the current ID. You can still submit the request.</span>';
+  }
+}
+
 function buildCard(req, { myRole } = {}) {
   const id = req?._id || req?.id;
 
@@ -229,7 +255,8 @@ export async function initRequestsPage({ me, role } = {}) {
 
   // Only render requests when logged-in user is the current user.
   // Backend already filters by req.user.
-  if (!me?.id) {
+  const userIdentity = getUserIdentity(me);
+  if (!userIdentity) {
     const authzError = document.getElementById('authzError');
     if (authzError) {
       authzError.classList.remove('d-none');
@@ -249,6 +276,9 @@ export async function initRequestsPage({ me, role } = {}) {
 
   const requestForm =
     document.getElementById('createRequestForm');
+
+  const serviceInput = document.getElementById('service');
+  const servicePreviewEl = document.getElementById('serviceSelectionHint');
 
   const requestModalEl =
     document.getElementById('createRequestModal');
@@ -291,19 +321,29 @@ export async function initRequestsPage({ me, role } = {}) {
   });
 
   // Prefill from services.html: requests.html?prefillServiceId=...
-  const prefillServiceId = qs('prefillServiceId');
+  const prefillServiceId = qs('prefillServiceId') || qs('serviceId') || qs('service');
   const prefillShouldOpen = !!prefillServiceId;
 
-
-  if (prefillServiceId && document.getElementById('service')) {
-    const serviceEl = document.getElementById('service');
-    serviceEl.value = prefillServiceId;
+  if (prefillServiceId && serviceInput) {
+    serviceInput.value = prefillServiceId;
   }
 
+  if (serviceInput) {
+    serviceInput.addEventListener('input', () => {
+      renderServicePreview(serviceInput.value, servicePreviewEl);
+    });
+  }
 
   if (prefillShouldOpen) {
-    // Ensure modal opens after bootstrap init.
-    setTimeout(() => requestModal?.show(), 0);
+    setTimeout(() => {
+      requestModal?.show();
+      renderServicePreview(serviceInput?.value, servicePreviewEl);
+      toast({
+        title: 'Request ready',
+        message: 'Your selected service has been prefilled. Complete the form and submit.',
+        variant: 'info',
+      });
+    }, 0);
   }
 
   requestForm?.addEventListener('submit', async (e) => {
@@ -336,6 +376,7 @@ export async function initRequestsPage({ me, role } = {}) {
 
     const payload = {
       service: service || undefined,
+      serviceId: service || undefined,
 
       eventDate: Number.isNaN(eventDate.getTime())
         ? undefined
