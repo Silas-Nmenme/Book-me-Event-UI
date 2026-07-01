@@ -43,31 +43,50 @@ export async function apiFetch(path, options = {}) {
     }
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const timeoutMs = Number(options.timeoutMs || 0);
+  const controller = timeoutMs > 0 ? new AbortController() : null;
+  const timeoutId = controller
+    ? window.setTimeout(() => controller.abort(), timeoutMs)
+    : null;
 
-  const text = await res.text();
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      signal: controller?.signal,
+    });
 
-  let data = null;
-  if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { message: text };
+    const text = await res.text();
+
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text };
+      }
     }
-  }
 
-  if (!res.ok) {
-    const msg = data?.message || data?.error || `Request failed (${res.status})`;
-    const err = new Error(msg);
-    err.status = res.status;
-    err.data = data;
+    if (!res.ok) {
+      const msg = data?.message || data?.error || `Request failed (${res.status})`;
+      const err = new Error(msg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+
+    return data;
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      const timeoutError = new Error('The payment service is taking too long. Please try again in a moment.');
+      timeoutError.status = 504;
+      timeoutError.data = { message: timeoutError.message };
+      throw timeoutError;
+    }
     throw err;
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
   }
-
-  return data;
 }
 
 export async function loginUser({ email, password, totpCode } = {}) {
@@ -357,6 +376,7 @@ export async function initializeFlutterwavePayment(bookingId) {
   return apiFetch('/api/v1/payments/initialize', {
     method: 'POST',
     body: JSON.stringify({ bookingId }),
+    timeoutMs: 20000,
   });
 }
 
