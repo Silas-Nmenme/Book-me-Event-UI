@@ -248,6 +248,10 @@ html[data-theme="light"] .bme-pill { color: #111827; }
 
 html { scroll-padding-top: var(--bme-navbar-height); }
 
+body.requests-page {
+  overflow-x: hidden;
+}
+
 .bme-navbar + header,
 .bme-navbar + .section,
 .bme-navbar + main,

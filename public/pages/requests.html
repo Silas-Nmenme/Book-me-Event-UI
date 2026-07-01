@@ -23,10 +23,34 @@
     overflow: auto !important;
     padding-right: 0 !important;
   }
+
+  .modal,
+  .modal-backdrop,
+  .modal-dialog,
+  .modal-content {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .fade-slide,
+  .card-glass,
+  .modal-content {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .modal.fade .modal-dialog {
+    transform: none !important;
+  }
+
+  .modal.show .modal-dialog {
+    transform: none !important;
+  }
 </style>
 </head>
 
-<body>
+<body class="requests-page">
 
 <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
 

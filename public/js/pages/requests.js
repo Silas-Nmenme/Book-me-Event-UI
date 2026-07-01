@@ -77,6 +77,11 @@ function getUserIdentity(me) {
 function openCreateRequestModal(requestModal, requestModalEl, serviceInput, servicePreviewEl) {
   if (!requestModal || !requestModalEl) return;
 
+  requestModalEl.classList.remove('fade');
+  requestModalEl.style.transition = 'none';
+  requestModalEl.querySelector('.modal-dialog')?.style.setProperty('transition', 'none', 'important');
+  requestModalEl.querySelector('.modal-content')?.style.setProperty('transition', 'none', 'important');
+
   try {
     if (!requestModalEl.classList.contains('show')) {
       requestModal.show();
@@ -86,11 +91,14 @@ function openCreateRequestModal(requestModal, requestModalEl, serviceInput, serv
   }
 
   window.setTimeout(() => {
+    requestModalEl.style.display = 'block';
+    requestModalEl.classList.add('show');
+    document.body.classList.add('modal-open');
     serviceInput?.focus({ preventScroll: true });
     if (serviceInput?.value) {
       renderServicePreview(serviceInput.value, servicePreviewEl);
     }
-  }, 50);
+  }, 0);
 }
 
 async function renderServicePreview(serviceId, hintEl) {
