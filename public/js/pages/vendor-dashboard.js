@@ -53,37 +53,48 @@ async function fetchVendorStats({ me, role }) {
   const myRole = (role || qs('role') || me?.role || 'USER').toString().toUpperCase();
   if (myRole !== 'VENDOR') return;
 
-  // Ensure values for the dashboard strip always load.
   try {
-    const [analyticsRes, slaRes] = await Promise.all([
-      apiFetch('/api/v1/vendor/analytics', { method: 'GET' }),
-      apiFetch('/api/v1/vendor/sla', { method: 'GET' }),
-
+    const vendorId = getMeVendorId(me);
+    const [analyticsResult, slaResult, servicesResult] = await Promise.allSettled([
+      apiFetch('/api/v1/vendors/analytics', { method: 'GET' }),
+      apiFetch('/api/v1/vendors/sla', { method: 'GET' }),
+      vendorId
+        ? apiFetch(`/api/v1/vendors/${encodeURIComponent(vendorId)}/services`, { method: 'GET' })
+        : Promise.resolve([]),
     ]);
 
-    const analytics = analyticsRes?.data || analyticsRes;
-    const sla = slaRes?.data || slaRes;
+    const analytics = analyticsResult.status === 'fulfilled'
+      ? analyticsResult.value?.data || analyticsResult.value
+      : null;
+    const sla = slaResult.status === 'fulfilled'
+      ? slaResult.value?.data || slaResult.value
+      : null;
+    const servicesData = servicesResult.status === 'fulfilled'
+      ? servicesResult.value?.data || servicesResult.value || []
+      : [];
+    const serviceCount = Array.isArray(servicesData)
+      ? servicesData.length
+      : Array.isArray(servicesData?.data || servicesData?.services)
+        ? (servicesData.data || servicesData.services).length
+        : 0;
 
-    // Map backend analytics to the dashboard strip.
-    // Current backend vendor analytics endpoint only returns totalBookings + completedBookings.
-    const totalBookings = analytics?.totalBookings ?? 0;
-    const completedBookings = analytics?.completedBookings ?? 0;
+    const totalBookings = Number(analytics?.totalBookings ?? 0);
+    const completedBookings = Number(analytics?.completedBookings ?? 0);
+    const pendingBookings = Math.max(0, totalBookings - completedBookings);
 
-    // Best-effort mapping until backend provides request states counts.
-    // - Incoming requests / Accepted requests: currently approximated by totalBookings.
-    // - Bookings pending: approximated by (totalBookings - completedBookings).
     setText('vStatRequests', totalBookings);
     setText('vStatAccepted', totalBookings);
-    setText('vStatServices', '—');
-    setText('vStatPendingBookings', Math.max(0, totalBookings - completedBookings));
+    setText('vStatServices', serviceCount);
+    setText('vStatPendingBookings', pendingBookings);
     setText('vStatCompletedBookings', completedBookings);
-
-    setPct('vStatBreachRate', sla?.breachRate);
-
-    // NOTE: analytics endpoint only provides bookings counts. If you later add a more detailed
-    // vendor stats endpoint (pending/accepted), wire these two fields accordingly.
+    setPct('vStatBreachRate', sla?.breachRate ?? 0);
   } catch (e) {
-    // keep placeholders; don’t break vendor page
+    setText('vStatRequests', 0);
+    setText('vStatAccepted', 0);
+    setText('vStatServices', 0);
+    setText('vStatPendingBookings', 0);
+    setText('vStatCompletedBookings', 0);
+    setPct('vStatBreachRate', 0);
   }
 }
 
