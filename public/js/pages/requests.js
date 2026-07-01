@@ -74,6 +74,25 @@ function getUserIdentity(me) {
   return me?.id || me?._id || me?.user?.id || me?.user?._id || me?.userId || me?.user_id || null;
 }
 
+function openCreateRequestModal(requestModal, requestModalEl, serviceInput, servicePreviewEl) {
+  if (!requestModal || !requestModalEl) return;
+
+  try {
+    if (!requestModalEl.classList.contains('show')) {
+      requestModal.show();
+    }
+  } catch {
+    // Ignore bootstrap modal errors and fall back to a simple display.
+  }
+
+  window.setTimeout(() => {
+    serviceInput?.focus({ preventScroll: true });
+    if (serviceInput?.value) {
+      renderServicePreview(serviceInput.value, servicePreviewEl);
+    }
+  }, 50);
+}
+
 async function renderServicePreview(serviceId, hintEl) {
   if (!hintEl) return;
 
@@ -316,8 +335,7 @@ export async function initRequestsPage({ me, role } = {}) {
   }
 
   btnCreateRequest?.addEventListener('click', () => {
-    // If we have a prefill request from a service card, keep it.
-    requestModal?.show();
+    openCreateRequestModal(requestModal, requestModalEl, serviceInput, servicePreviewEl);
   });
 
   // Prefill from services.html: requests.html?prefillServiceId=...
@@ -336,13 +354,19 @@ export async function initRequestsPage({ me, role } = {}) {
 
   if (prefillShouldOpen) {
     setTimeout(() => {
-      requestModal?.show();
-      renderServicePreview(serviceInput?.value, servicePreviewEl);
+      openCreateRequestModal(requestModal, requestModalEl, serviceInput, servicePreviewEl);
       toast({
         title: 'Request ready',
         message: 'Your selected service has been prefilled. Complete the form and submit.',
         variant: 'info',
       });
+      if (window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('prefillServiceId');
+        url.searchParams.delete('serviceId');
+        url.searchParams.delete('service');
+        window.history.replaceState({}, '', url.toString());
+      }
     }, 0);
   }
 
@@ -443,10 +467,10 @@ export async function initRequestsPage({ me, role } = {}) {
       });
 
       requestForm.reset();
+      renderServicePreview('', servicePreviewEl);
 
       requestModal?.hide();
-
-      window.location.reload();
+      await load();
 
     } catch (e) {
 
