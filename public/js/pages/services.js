@@ -1,4 +1,4 @@
-import { apiFetch } from '../api.js';
+import { getServices } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -116,7 +116,7 @@ export async function initServicesPage({ me, role } = {}) {
   noServices?.classList.add('d-none');
 
   try {
-    const res = await apiFetch('/api/v1/services', { method: 'GET' });
+    const res = await getServices({ page: 1, limit: 10 });
     const data = res?.data || res;
     const services = Array.isArray(data)
       ? data
