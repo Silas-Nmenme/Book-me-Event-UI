@@ -19,6 +19,10 @@ import {
   bulkToggleUsers,
   bulkVendorAction,
   adminGlobalSearch,
+  getUser,
+  getUserBookings,
+  getUserRequests,
+  deleteUser,
 } from '../api.js';
 
 import { toast, setYear } from '../ui.js';
@@ -186,6 +190,80 @@ async function renderPendingVendors() {
   }
 }
 
+async function openUserDetailModal(userId) {
+  const modalEl = document.getElementById('userDetailModal');
+  const bodyEl = document.getElementById('userDetailModalBody');
+  if (!modalEl || !bodyEl || typeof window.bootstrap === 'undefined') return;
+
+  const modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+  bodyEl.innerHTML = `<div class="text-muted-soft small">Loading…</div>`;
+  modal.show();
+
+  try {
+    const [userRes, bookingsRes, requestsRes] = await Promise.all([
+      getUser(userId),
+      getUserBookings(userId, { page: 1, limit: 5 }),
+      getUserRequests(userId, { page: 1, limit: 5 }),
+    ]);
+
+    const user = userRes?.data || userRes;
+    const bookings = bookingsRes?.data || [];
+    const requests = requestsRes?.data || [];
+
+    const bookingRows = bookings.length
+      ? bookings
+          .map(
+            (b) =>
+              `<tr><td>${escapeHtml(b?.service?.serviceName || b?.service?.name || '—')}</td><td>${escapeHtml(b?.vendor?.businessName || '—')}</td><td>${escapeHtml(b?.bookingStatus || '—')}</td><td>${escapeHtml(formatDateMaybe(b?.createdAt))}</td></tr>`
+          )
+          .join('')
+      : `<tr><td colspan="4" class="text-muted-soft">No bookings.</td></tr>`;
+
+    const requestRows = requests.length
+      ? requests
+          .map(
+            (r) =>
+              `<tr><td>${escapeHtml(r?.service?.serviceName || r?.service?.name || '—')}</td><td>${escapeHtml(r?.vendor?.businessName || '—')}</td><td>${escapeHtml(r?.status || '—')}</td><td>${escapeHtml(formatDateMaybe(r?.createdAt))}</td></tr>`
+          )
+          .join('')
+      : `<tr><td colspan="4" class="text-muted-soft">No requests.</td></tr>`;
+
+    bodyEl.innerHTML = `
+      <div class="mb-3">
+        <div class="fw-bold h6">${escapeHtml(user?.firstName || '')} ${escapeHtml(user?.lastName || '')}</div>
+        <div class="text-muted-soft small">${escapeHtml(user?.email || '')} · ${escapeHtml(user?.phone || '—')}</div>
+        <div class="small mt-1">
+          Role: <span class="badge text-bg-secondary">${escapeHtml(user?.role || 'USER')}</span>
+          Status: <span class="badge text-bg-${user?.isActive ? 'success' : 'secondary'}">${user?.isActive ? 'Active' : 'Disabled'}</span>
+          Verified: <span class="badge text-bg-${user?.isVerified ? 'success' : 'warning'}">${user?.isVerified ? 'Yes' : 'No'}</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="fw-bold small mb-2">Recent bookings</div>
+        <div class="table-responsive">
+          <table class="table table-dark table-sm mb-0">
+            <thead><tr><th>Service</th><th>Vendor</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>${bookingRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="fw-bold small mb-2">Recent requests</div>
+        <div class="table-responsive">
+          <table class="table table-dark table-sm mb-0">
+            <thead><tr><th>Service</th><th>Vendor</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>${requestRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    bodyEl.innerHTML = `<div class="text-danger small">${escapeHtml(e?.message || 'Failed to load user details.')}</div>`;
+  }
+}
+
 function updateUsersBulkToolbar() {
   const countEl = document.getElementById('usersSelectedCount');
   const enableBtn = document.getElementById('btnBulkEnableUsers');
@@ -240,9 +318,13 @@ async function renderUsers() {
             <td>${escapeHtml(u?.role || 'USER')}</td>
             <td><span class="badge text-bg-${escapeHtml(variant)}">${escapeHtml(text)}</span></td>
             <td>
-              <button class="btn btn-soft btn-sm" data-action="toggle" data-user-id="${id}">
-                ${u?.isActive ? 'Disable' : 'Enable'}
-              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-soft btn-sm" data-action="view" data-user-id="${id}">View</button>
+                <button class="btn btn-soft btn-sm" data-action="toggle" data-user-id="${id}">
+                  ${u?.isActive ? 'Disable' : 'Enable'}
+                </button>
+                <button class="btn btn-danger btn-sm" data-action="delete" data-user-id="${id}">Delete</button>
+              </div>
             </td>
           </tr>
         `;
@@ -270,6 +352,29 @@ async function renderUsers() {
           await renderUsers();
         } catch (e) {
           toast({ title: 'Update failed', message: e?.message || 'Try again.', variant: 'danger' });
+        }
+      });
+    });
+
+    bodyEl.querySelectorAll('[data-action="view"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const userId = btn.getAttribute('data-user-id');
+        if (userId) openUserDetailModal(userId);
+      });
+    });
+
+    bodyEl.querySelectorAll('[data-action="delete"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.getAttribute('data-user-id');
+        if (!userId) return;
+        if (!confirm('Delete this user account? This cannot be undone.')) return;
+
+        try {
+          await deleteUser(userId);
+          toast({ title: 'User deleted', message: 'Account removed successfully.', variant: 'success' });
+          await renderUsers();
+        } catch (e) {
+          toast({ title: 'Delete failed', message: e?.message || 'Try again.', variant: 'danger' });
         }
       });
     });
