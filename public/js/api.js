@@ -862,12 +862,22 @@ export async function rejectVendor(vendorId, payload = {}) {
   });
 }
 
-export async function getAdminUsers({ role, page = 1, limit = 10 } = {}) {
+export async function getAdminUsers({ role, search, page = 1, limit = 10 } = {}) {
   const params = new URLSearchParams();
   if (role) params.set('role', role);
+  if (search) params.set('search', search);
   if (page) params.set('page', page);
   if (limit) params.set('limit', limit);
   return apiFetch(`/api/v1/admin/users?${params.toString()}`, { method: 'GET' });
+}
+
+export async function getAdminVendors({ status, search, page = 1, limit = 10 } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (search) params.set('search', search);
+  if (page) params.set('page', page);
+  if (limit) params.set('limit', limit);
+  return apiFetch(`/api/v1/admin/vendors?${params.toString()}`, { method: 'GET' });
 }
 
 export async function toggleUserStatus(userId) {

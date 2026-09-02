@@ -133,37 +133,49 @@
                       </div>
 
                       <div class="row g-3" id="statsStrip">
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Total users</div>
                             <div class="bme-stat-card__value" id="statTotalUsers">—</div>
                           </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Total vendors</div>
                             <div class="bme-stat-card__value" id="statTotalVendors">—</div>
                           </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Active users</div>
+                            <div class="bme-stat-card__value" id="statActiveUsers">—</div>
+                          </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Pending vendors</div>
+                            <div class="bme-stat-card__value" id="statPendingVendors">—</div>
+                          </div>
+                        </div>
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Total bookings</div>
                             <div class="bme-stat-card__value" id="statTotalBookings">—</div>
                           </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Completed bookings</div>
                             <div class="bme-stat-card__value" id="statCompletedBookings">—</div>
                           </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Total revenue</div>
                             <div class="bme-stat-card__value" id="statTotalRevenue">—</div>
                           </div>
                         </div>
-                        <div class="col-6 col-md-4">
+                        <div class="col-6 col-md-3">
                           <div class="bme-stat-card h-100">
                             <div class="bme-stat-card__label">Avg rating</div>
                             <div class="bme-stat-card__value" id="statAvgRating">—</div>
@@ -248,12 +260,74 @@
                     <div class="card card-glass p-3">
                       <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
                         <div>
+                          <div class="fw-bold">All vendors</div>
+                          <div class="text-muted-soft small">Every vendor on the platform, regardless of KYC status.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-soft btn-sm" type="button" id="btnRefreshVendors">Refresh</button>
+                        </div>
+                      </div>
+
+                      <div class="d-flex gap-2 flex-wrap mb-3">
+                        <select class="form-select form-select-sm w-auto" id="vendorsStatusFilter" title="Filter by KYC status">
+                          <option value="">All statuses</option>
+                          <option value="PENDING">Pending</option>
+                          <option value="APPROVED">Approved</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                        <input class="form-control form-control-sm w-auto" id="vendorsSearchInput" placeholder="Search business name…" />
+                        <button class="btn btn-soft btn-sm" type="button" id="btnVendorsSearch">Search</button>
+                      </div>
+
+                      <div id="vendorsLoading" class="text-muted-soft small d-none">Loading…</div>
+                      <div id="vendorsError" class="text-danger small d-none"></div>
+
+                      <div class="table-responsive bme-scroll-panel">
+                        <table class="table table-dark table-hover mb-0">
+                          <thead>
+                            <tr>
+                              <th>User</th>
+                              <th>Business</th>
+                              <th>Status</th>
+                              <th>Joined</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody id="vendorsBody"></tbody>
+                        </table>
+                      </div>
+
+                      <div class="d-flex justify-content-between align-items-center mt-3 gap-2">
+                        <div class="small text-muted-soft" id="vendorsPageInfo">Page 1</div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-soft btn-sm" type="button" id="btnVendorsPrev">Prev</button>
+                          <button class="btn btn-soft btn-sm" type="button" id="btnVendorsNext">Next</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+                        <div>
                           <div class="fw-bold">Users management</div>
                           <div class="text-muted-soft small">Enable/disable users.</div>
                         </div>
                         <div class="d-flex gap-2">
                           <button class="btn btn-soft btn-sm" type="button" id="btnRefreshUsers">Refresh</button>
                         </div>
+                      </div>
+
+                      <div class="d-flex gap-2 flex-wrap mb-3">
+                        <select class="form-select form-select-sm w-auto" id="usersRoleFilter" title="Filter by role">
+                          <option value="">All roles</option>
+                          <option value="USER">USER</option>
+                          <option value="VENDOR">VENDOR</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                        <input class="form-control form-control-sm w-auto" id="usersSearchInput" placeholder="Search name or email…" />
+                        <button class="btn btn-soft btn-sm" type="button" id="btnUsersSearch">Search</button>
                       </div>
 
                       <div id="usersLoading" class="text-muted-soft small d-none">Loading…</div>
@@ -272,6 +346,14 @@
                           </thead>
                           <tbody id="usersBody"></tbody>
                         </table>
+                      </div>
+
+                      <div class="d-flex justify-content-between align-items-center mt-3 gap-2">
+                        <div class="small text-muted-soft" id="usersPageInfo">Page 1</div>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-soft btn-sm" type="button" id="btnUsersPrev">Prev</button>
+                          <button class="btn btn-soft btn-sm" type="button" id="btnUsersNext">Next</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -314,16 +396,18 @@
                             <div class="h5 fw-bold" id="paymentsCount">—</div>
                           </div>
                         </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="mt-4 text-muted-soft small d-none" id="adminLegacyNote">Connect these widgets to admin routes in the backend (e.g., pending vendors).</div>
+                <div class="mt-4 text-muted-soft small d-none" id="adminLegacyNote">Connect these widgets to admin routes in the backend (e.g., pending vendors).</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section. 
+    </section>
 
     <footer class="footer">
       <div class="container">

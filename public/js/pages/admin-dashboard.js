@@ -5,6 +5,7 @@ import {
   apiFetch,
   getAdminDashboard,
   getPendingVendors,
+  getAdminVendors,
   verifyVendor,
   rejectVendor,
   getAdminUsers,
@@ -17,6 +18,10 @@ import {
 
 import { toast, setYear } from '../ui.js';
 import { initThemeToggle } from '../theme-toggle.js';
+
+// Client-side filter/pagination state for the users & vendors tables.
+const usersState = { role: '', search: '', page: 1, limit: 10, pages: 1 };
+const vendorsState = { status: '', search: '', page: 1, limit: 10, pages: 1 };
 
 function escapeHtml(s) {
   return (s ?? '')
@@ -64,10 +69,14 @@ async function loadPendingVendors() {
   return data;
 }
 
-async function loadUsers({ role } = {}) {
-  const res = await getAdminUsers({ role, page: 1, limit: 10 });
-  const data = normalizePagePayload(res);
-  return data;
+async function loadUsers({ role, search, page, limit } = {}) {
+  // Pagination/count fields (total, pages, currentPage) live on the top-level
+  // response, not inside `.data` (which is just the array) — return the raw response.
+  return getAdminUsers({ role, search, page, limit });
+}
+
+async function loadAllVendors({ status, search, page, limit } = {}) {
+  return getAdminVendors({ status, search, page, limit });
 }
 
 async function loadAdminCounts() {
@@ -76,12 +85,9 @@ async function loadAdminCounts() {
     getAdminPayments({ page: 1, limit: 1 }),
   ]);
 
-  const bookingsData = normalizePagePayload(bookingsRes);
-  const paymentsData = normalizePagePayload(paymentsRes);
-
   return {
-    totalBookings: bookingsData?.total ?? bookingsData?.count ?? '—',
-    totalPayments: paymentsData?.total ?? paymentsData?.count ?? '—',
+    totalBookings: bookingsRes?.total ?? bookingsRes?.count ?? '—',
+    totalPayments: paymentsRes?.total ?? paymentsRes?.count ?? '—',
   };
 }
 
@@ -172,6 +178,7 @@ async function renderUsers() {
   const loadingEl = document.getElementById('usersLoading');
   const errorEl = document.getElementById('usersError');
   const bodyEl = document.getElementById('usersBody');
+  const pageInfoEl = document.getElementById('usersPageInfo');
 
   if (!bodyEl) return;
 
@@ -180,9 +187,14 @@ async function renderUsers() {
   bodyEl.innerHTML = '';
 
   try {
-    // Default: show all roles (no role filter)
-    const data = await loadUsers();
-    const users = data?.data || [];
+    const res = await loadUsers(usersState);
+    const users = res?.data || [];
+    usersState.pages = res?.pages || 1;
+
+    if (pageInfoEl) {
+      const total = res?.total ?? users.length;
+      pageInfoEl.textContent = `Page ${usersState.page} of ${usersState.pages} (${total} users)`;
+    }
 
     if (!Array.isArray(users) || users.length === 0) {
       bodyEl.innerHTML = `<tr><td colspan="5" class="text-muted-soft">No users found.</td></tr>`;
@@ -225,6 +237,95 @@ async function renderUsers() {
   } catch (e) {
     errorEl?.classList.remove('d-none');
     if (errorEl) errorEl.textContent = e?.message || 'Failed to load users.';
+  } finally {
+    loadingEl?.classList.add('d-none');
+  }
+}
+
+function vendorStatusBadge(kycStatus) {
+  const s = (kycStatus || 'PENDING').toUpperCase();
+  if (s === 'APPROVED') return { text: 'Approved', variant: 'success' };
+  if (s === 'REJECTED') return { text: 'Rejected', variant: 'danger' };
+  return { text: 'Pending', variant: 'warning' };
+}
+
+async function renderAllVendors() {
+  const loadingEl = document.getElementById('vendorsLoading');
+  const errorEl = document.getElementById('vendorsError');
+  const bodyEl = document.getElementById('vendorsBody');
+  const pageInfoEl = document.getElementById('vendorsPageInfo');
+
+  if (!bodyEl) return;
+
+  loadingEl?.classList.remove('d-none');
+  errorEl?.classList.add('d-none');
+  bodyEl.innerHTML = '';
+
+  try {
+    const res = await loadAllVendors(vendorsState);
+    const vendors = res?.data || [];
+    vendorsState.pages = res?.pages || 1;
+
+    if (pageInfoEl) {
+      const total = res?.total ?? vendors.length;
+      pageInfoEl.textContent = `Page ${vendorsState.page} of ${vendorsState.pages} (${total} vendors)`;
+    }
+
+    if (!Array.isArray(vendors) || vendors.length === 0) {
+      bodyEl.innerHTML = `<tr><td colspan="5" class="text-muted-soft">No vendors found.</td></tr>`;
+      return;
+    }
+
+    bodyEl.innerHTML = vendors
+      .map((v) => {
+        const user = v?.user;
+        const { text, variant } = vendorStatusBadge(v?.kycStatus);
+        const isPending = (v?.kycStatus || 'PENDING').toUpperCase() === 'PENDING';
+        return `
+          <tr>
+            <td>${escapeHtml(user?.firstName || '')} ${escapeHtml(user?.lastName || '')}<div class="small text-muted-soft">${escapeHtml(user?.email || '')}</div></td>
+            <td>${escapeHtml(v?.businessName || '—')}</td>
+            <td><span class="badge text-bg-${escapeHtml(variant)}">${escapeHtml(text)}</span></td>
+            <td>${escapeHtml(formatDateMaybe(v?.createdAt))}</td>
+            <td>
+              ${
+                isPending
+                  ? `<div class="d-flex gap-2">
+                      <button class="btn btn-success btn-sm" data-action="verify" data-vendor-id="${escapeHtml(v?._id || '')}">Verify</button>
+                      <button class="btn btn-danger btn-sm" data-action="reject" data-vendor-id="${escapeHtml(v?._id || '')}">Reject</button>
+                    </div>`
+                  : `<span class="text-muted-soft">—</span>`
+              }
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    bodyEl.querySelectorAll('[data-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const vendorId = btn.getAttribute('data-vendor-id');
+        const action = btn.getAttribute('data-action');
+        if (!vendorId) return;
+
+        try {
+          if (action === 'verify') {
+            await verifyVendor(vendorId);
+            toast({ title: 'Vendor verified', message: 'Verification completed successfully.', variant: 'success' });
+          } else {
+            const reason = prompt('Rejection reason (optional):') || undefined;
+            await rejectVendor(vendorId, { reason });
+            toast({ title: 'Vendor rejected', message: 'Vendor has been rejected.', variant: 'success' });
+          }
+          await Promise.all([renderAllVendors(), renderPendingVendors()]);
+        } catch (e) {
+          toast({ title: 'Action failed', message: e?.message || 'Try again.', variant: 'danger' });
+        }
+      });
+    });
+  } catch (e) {
+    errorEl?.classList.remove('d-none');
+    if (errorEl) errorEl.textContent = e?.message || 'Failed to load vendors.';
   } finally {
     loadingEl?.classList.add('d-none');
   }
@@ -369,14 +470,77 @@ async function initAdminDashboard() {
     document.getElementById('statCompletedBookings').textContent = stats?.completedBookings ?? '—';
     document.getElementById('statTotalRevenue').textContent = stats?.totalRevenue != null ? stats.totalRevenue : '—';
     document.getElementById('statAvgRating').textContent = stats?.averageRating ?? '—';
+    document.getElementById('statActiveUsers').textContent = stats?.activeUsers ?? '—';
+    document.getElementById('statPendingVendors').textContent = stats?.pendingVendors ?? '—';
   } catch {
     // ignore
   }
 
-  await Promise.all([renderPendingVendors(), renderUsers(), renderBillingViews()]);
+  await Promise.all([renderPendingVendors(), renderAllVendors(), renderUsers(), renderBillingViews()]);
 
   document.getElementById('btnRefreshPending')?.addEventListener('click', renderPendingVendors);
-  document.getElementById('btnRefreshUsers')?.addEventListener('click', renderUsers);
+  document.getElementById('btnRefreshUsers')?.addEventListener('click', () => {
+    usersState.page = 1;
+    renderUsers();
+  });
+  document.getElementById('btnRefreshVendors')?.addEventListener('click', () => {
+    vendorsState.page = 1;
+    renderAllVendors();
+  });
+
+  // Users: role filter, search, pagination
+  document.getElementById('usersRoleFilter')?.addEventListener('change', (e) => {
+    usersState.role = e.target.value;
+    usersState.page = 1;
+    renderUsers();
+  });
+  document.getElementById('btnUsersSearch')?.addEventListener('click', () => {
+    usersState.search = document.getElementById('usersSearchInput')?.value?.trim() || '';
+    usersState.page = 1;
+    renderUsers();
+  });
+  document.getElementById('usersSearchInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnUsersSearch')?.click();
+  });
+  document.getElementById('btnUsersPrev')?.addEventListener('click', () => {
+    if (usersState.page > 1) {
+      usersState.page -= 1;
+      renderUsers();
+    }
+  });
+  document.getElementById('btnUsersNext')?.addEventListener('click', () => {
+    if (usersState.page < usersState.pages) {
+      usersState.page += 1;
+      renderUsers();
+    }
+  });
+
+  // Vendors: status filter, search, pagination
+  document.getElementById('vendorsStatusFilter')?.addEventListener('change', (e) => {
+    vendorsState.status = e.target.value;
+    vendorsState.page = 1;
+    renderAllVendors();
+  });
+  document.getElementById('btnVendorsSearch')?.addEventListener('click', () => {
+    vendorsState.search = document.getElementById('vendorsSearchInput')?.value?.trim() || '';
+    vendorsState.page = 1;
+    renderAllVendors();
+  });
+  document.getElementById('vendorsSearchInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnVendorsSearch')?.click();
+  });
+  document.getElementById('btnVendorsPrev')?.addEventListener('click', () => {
+    if (vendorsState.page > 1) {
+      vendorsState.page -= 1;
+      renderAllVendors();
+    }
+  });
+  document.getElementById('btnVendorsNext')?.addEventListener('click', () => {
+    if (vendorsState.page < vendorsState.pages) {
+      vendorsState.page += 1;
+      renderAllVendors();
+    }
+  });
 
   // Announcement form
   document.getElementById('announcementForm')?.addEventListener('submit', async (e) => {
