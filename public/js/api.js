@@ -912,6 +912,83 @@ export async function sendAnnouncement(payload) {
   });
 }
 
+// Downloads a CSV (or other file) response as a browser file save, forwarding the auth token.
+async function downloadFile(path, fallbackFilename) {
+  const url = buildUrl(path);
+  const headers = new Headers({ Accept: 'text/csv' });
+  const token = getToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    let message = `Export failed (${res.status})`;
+    try {
+      const data = await res.json();
+      message = data?.message || message;
+    } catch {}
+    throw new Error(message);
+  }
+
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] || fallbackFilename;
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
+}
+
+export async function exportAdminUsersCsv({ role, search } = {}) {
+  const params = new URLSearchParams();
+  if (role) params.set('role', role);
+  if (search) params.set('search', search);
+  return downloadFile(`/api/v1/admin/users/export?${params.toString()}`, 'users-export.csv');
+}
+
+export async function exportAdminVendorsCsv({ status, search } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (search) params.set('search', search);
+  return downloadFile(`/api/v1/admin/vendors/export?${params.toString()}`, 'vendors-export.csv');
+}
+
+export async function exportAdminBookingsCsv({ status } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  return downloadFile(`/api/v1/admin/bookings/export?${params.toString()}`, 'bookings-export.csv');
+}
+
+export async function exportAdminPaymentsCsv({ status } = {}) {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  return downloadFile(`/api/v1/admin/payments/export?${params.toString()}`, 'payments-export.csv');
+}
+
+export async function bulkToggleUsers({ userIds, isActive }) {
+  return apiFetch('/api/v1/admin/users/bulk-toggle-status', {
+    method: 'PUT',
+    body: JSON.stringify({ userIds, isActive }),
+  });
+}
+
+export async function bulkVendorAction({ vendorIds, action, reason }) {
+  return apiFetch('/api/v1/admin/vendors/bulk-action', {
+    method: 'PUT',
+    body: JSON.stringify({ vendorIds, action, reason }),
+  });
+}
+
+export async function adminGlobalSearch(q) {
+  const params = new URLSearchParams();
+  params.set('q', q || '');
+  return apiFetch(`/api/v1/admin/search?${params.toString()}`, { method: 'GET' });
+}
+
 export async function getAdminAudit({
   userId,
   actionType,

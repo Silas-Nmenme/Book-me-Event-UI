@@ -666,6 +666,13 @@ html[data-theme="light"] .badge-outline-brand { color: var(--clr-primary); }
 .bme-stat-card__trend--up { color: var(--clr-teal); }
 .bme-stat-card__trend--down { color: #F43F5E; }
 
+/* Global admin search results dropdown */
+.bme-search-results {
+  z-index: 20;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
 /* Icon chip used inside stat cards / activity rows (replaces inline background styles) */
 .bme-stat-card__header { display: flex; align-items: center; justify-content: space-between; }
 .bme-icon-chip {

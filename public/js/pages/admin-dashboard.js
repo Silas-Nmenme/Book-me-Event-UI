@@ -14,6 +14,11 @@ import {
   getAdminPayments,
   getAdminStats,
   sendAnnouncement,
+  exportAdminUsersCsv,
+  exportAdminVendorsCsv,
+  bulkToggleUsers,
+  bulkVendorAction,
+  adminGlobalSearch,
 } from '../api.js';
 
 import { toast, setYear } from '../ui.js';
@@ -22,6 +27,13 @@ import { initThemeToggle } from '../theme-toggle.js';
 // Client-side filter/pagination state for the users & vendors tables.
 const usersState = { role: '', search: '', page: 1, limit: 10, pages: 1 };
 const vendorsState = { status: '', search: '', page: 1, limit: 10, pages: 1 };
+
+// Row selection state for bulk actions (cleared whenever a table re-renders).
+const selectedUserIds = new Set();
+const selectedVendorIds = new Set();
+
+let revenueChart = null;
+let growthChart = null;
 
 function escapeHtml(s) {
   return (s ?? '')
@@ -174,17 +186,32 @@ async function renderPendingVendors() {
   }
 }
 
+function updateUsersBulkToolbar() {
+  const countEl = document.getElementById('usersSelectedCount');
+  const enableBtn = document.getElementById('btnBulkEnableUsers');
+  const disableBtn = document.getElementById('btnBulkDisableUsers');
+  const hasSelection = selectedUserIds.size > 0;
+
+  if (countEl) countEl.textContent = `${selectedUserIds.size} selected`;
+  if (enableBtn) enableBtn.disabled = !hasSelection;
+  if (disableBtn) disableBtn.disabled = !hasSelection;
+}
+
 async function renderUsers() {
   const loadingEl = document.getElementById('usersLoading');
   const errorEl = document.getElementById('usersError');
   const bodyEl = document.getElementById('usersBody');
   const pageInfoEl = document.getElementById('usersPageInfo');
+  const selectAllEl = document.getElementById('usersSelectAll');
 
   if (!bodyEl) return;
 
   loadingEl?.classList.remove('d-none');
   errorEl?.classList.add('d-none');
   bodyEl.innerHTML = '';
+  selectedUserIds.clear();
+  updateUsersBulkToolbar();
+  if (selectAllEl) selectAllEl.checked = false;
 
   try {
     const res = await loadUsers(usersState);
@@ -197,21 +224,23 @@ async function renderUsers() {
     }
 
     if (!Array.isArray(users) || users.length === 0) {
-      bodyEl.innerHTML = `<tr><td colspan="5" class="text-muted-soft">No users found.</td></tr>`;
+      bodyEl.innerHTML = `<tr><td colspan="6" class="text-muted-soft">No users found.</td></tr>`;
       return;
     }
 
     bodyEl.innerHTML = users
       .map((u) => {
         const { text, variant } = statusText(u?.isActive);
+        const id = escapeHtml(u?._id || '');
         return `
           <tr>
+            <td><input type="checkbox" class="user-row-checkbox" data-user-id="${id}" /></td>
             <td>${escapeHtml(u?.firstName || '')} ${escapeHtml(u?.lastName || '')}</td>
             <td>${escapeHtml(u?.email || '')}</td>
             <td>${escapeHtml(u?.role || 'USER')}</td>
             <td><span class="badge text-bg-${escapeHtml(variant)}">${escapeHtml(text)}</span></td>
             <td>
-              <button class="btn btn-soft btn-sm" data-action="toggle" data-user-id="${escapeHtml(u?._id || '')}">
+              <button class="btn btn-soft btn-sm" data-action="toggle" data-user-id="${id}">
                 ${u?.isActive ? 'Disable' : 'Enable'}
               </button>
             </td>
@@ -219,6 +248,16 @@ async function renderUsers() {
         `;
       })
       .join('');
+
+    bodyEl.querySelectorAll('.user-row-checkbox').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-user-id');
+        if (!id) return;
+        if (cb.checked) selectedUserIds.add(id);
+        else selectedUserIds.delete(id);
+        updateUsersBulkToolbar();
+      });
+    });
 
     bodyEl.querySelectorAll('[data-action="toggle"]').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -249,17 +288,32 @@ function vendorStatusBadge(kycStatus) {
   return { text: 'Pending', variant: 'warning' };
 }
 
+function updateVendorsBulkToolbar() {
+  const countEl = document.getElementById('vendorsSelectedCount');
+  const verifyBtn = document.getElementById('btnBulkVerifyVendors');
+  const rejectBtn = document.getElementById('btnBulkRejectVendors');
+  const hasSelection = selectedVendorIds.size > 0;
+
+  if (countEl) countEl.textContent = `${selectedVendorIds.size} selected`;
+  if (verifyBtn) verifyBtn.disabled = !hasSelection;
+  if (rejectBtn) rejectBtn.disabled = !hasSelection;
+}
+
 async function renderAllVendors() {
   const loadingEl = document.getElementById('vendorsLoading');
   const errorEl = document.getElementById('vendorsError');
   const bodyEl = document.getElementById('vendorsBody');
   const pageInfoEl = document.getElementById('vendorsPageInfo');
+  const selectAllEl = document.getElementById('vendorsSelectAll');
 
   if (!bodyEl) return;
 
   loadingEl?.classList.remove('d-none');
   errorEl?.classList.add('d-none');
   bodyEl.innerHTML = '';
+  selectedVendorIds.clear();
+  updateVendorsBulkToolbar();
+  if (selectAllEl) selectAllEl.checked = false;
 
   try {
     const res = await loadAllVendors(vendorsState);
@@ -272,7 +326,7 @@ async function renderAllVendors() {
     }
 
     if (!Array.isArray(vendors) || vendors.length === 0) {
-      bodyEl.innerHTML = `<tr><td colspan="5" class="text-muted-soft">No vendors found.</td></tr>`;
+      bodyEl.innerHTML = `<tr><td colspan="6" class="text-muted-soft">No vendors found.</td></tr>`;
       return;
     }
 
@@ -281,8 +335,10 @@ async function renderAllVendors() {
         const user = v?.user;
         const { text, variant } = vendorStatusBadge(v?.kycStatus);
         const isPending = (v?.kycStatus || 'PENDING').toUpperCase() === 'PENDING';
+        const id = escapeHtml(v?._id || '');
         return `
           <tr>
+            <td><input type="checkbox" class="vendor-row-checkbox" data-vendor-id="${id}" /></td>
             <td>${escapeHtml(user?.firstName || '')} ${escapeHtml(user?.lastName || '')}<div class="small text-muted-soft">${escapeHtml(user?.email || '')}</div></td>
             <td>${escapeHtml(v?.businessName || '—')}</td>
             <td><span class="badge text-bg-${escapeHtml(variant)}">${escapeHtml(text)}</span></td>
@@ -291,8 +347,8 @@ async function renderAllVendors() {
               ${
                 isPending
                   ? `<div class="d-flex gap-2">
-                      <button class="btn btn-success btn-sm" data-action="verify" data-vendor-id="${escapeHtml(v?._id || '')}">Verify</button>
-                      <button class="btn btn-danger btn-sm" data-action="reject" data-vendor-id="${escapeHtml(v?._id || '')}">Reject</button>
+                      <button class="btn btn-success btn-sm" data-action="verify" data-vendor-id="${id}">Verify</button>
+                      <button class="btn btn-danger btn-sm" data-action="reject" data-vendor-id="${id}">Reject</button>
                     </div>`
                   : `<span class="text-muted-soft">—</span>`
               }
@@ -301,6 +357,16 @@ async function renderAllVendors() {
         `;
       })
       .join('');
+
+    bodyEl.querySelectorAll('.vendor-row-checkbox').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-vendor-id');
+        if (!id) return;
+        if (cb.checked) selectedVendorIds.add(id);
+        else selectedVendorIds.delete(id);
+        updateVendorsBulkToolbar();
+      });
+    });
 
     bodyEl.querySelectorAll('[data-action]').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -344,6 +410,155 @@ async function renderBillingViews() {
     bookingsCountEl.textContent = '—';
     paymentsCountEl.textContent = '—';
   }
+}
+
+function renderCharts(stats) {
+  if (typeof window.Chart === 'undefined') return;
+
+  const revenueCanvas = document.getElementById('chartRevenue');
+  const growthCanvas = document.getElementById('chartGrowth');
+  if (!revenueCanvas || !growthCanvas) return;
+
+  const monthlyRevenue = Array.isArray(stats?.monthlyRevenue) ? stats.monthlyRevenue : [];
+  const monthlySignups = Array.isArray(stats?.monthlySignups) ? stats.monthlySignups : [];
+  const monthlyBookings = Array.isArray(stats?.monthlyBookings) ? stats.monthlyBookings : [];
+
+  revenueChart?.destroy();
+  revenueChart = new window.Chart(revenueCanvas, {
+    type: 'line',
+    data: {
+      labels: monthlyRevenue.map((m) => m._id),
+      datasets: [
+        {
+          label: 'Revenue',
+          data: monthlyRevenue.map((m) => m.total),
+          borderColor: '#0EA5E9',
+          backgroundColor: 'rgba(14,165,233,0.15)',
+          fill: true,
+          tension: 0.35,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, title: { display: true, text: 'Monthly revenue' } },
+    },
+  });
+
+  // Merge signup/booking months so both series share the same x-axis labels.
+  const allMonths = Array.from(
+    new Set([...monthlySignups.map((m) => m._id), ...monthlyBookings.map((m) => m._id)])
+  ).sort();
+  const signupsByMonth = Object.fromEntries(monthlySignups.map((m) => [m._id, m.count]));
+  const bookingsByMonth = Object.fromEntries(monthlyBookings.map((m) => [m._id, m.count]));
+
+  growthChart?.destroy();
+  growthChart = new window.Chart(growthCanvas, {
+    type: 'bar',
+    data: {
+      labels: allMonths,
+      datasets: [
+        {
+          label: 'New signups',
+          data: allMonths.map((m) => signupsByMonth[m] || 0),
+          backgroundColor: '#7C5CFF',
+        },
+        {
+          label: 'Bookings',
+          data: allMonths.map((m) => bookingsByMonth[m] || 0),
+          backgroundColor: '#22c55e',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { title: { display: true, text: 'New signups & bookings' } },
+    },
+  });
+}
+
+function renderGlobalSearchResults(data) {
+  const resultsEl = document.getElementById('globalSearchResults');
+  if (!resultsEl) return;
+
+  const users = data?.users || [];
+  const vendors = data?.vendors || [];
+  const bookings = data?.bookings || [];
+
+  if (users.length === 0 && vendors.length === 0 && bookings.length === 0) {
+    resultsEl.innerHTML = `<div class="list-group-item text-muted-soft small">No matches found.</div>`;
+    resultsEl.classList.remove('d-none');
+    return;
+  }
+
+  const sections = [];
+
+  if (users.length) {
+    sections.push(`<div class="list-group-item bg-dark text-muted-soft small fw-bold">Users</div>`);
+    sections.push(
+      ...users.map(
+        (u) =>
+          `<div class="list-group-item list-group-item-action">${escapeHtml(u.firstName || '')} ${escapeHtml(u.lastName || '')} <span class="text-muted-soft small">${escapeHtml(u.email || '')} · ${escapeHtml(u.role || '')}</span></div>`
+      )
+    );
+  }
+
+  if (vendors.length) {
+    sections.push(`<div class="list-group-item bg-dark text-muted-soft small fw-bold">Vendors</div>`);
+    sections.push(
+      ...vendors.map(
+        (v) =>
+          `<div class="list-group-item list-group-item-action">${escapeHtml(v.businessName || '')} <span class="text-muted-soft small">${escapeHtml(v.user?.email || '')} · ${escapeHtml(v.kycStatus || '')}</span></div>`
+      )
+    );
+  }
+
+  if (bookings.length) {
+    sections.push(`<div class="list-group-item bg-dark text-muted-soft small fw-bold">Bookings</div>`);
+    sections.push(
+      ...bookings.map(
+        (b) =>
+          `<div class="list-group-item list-group-item-action">${escapeHtml(b.user?.firstName || '')} ${escapeHtml(b.user?.lastName || '')} → ${escapeHtml(b.vendor?.businessName || '')} <span class="text-muted-soft small">${escapeHtml(b.bookingStatus || '')}</span></div>`
+      )
+    );
+  }
+
+  resultsEl.innerHTML = sections.join('');
+  resultsEl.classList.remove('d-none');
+}
+
+function setupGlobalSearch() {
+  const inputEl = document.getElementById('globalSearchInput');
+  const resultsEl = document.getElementById('globalSearchResults');
+  if (!inputEl || !resultsEl) return;
+
+  let debounceTimer = null;
+
+  inputEl.addEventListener('input', () => {
+    const q = inputEl.value.trim();
+    clearTimeout(debounceTimer);
+
+    if (!q) {
+      resultsEl.classList.add('d-none');
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const res = await adminGlobalSearch(q);
+        renderGlobalSearchResults(res?.data || res);
+      } catch (e) {
+        resultsEl.innerHTML = `<div class="list-group-item text-danger small">${escapeHtml(e?.message || 'Search failed.')}</div>`;
+        resultsEl.classList.remove('d-none');
+      }
+    }, 300);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!resultsEl.contains(e.target) && e.target !== inputEl) {
+      resultsEl.classList.add('d-none');
+    }
+  });
 }
 
 async function initAdminDashboard() {
@@ -476,6 +691,16 @@ async function initAdminDashboard() {
     // ignore
   }
 
+  // Charts
+  try {
+    const platformStats = await getAdminStats();
+    renderCharts(platformStats?.data || platformStats);
+  } catch {
+    // ignore
+  }
+
+  setupGlobalSearch();
+
   await Promise.all([renderPendingVendors(), renderAllVendors(), renderUsers(), renderBillingViews()]);
 
   document.getElementById('btnRefreshPending')?.addEventListener('click', renderPendingVendors);
@@ -486,6 +711,78 @@ async function initAdminDashboard() {
   document.getElementById('btnRefreshVendors')?.addEventListener('click', () => {
     vendorsState.page = 1;
     renderAllVendors();
+  });
+
+  // Users: select-all, bulk actions, export
+  document.getElementById('usersSelectAll')?.addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('.user-row-checkbox').forEach((cb) => {
+      cb.checked = checked;
+      const id = cb.getAttribute('data-user-id');
+      if (!id) return;
+      if (checked) selectedUserIds.add(id);
+      else selectedUserIds.delete(id);
+    });
+    updateUsersBulkToolbar();
+  });
+
+  async function runBulkUserToggle(isActive) {
+    if (selectedUserIds.size === 0) return;
+    try {
+      const res = await bulkToggleUsers({ userIds: Array.from(selectedUserIds), isActive });
+      toast({ title: 'Bulk update complete', message: res?.message || 'Users updated.', variant: 'success' });
+      await renderUsers();
+    } catch (e) {
+      toast({ title: 'Bulk update failed', message: e?.message || 'Try again.', variant: 'danger' });
+    }
+  }
+
+  document.getElementById('btnBulkEnableUsers')?.addEventListener('click', () => runBulkUserToggle(true));
+  document.getElementById('btnBulkDisableUsers')?.addEventListener('click', () => runBulkUserToggle(false));
+
+  document.getElementById('btnExportUsers')?.addEventListener('click', async () => {
+    try {
+      await exportAdminUsersCsv({ role: usersState.role, search: usersState.search });
+    } catch (e) {
+      toast({ title: 'Export failed', message: e?.message || 'Try again.', variant: 'danger' });
+    }
+  });
+
+  // Vendors: select-all, bulk actions, export
+  document.getElementById('vendorsSelectAll')?.addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('.vendor-row-checkbox').forEach((cb) => {
+      cb.checked = checked;
+      const id = cb.getAttribute('data-vendor-id');
+      if (!id) return;
+      if (checked) selectedVendorIds.add(id);
+      else selectedVendorIds.delete(id);
+    });
+    updateVendorsBulkToolbar();
+  });
+
+  async function runBulkVendorAction(action) {
+    if (selectedVendorIds.size === 0) return;
+    const reason = action === 'reject' ? prompt('Rejection reason (optional):') || undefined : undefined;
+
+    try {
+      const res = await bulkVendorAction({ vendorIds: Array.from(selectedVendorIds), action, reason });
+      toast({ title: 'Bulk action complete', message: res?.message || 'Vendors updated.', variant: 'success' });
+      await Promise.all([renderAllVendors(), renderPendingVendors()]);
+    } catch (e) {
+      toast({ title: 'Bulk action failed', message: e?.message || 'Try again.', variant: 'danger' });
+    }
+  }
+
+  document.getElementById('btnBulkVerifyVendors')?.addEventListener('click', () => runBulkVendorAction('verify'));
+  document.getElementById('btnBulkRejectVendors')?.addEventListener('click', () => runBulkVendorAction('reject'));
+
+  document.getElementById('btnExportVendors')?.addEventListener('click', async () => {
+    try {
+      await exportAdminVendorsCsv({ status: vendorsState.status, search: vendorsState.search });
+    } catch (e) {
+      toast({ title: 'Export failed', message: e?.message || 'Try again.', variant: 'danger' });
+    }
   });
 
   // Users: role filter, search, pagination

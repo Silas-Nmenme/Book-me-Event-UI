@@ -95,6 +95,7 @@
                     <option value="REFUNDED">REFUNDED</option>
                   </select>
                   <button id="btnRefreshPayments" class="btn btn-soft btn-sm" type="button">Refresh</button>
+                  <button id="btnExportPayments" class="btn btn-soft btn-sm" type="button">Export CSV</button>
                 </div>
               </div>
 
@@ -138,7 +139,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken, getAdminPayments } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken, getAdminPayments, exportAdminPaymentsCsv } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
 
@@ -271,6 +272,15 @@
       }
 
       document.getElementById('btnRefreshPayments')?.addEventListener('click', loadPayments);
+
+      document.getElementById('btnExportPayments')?.addEventListener('click', async () => {
+        const status = document.getElementById('statusSelect')?.value || undefined;
+        try {
+          await exportAdminPaymentsCsv({ status });
+        } catch (e) {
+          toast({ title: 'Export failed', message: e?.message || 'Try again.', variant: 'danger' });
+        }
+      });
 
       await loadMe();
       await loadPayments();

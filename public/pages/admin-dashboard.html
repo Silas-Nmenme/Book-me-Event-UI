@@ -104,6 +104,19 @@
                 </div>
               </div>
 
+              <div class="mb-3 position-relative">
+                <input
+                  class="form-control"
+                  id="globalSearchInput"
+                  placeholder="Search users, vendors, or bookings by name/email/business…"
+                  autocomplete="off"
+                />
+                <div
+                  id="globalSearchResults"
+                  class="list-group position-absolute w-100 shadow bme-search-results d-none"
+                ></div>
+              </div>
+
               <div class="row g-3">
                 <div class="col-12 col-md-6">
                   <div class="card card-glass p-3 card-hover h-100">
@@ -180,6 +193,25 @@
                             <div class="bme-stat-card__label">Avg rating</div>
                             <div class="bme-stat-card__value" id="statAvgRating">—</div>
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="card card-glass p-3">
+                      <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                          <div class="fw-bold">Growth & revenue</div>
+                          <div class="text-muted-soft small">Monthly trends across signups, bookings, and revenue.</div>
+                        </div>
+                      </div>
+                      <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                          <canvas id="chartRevenue" height="220"></canvas>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                          <canvas id="chartGrowth" height="220"></canvas>
                         </div>
                       </div>
                     </div>
@@ -265,6 +297,7 @@
                         </div>
                         <div class="d-flex gap-2">
                           <button class="btn btn-soft btn-sm" type="button" id="btnRefreshVendors">Refresh</button>
+                          <button class="btn btn-soft btn-sm" type="button" id="btnExportVendors">Export CSV</button>
                         </div>
                       </div>
 
@@ -279,6 +312,12 @@
                         <button class="btn btn-soft btn-sm" type="button" id="btnVendorsSearch">Search</button>
                       </div>
 
+                      <div class="d-flex gap-2 flex-wrap mb-2 align-items-center">
+                        <span class="small text-muted-soft" id="vendorsSelectedCount">0 selected</span>
+                        <button class="btn btn-success btn-sm" type="button" id="btnBulkVerifyVendors" disabled>Verify selected</button>
+                        <button class="btn btn-danger btn-sm" type="button" id="btnBulkRejectVendors" disabled>Reject selected</button>
+                      </div>
+
                       <div id="vendorsLoading" class="text-muted-soft small d-none">Loading…</div>
                       <div id="vendorsError" class="text-danger small d-none"></div>
 
@@ -286,6 +325,7 @@
                         <table class="table table-dark table-hover mb-0">
                           <thead>
                             <tr>
+                              <th><input type="checkbox" id="vendorsSelectAll" title="Select all vendors" /></th>
                               <th>User</th>
                               <th>Business</th>
                               <th>Status</th>
@@ -316,6 +356,7 @@
                         </div>
                         <div class="d-flex gap-2">
                           <button class="btn btn-soft btn-sm" type="button" id="btnRefreshUsers">Refresh</button>
+                          <button class="btn btn-soft btn-sm" type="button" id="btnExportUsers">Export CSV</button>
                         </div>
                       </div>
 
@@ -330,6 +371,12 @@
                         <button class="btn btn-soft btn-sm" type="button" id="btnUsersSearch">Search</button>
                       </div>
 
+                      <div class="d-flex gap-2 flex-wrap mb-2 align-items-center">
+                        <span class="small text-muted-soft" id="usersSelectedCount">0 selected</span>
+                        <button class="btn btn-soft btn-sm" type="button" id="btnBulkEnableUsers" disabled>Enable selected</button>
+                        <button class="btn btn-soft btn-sm" type="button" id="btnBulkDisableUsers" disabled>Disable selected</button>
+                      </div>
+
                       <div id="usersLoading" class="text-muted-soft small d-none">Loading…</div>
                       <div id="usersError" class="text-danger small d-none"></div>
 
@@ -337,6 +384,7 @@
                         <table class="table table-dark table-hover mb-0">
                           <thead>
                             <tr>
+                              <th><input type="checkbox" id="usersSelectAll" title="Select all users" /></th>
                               <th>Name</th>
                               <th>Email</th>
                               <th>Role</th>
@@ -419,6 +467,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
     <script type="module">
       import { setYear } from '../js/ui.js';
