@@ -110,12 +110,32 @@ function hydrateProfileAvatar(payload) {
   const user = payload?.data || payload;
   const picture = getProfilePicture(user);
   if (picture) {
-    avatar.style.backgroundImage = `url("${String(picture).replace(/[")]/g, '')}")`;
-    avatar.style.backgroundSize = 'cover';
-    avatar.style.backgroundPosition = 'center';
-    avatar.style.backgroundRepeat = 'no-repeat';
-    avatar.textContent = '';
-    avatar.style.fontWeight = 'normal';
+    const renderImage = () => {
+      if (!document.body.contains(avatar)) return;
+
+      const image = document.createElement('img');
+      image.src = String(picture);
+      image.alt = 'Profile picture';
+      image.className = 'bme-avatar__image';
+      image.addEventListener('error', () => {
+        image.remove();
+        avatar.style.backgroundImage = '';
+        avatar.textContent = getProfileName(user)
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0].toUpperCase())
+          .join('');
+        avatar.style.fontWeight = '900';
+      }, { once: true });
+
+      avatar.textContent = '';
+      avatar.style.backgroundImage = '';
+      avatar.style.fontWeight = 'normal';
+      avatar.append(image);
+    };
+
+    window.setTimeout(renderImage, 0);
     return;
   }
 
