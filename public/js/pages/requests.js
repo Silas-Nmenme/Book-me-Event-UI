@@ -509,12 +509,13 @@ export async function initRequestsPage({ me, role } = {}) {
 
       const data = res?.data || res;
 
-      const items =
-        data?.data ||
-        data?.results ||
-        data?.requests ||
-        data?.items ||
-        [];
+      const items = Array.isArray(data)
+        ? data
+        : data?.data ||
+          data?.results ||
+          data?.requests ||
+          data?.items ||
+          [];
 
   if (!Array.isArray(items) || items.length === 0) {
 

@@ -89,6 +89,46 @@ function createMultipartBody(payload = {}, files = [], fileField = 'images') {
   return form;
 }
 
+function getProfilePicture(user) {
+  return user?.profilePicture ||
+    user?.user?.profilePicture ||
+    user?.vendor?.user?.profilePicture ||
+    user?.vendor?.profilePicture ||
+    null;
+}
+
+function getProfileName(user) {
+  const firstName = user?.firstName || user?.user?.firstName || '';
+  const lastName = user?.lastName || user?.user?.lastName || '';
+  return `${firstName} ${lastName}`.trim() || 'BME';
+}
+
+function hydrateProfileAvatar(payload) {
+  const avatar = document.getElementById('avatar');
+  if (!avatar) return;
+
+  const user = payload?.data || payload;
+  const picture = getProfilePicture(user);
+  if (picture) {
+    avatar.style.backgroundImage = `url("${String(picture).replace(/[")]/g, '')}")`;
+    avatar.style.backgroundSize = 'cover';
+    avatar.style.backgroundPosition = 'center';
+    avatar.style.backgroundRepeat = 'no-repeat';
+    avatar.textContent = '';
+    avatar.style.fontWeight = 'normal';
+    return;
+  }
+
+  avatar.style.backgroundImage = '';
+  avatar.textContent = getProfileName(user)
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+  avatar.style.fontWeight = '900';
+}
+
 export async function apiFetch(path, options = {}) {
   const url = buildUrl(path);
 
@@ -144,6 +184,10 @@ export async function apiFetch(path, options = {}) {
       err.status = res.status;
       err.data = data;
       throw err;
+    }
+
+    if (path === '/api/v1/auth/me' || path === 'api/v1/auth/me') {
+      hydrateProfileAvatar(data);
     }
 
     return data;

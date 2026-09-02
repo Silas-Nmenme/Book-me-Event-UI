@@ -881,6 +881,20 @@ body {
 .bme-main { min-width: 0; }
 .bme-topbar { border-left: 0 !important; border-right: 0 !important; }
 
+.bme-avatar {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-weight: var(--fw-bold);
+}
+
 @media (max-width: 767.98px) {
   .bme-role-dashboard > .section { padding-top: 1.5rem; }
   .bme-role-dashboard .navbar .container { padding-inline: var(--page-gutter); }
