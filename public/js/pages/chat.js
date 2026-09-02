@@ -1,4 +1,4 @@
-import { apiFetch, fetchMe, logoutUser, clearToken, getUnreadCount, getRequestConversation, sendMessageByRequestId, uploadMessageAttachments } from '../api.js';
+import { apiFetch, fetchMe, logoutUser, clearToken, getUnreadCount, getRequestConversation, sendMessageByRequestId, uploadMessageAttachments, getToken } from '../api.js';
 import { toast } from '../ui.js';
 
 
@@ -267,7 +267,7 @@ export async function initChatPage({ role = 'USER' } = {}) {
       sessionStorage.clear();
       localStorage.clear();
       toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-      window.location.href = 'auth-login.html';
+      window.location.replace('auth-login.html');
     }
   });
 
@@ -345,7 +345,7 @@ export async function initChatPage({ role = 'USER' } = {}) {
           transports: ['polling', 'websocket'],
           path: '/socket.io',
           auth: {
-            token: (localStorage.getItem('token') || sessionStorage.getItem('token') || '')
+            token: getToken()
           },
         })
       : null;

@@ -462,7 +462,7 @@ async function loadMe() {
     } else {
       avatarEl.textContent = getAvatarInitials(me?.firstName || 'BME');
       avatarEl.style.backgroundImage = '';
-      avatarEl.style.background = 'rgba(124,92,255,0.12)';
+      avatarEl.style.background = 'rgba(124,58,237,0.12)';
     }
 
 
@@ -482,7 +482,7 @@ async function loadMe() {
       variant:'danger'
     });
 
-    window.location.href='auth-login.html';
+    window.location.replace('auth-login.html');
     return null;
   }
 }
@@ -500,7 +500,7 @@ document.getElementById('btnLogout').addEventListener('click', async () => {
     variant:'success'
   });
 
-  window.location.href='auth-login.html';
+  window.location.replace('auth-login.html');
 });
 
 const meRes = await loadMe();

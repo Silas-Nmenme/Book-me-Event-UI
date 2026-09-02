@@ -147,7 +147,7 @@
       document.getElementById('btnLogout')?.addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       const form = document.getElementById('ticketForm');
@@ -291,7 +291,7 @@
       // Auth check
       await fetchMe().catch(() => {
         clearToken();
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       await loadTickets();

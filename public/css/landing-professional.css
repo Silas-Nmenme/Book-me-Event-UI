@@ -47,8 +47,8 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
   gap:10px;
   padding:10px 14px;
   border-radius:999px;
-  background: rgba(124,92,255,.12);
-  border: 1px solid rgba(124,92,255,.35);
+  background: rgba(124,58,237,.12);
+  border: 1px solid rgba(124,58,237,.35);
 }
 
 .bme-kicker .dot{
@@ -56,6 +56,6 @@ html{ scroll-padding-top: var(--bme-navbar-height); }
   height:10px;
   border-radius:50%;
   background: linear-gradient(135deg, var(--brand), var(--brand2));
-  box-shadow: 0 0 0 4px rgba(124,92,255,.18);
+  box-shadow: 0 0 0 4px rgba(124,58,237,.18);
 }
 

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
 
-  <body>
+  <body class="bme-role-dashboard bme-admin-page">
 <div id="toastHost" class="bme-toast-host p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
@@ -34,6 +34,10 @@
 
         <div id="navAdminContent" class="collapse navbar-collapse">
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="admin-dashboard.html" aria-current="page">Overview</a>
+            <a class="btn btn-soft" href="admin-bookings.html">Bookings</a>
+            <a class="btn btn-soft" href="admin-payments.html">Payments</a>
+            <a class="btn btn-soft" href="admin-audit.html">Audit</a>
             <a class="btn btn-soft" href="profile.html">Refresh</a>
 
             <button
@@ -130,39 +134,39 @@
 
                       <div class="row g-3" id="statsStrip">
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Total users</div>
-                            <div class="h4 fw-bold mb-0" id="statTotalUsers">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Total users</div>
+                            <div class="bme-stat-card__value" id="statTotalUsers">—</div>
                           </div>
                         </div>
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Total vendors</div>
-                            <div class="h4 fw-bold mb-0" id="statTotalVendors">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Total vendors</div>
+                            <div class="bme-stat-card__value" id="statTotalVendors">—</div>
                           </div>
                         </div>
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Total bookings</div>
-                            <div class="h4 fw-bold mb-0" id="statTotalBookings">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Total bookings</div>
+                            <div class="bme-stat-card__value" id="statTotalBookings">—</div>
                           </div>
                         </div>
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Completed bookings</div>
-                            <div class="h4 fw-bold mb-0" id="statCompletedBookings">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Completed bookings</div>
+                            <div class="bme-stat-card__value" id="statCompletedBookings">—</div>
                           </div>
                         </div>
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Total revenue</div>
-                            <div class="h4 fw-bold mb-0" id="statTotalRevenue">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Total revenue</div>
+                            <div class="bme-stat-card__value" id="statTotalRevenue">—</div>
                           </div>
                         </div>
                         <div class="col-6 col-md-4">
-                          <div class="card card-glass p-3 h-100 bme-card-item">
-                            <div class="text-muted-soft small">Avg rating</div>
-                            <div class="h4 fw-bold mb-0" id="statAvgRating">—</div>
+                          <div class="bme-stat-card h-100">
+                            <div class="bme-stat-card__label">Avg rating</div>
+                            <div class="bme-stat-card__value" id="statAvgRating">—</div>
                           </div>
                         </div>
                       </div>

@@ -161,7 +161,7 @@
         }
         avatarEl.textContent = 'BME';
         avatarEl.style.backgroundImage = '';
-        avatarEl.style.background = 'rgba(124,92,255,0.12)';
+        avatarEl.style.background = 'rgba(124,58,237,0.12)';
       }
 
       function escapeHtml(s) {
@@ -190,7 +190,7 @@
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       async function loadMe() {

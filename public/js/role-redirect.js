@@ -26,11 +26,11 @@ export async function initNavbarBrandRoleRedirect({ selector = '.bme-navbar .nav
       document.documentElement.dataset.role = role;
 
       const next = roleToDashboard(role);
-      window.location.href = next;
+      window.location.replace(next);
     } catch (err) {
       clearToken();
       if (typeof onAuthRequired === 'function') onAuthRequired(err);
-      window.location.href = 'auth-login.html';
+      window.location.replace('auth-login.html');
     }
   });
 }

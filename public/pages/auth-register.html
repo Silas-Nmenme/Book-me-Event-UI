@@ -63,7 +63,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Create account</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">Secure</span>
+                <span class="badge badge-outline-brand">Secure</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Join Book Me Events</h1>
@@ -169,7 +169,7 @@
           toast({ title: 'OTP sent', message: 'Verify your email OTP to continue.', variant: 'success' });
           // save email temporarily so user can verify OTP
           sessionStorage.setItem('bme_pending_verify_email', email);
-          window.location.href = 'auth-verify-otp.html';
+          window.location.replace('auth-verify-otp.html');
 
         } catch (err) {
           const status = err?.status || err?.response?.status;

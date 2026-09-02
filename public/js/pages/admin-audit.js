@@ -55,7 +55,7 @@ async function init() {
   const btnLogout = document.getElementById('btnLogout');
   btnLogout?.addEventListener('click', () => {
     clearToken();
-    window.location.href = 'auth-login.html';
+    window.location.replace('auth-login.html');
   });
 
   async function refresh() {

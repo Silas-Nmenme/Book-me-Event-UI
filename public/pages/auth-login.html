@@ -63,7 +63,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Login</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">Secure</span>
+                <span class="badge badge-outline-brand">Secure</span>
               </div>
 
               <!-- NOTE: Keep this login UI identical for all roles (USER/VENDOR/ADMIN).
@@ -154,7 +154,7 @@
             : (roleUpper === 'VENDOR' ? 'vendor-dashboard.html' : 'user-dashboard.html');
 
           toast({ title: 'Logged in', message: 'Redirecting to your dashboard…', variant: 'success' });
-          window.location.href = next;
+          window.location.replace(next);
 
 
 

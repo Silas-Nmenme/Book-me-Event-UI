@@ -50,7 +50,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Admin 2FA Setup</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">TOTP</span>
+                <span class="badge badge-outline-brand">TOTP</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Scan QR code</h1>
@@ -61,23 +61,23 @@
 
               <div class="row g-3">
                 <div class="col-12 col-md-6">
-                  <div class="p-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
-                    <div class="small text-muted-soft mb-2">Authenticator QR</div>
+                  <div class="p-3 bme-qr-panel">
+                    <div class="small mb-2 bme-qr-label">Authenticator QR</div>
                     <div id="qrWrap" class="d-flex justify-content-center">
-                      <div class="text-muted-soft">Loading QR…</div>
+                      <div class="bme-qr-label">Loading QR…</div>
                     </div>
 
                     <div id="qrError" class="text-danger small mt-2"></div>
 
                     <details class="mt-3">
-                      <summary class="small text-muted-soft">Show setup key</summary>
-                      <div class="small" style="word-break:break-all;" id="otpauthBox"></div>
+                      <summary class="small bme-qr-label">Show setup key</summary>
+                      <div class="small" id="otpauthBox"></div>
                     </details>
                   </div>
                 </div>
 
                 <div class="col-12 col-md-6">
-                  <div class="p-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;">
+                  <div class="p-3 bme-panel">
                     <div class="small text-muted-soft mb-2">Verify first code</div>
                     <form id="verifyForm" class="row g-3" autocomplete="on">
                       <div class="col-12">

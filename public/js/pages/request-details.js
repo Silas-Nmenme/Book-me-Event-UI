@@ -120,7 +120,7 @@ export async function initRequestDetailsPage() {
       sessionStorage.clear();
       localStorage.clear();
       toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-      window.location.href = 'auth-login.html';
+      window.location.replace('auth-login.html');
     }
   });
 

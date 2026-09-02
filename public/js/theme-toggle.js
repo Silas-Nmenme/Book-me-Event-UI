@@ -1,7 +1,21 @@
 const THEME_KEY = 'bme_theme';
 
+function safeStorageRead() {
+  try {
+    return localStorage.getItem(THEME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageWrite(value) {
+  try {
+    localStorage.setItem(THEME_KEY, value);
+  } catch {}
+}
+
 function getPreferredTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
+  const saved = safeStorageRead();
   if (saved === 'dark' || saved === 'light') return saved;
   const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
   return prefersDark ? 'dark' : 'light';
@@ -10,7 +24,7 @@ function getPreferredTheme() {
 export function setTheme(theme) {
   const t = theme === 'dark' || theme === 'light' ? theme : getPreferredTheme();
   document.documentElement.dataset.theme = t;
-  localStorage.setItem(THEME_KEY, t);
+  safeStorageWrite(t);
   updateToggleIcon(t);
 }
 

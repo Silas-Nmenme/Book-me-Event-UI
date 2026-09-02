@@ -211,7 +211,7 @@
         } catch {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         }
       }
 
@@ -222,7 +222,7 @@
           clearToken();
         }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       loadMe();

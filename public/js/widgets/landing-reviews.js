@@ -1,4 +1,4 @@
-import { apiFetch, fetchMe, clearToken } from '../api.js';
+import { apiFetch, fetchMe, clearToken, getToken } from '../api.js';
 import { toast } from '../ui.js';
 
 function escapeHtml(s) {
@@ -26,7 +26,7 @@ function qs(name) {
 async function loadMeIfPossible() {
   // Avoid noisy 401s on the public landing page when no token exists.
   try {
-    const token = localStorage.getItem('bme_token');
+    const token = getToken();
     if (!token) return null;
 
     const meRes = await fetchMe();

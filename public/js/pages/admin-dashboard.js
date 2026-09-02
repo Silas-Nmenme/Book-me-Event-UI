@@ -309,14 +309,14 @@ async function initAdminDashboard() {
       // Guard: ensure admin
       if (role !== 'ADMIN') {
         toast({ title: 'Forbidden', message: 'Admin access required.', variant: 'danger' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       }
 
       return me;
     } catch {
       clearToken();
       toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-      window.location.href = 'auth-login.html';
+      window.location.replace('auth-login.html');
       return null;
     }
   }
@@ -328,7 +328,7 @@ async function initAdminDashboard() {
       clearToken();
     }
     toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-    window.location.href = 'auth-login.html';
+    window.location.replace('auth-login.html');
   });
 
   // Profile picture upload (best-effort)

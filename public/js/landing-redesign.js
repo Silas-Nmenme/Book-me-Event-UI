@@ -11,6 +11,12 @@ async function fetchPlatformStats() {
   return json?.data;
 }
 
+async function fetchCategoryCounts() {
+  const res = await fetch(`${BACKEND_URL}/api/v1/widgets/landing/category-counts`, { method: 'GET' });
+  const json = await res.json();
+  return json?.data || {};
+}
+
 
 function setMarqueeFromVendors(vendors = []) {
   const marquee = document.getElementById('landingVendorMarquee');
@@ -47,7 +53,7 @@ function escapeHtml(s) {
   });
 }
 
-function showMiniToast({ name, action }) {
+function showMiniToast(text) {
   const host = document.getElementById('landingToastStack');
   if (!host) return;
 
@@ -56,9 +62,7 @@ function showMiniToast({ name, action }) {
   el.innerHTML = `
     <div class="d-flex align-items-center gap-2">
       <span class="landing-mini-toast__check" aria-hidden="true">✓</span>
-      <div class="small">
-        <span class="fw-bold">${escapeHtml(name)}</span> ${escapeHtml(action)}
-      </div>
+      <div class="small">${escapeHtml(text)}</div>
     </div>
   `;
 
@@ -255,61 +259,56 @@ function initPlatformStats() {
 
 
 function initPublicActivityToasts() {
-  const rotating = [
-    { name: 'John B.', action: 'just booked a DJ in Lagos ✓' },
-    { name: 'Amaka T.', action: 'requested catering in Abuja ✓' },
-    { name: 'Ibrahim S.', action: 'booked a photographer in Port Harcourt ✓' },
-    { name: 'Chiamaka O.', action: 'just confirmed a venue in Ibadan ✓' },
-  ];
-
-  // Fetch best-effort.
+  // Only ever displays real ActivityLog entries; no data means no toasts (never fabricate activity).
   const tryFetch = async () => {
     try {
-      const r = await fetch('/api/v1/activity-feed?public=true');
+      const r = await fetch(`${BACKEND_URL}/api/v1/activity-feed?public=true`);
       const j = await r.json();
       const data = j?.data || j;
-      return Array.isArray(data) ? data : null;
+      return Array.isArray(data) ? data.filter((item) => item?.message) : [];
     } catch {
-      return null;
+      return [];
     }
   };
 
   (async () => {
-    const fetched = await tryFetch();
-    const pool = fetched?.length ? fetched : rotating;
-    let i = 0;
+    const pool = await tryFetch();
+    if (!pool.length) return;
 
-    // Immediate first
-    const pick = pool[i % pool.length];
-    if (pick?.name || pick?.vendorName) {
-      showMiniToast({
-        name: pick.name || pick.vendorName,
-        action: pick.action || pick.text || pick.message || pick.activityText || 'just booked ✓',
-      });
-    } else {
-      showMiniToast(rotating[0]);
-    }
+    let i = 0;
+    showMiniToast(pool[0].message);
 
     setInterval(() => {
-      const item = pool[i % pool.length];
       i += 1;
-
-      if (item?.name || item?.vendorName) {
-        showMiniToast({
-          name: item.name || item.vendorName,
-          action: item.action || item.text || item.message || item.activityText || 'just booked ✓',
-        });
-      } else {
-        showMiniToast(rotating[i % rotating.length]);
-      }
+      const item = pool[i % pool.length];
+      if (item?.message) showMiniToast(item.message);
     }, 8000);
   })();
+}
+
+function initCategoryCounts() {
+  const nodes = Array.from(document.querySelectorAll('[data-category-count]'));
+  if (!nodes.length) return;
+
+  fetchCategoryCounts()
+    .then((counts) => {
+      nodes.forEach((el) => {
+        const key = el.dataset.categoryCount;
+        const singular = key.endsWith('s') ? key.slice(0, -1) : key;
+        const n = Number(counts?.[key] ?? counts?.[singular] ?? 0);
+        el.textContent = `${formatNumber(n)} vendor${n === 1 ? '' : 's'} available`;
+      });
+    })
+    .catch(() => {
+      nodes.forEach((el) => { el.textContent = 'Vendors available'; });
+    });
 }
 
 export function initLandingRedesign() {
   initConfetti();
   initTypewriter();
   initPlatformStats();
+  initCategoryCounts();
   initMarquee();
   initPublicActivityToasts();
 

@@ -242,7 +242,7 @@
       document.getElementById('btnLogout')?.addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       try {
@@ -254,7 +254,7 @@
       } catch {
         clearToken();
         toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       }
     </script>
   </body>

@@ -244,62 +244,62 @@
             <!-- Stat cards -->
             <div class="row g-3">
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Requests</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">📄</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Requests</div>
+                    <div class="bme-icon-chip bme-icon-chip--brand">📄</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statRequests">—</div>
+                  <div class="bme-stat-card__value" id="statRequests">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Bookings</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">📅</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Bookings</div>
+                    <div class="bme-icon-chip bme-icon-chip--brand">📅</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statBookings">—</div>
+                  <div class="bme-stat-card__value" id="statBookings">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Support</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);">🎫</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Support</div>
+                    <div class="bme-icon-chip bme-icon-chip--brand">🎫</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statTickets">—</div>
+                  <div class="bme-stat-card__value" id="statTickets">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Pending</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,.16);border:1px solid rgba(245,158,11,.35);">⏳</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Pending</div>
+                    <div class="bme-icon-chip bme-icon-chip--warning">⏳</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statPendingRequests">—</div>
+                  <div class="bme-stat-card__value" id="statPendingRequests">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Completed</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(20,184,166,.16);border:1px solid rgba(20,184,166,.35);">✅</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Completed</div>
+                    <div class="bme-icon-chip bme-icon-chip--success">✅</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statCompletedBookings">—</div>
+                  <div class="bme-stat-card__value" id="statCompletedBookings">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
-                <div class="widget-card card-glass h-100 p-3">
-                  <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-muted-soft small">Rating</div>
-                    <div class="d-flex align-items-center justify-content-center" style="width:32px;height:32px;border-radius:8px;background:rgba(236,72,153,.16);border:1px solid rgba(236,72,153,.35);">⭐</div>
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Rating</div>
+                    <div class="bme-icon-chip bme-icon-chip--pink">⭐</div>
                   </div>
-                  <div class="h3 fw-bold mt-2" id="statAvgRating">—</div>
+                  <div class="bme-stat-card__value" id="statAvgRating">—</div>
                 </div>
               </div>
             </div>
@@ -477,7 +477,7 @@
         const me = await fetchMe().catch(() => {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
           return null;
         });
         if (!me) return;
@@ -517,7 +517,7 @@
         document.getElementById('btnLogout')?.addEventListener('click', async () => {
           try { await logoutUser(); } finally { clearToken(); }
           toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         });
       }
 

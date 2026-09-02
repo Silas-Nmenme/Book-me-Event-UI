@@ -61,7 +61,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Admin 2FA</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">Step</span>
+                <span class="badge badge-outline-brand">Step</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Confirm admin login</h1>
@@ -151,7 +151,7 @@
           message: 'Please log in again to verify your admin 2FA.',
           variant: 'warning',
         });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       }
 
       if (pendingEmail) {
@@ -198,7 +198,7 @@
             message: 'Please log in again to verify your admin 2FA.',
             variant: 'warning',
           });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
           return;
         }
 

@@ -205,13 +205,13 @@
           clearToken();
         }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       const me = await fetchMe().catch(() => null);
       if (!me) {
         clearToken();
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       } else {
         const meData = me?.data || me;
         document.getElementById('meName').textContent = meData?.firstName ? `${meData.firstName} ${meData.lastName || ''}`.trim() : '—';
@@ -228,7 +228,7 @@
         } else {
           avatarEl.textContent = (meData?.firstName || 'BME').split(' ').filter(Boolean).slice(0, 2).map(x => x[0].toUpperCase()).join('');
           avatarEl.style.backgroundImage = '';
-          avatarEl.style.background = 'rgba(124,92,255,0.12)';
+          avatarEl.style.background = 'rgba(124,58,237,0.12)';
         }
       }
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../css/landing-professional.css" />
   </head>
 
-  <body>
+  <body class="bme-role-dashboard bme-vendor-page">
 <div id="toastHost" class="bme-toast-host p-3"></div>
 
     <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
@@ -35,7 +35,11 @@
 
         <div id="navVendorDashboardContent" class="collapse navbar-collapse">
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
+            <a class="btn btn-soft" href="vendor-dashboard.html" aria-current="page">Dashboard</a>
             <a class="btn btn-soft" href="services.html">Browse</a>
+            <a class="btn btn-soft" href="vendor-service.html">Requests</a>
+            <a class="btn btn-soft" href="bookings.html">Bookings</a>
+            <a class="btn btn-soft" href="messages.html">Messages</a>
 
             <div class="dropdown">
               <button
@@ -150,39 +154,39 @@
 
               <div class="row g-3 mb-3" id="statsStrip">
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Incoming requests</div>
-                    <div class="h4 fw-bold mb-0" id="vStatRequests">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Incoming requests</div>
+                    <div class="bme-stat-card__value" id="vStatRequests">—</div>
                   </div>
                 </div>
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Accepted requests</div>
-                    <div class="h4 fw-bold mb-0" id="vStatAccepted">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Accepted requests</div>
+                    <div class="bme-stat-card__value" id="vStatAccepted">—</div>
                   </div>
                 </div>
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">My services</div>
-                    <div class="h4 fw-bold mb-0" id="vStatServices">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">My services</div>
+                    <div class="bme-stat-card__value" id="vStatServices">—</div>
                   </div>
                 </div>
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Bookings pending</div>
-                    <div class="h4 fw-bold mb-0" id="vStatPendingBookings">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Bookings pending</div>
+                    <div class="bme-stat-card__value" id="vStatPendingBookings">—</div>
                   </div>
                 </div>
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Completed bookings</div>
-                    <div class="h4 fw-bold mb-0" id="vStatCompletedBookings">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Completed bookings</div>
+                    <div class="bme-stat-card__value" id="vStatCompletedBookings">—</div>
                   </div>
                 </div>
                 <div class="col-6 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">SLA breach rate</div>
-                    <div class="h4 fw-bold mb-0" id="vStatBreachRate">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">SLA breach rate</div>
+                    <div class="bme-stat-card__value" id="vStatBreachRate">—</div>
                   </div>
                 </div>
               </div>
@@ -275,8 +279,8 @@
 
                     </div>
                     <div class="col-12 col-md-6">
-                      <label class="form-label">Price currency</label>
-                      <input class="form-control" type="text" id="vendorPriceCurrency" value="NGN" />
+                      <label class="form-label" for="vendorPriceCurrency">Price currency</label>
+                      <input class="form-control" type="text" id="vendorPriceCurrency" value="NGN" placeholder="e.g. NGN" title="Price currency" aria-label="Price currency" />
                     </div>
 
                     <div class="col-12">
@@ -390,7 +394,7 @@
           } else {
             avatarEl.textContent = getAvatarInitials(me?.firstName || me?.user?.firstName || 'BME');
             avatarEl.style.backgroundImage = '';
-            avatarEl.style.background = 'rgba(124,92,255,0.12)';
+            avatarEl.style.background = 'rgba(124,58,237,0.12)';
           }
 
           return me;
@@ -399,7 +403,7 @@
         } catch {
           clearToken();
           toast({ title: 'Session expired', message: 'Please log in again.', variant: 'danger' });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         }
       }
 
@@ -433,7 +437,7 @@
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       loadMe().then(async (me) => {

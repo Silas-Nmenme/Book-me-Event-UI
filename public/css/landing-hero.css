@@ -1,0 +1,364 @@
+/* Landing page (index.html) scoped styles — extracted from inline <style> for cacheability */
+
+/* Small CTA pill (index.html loads this file instead of landing-professional.css) */
+.bme-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, .12);
+  border: 1px solid rgba(124, 58, 237, .35);
+}
+.bme-kicker .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-highlight));
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, .18);
+}
+
+.bme-navbar {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+}
+html[data-theme="light"] .bme-navbar {
+  background: rgba(248, 247, 255, 0.70) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.10);
+}
+
+.bme-logo {
+  text-decoration: none;
+}
+
+.bme-logo .brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-highlight));
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.18);
+  transition: transform 200ms ease;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: .95; }
+  60% { transform: scale(1.35); opacity: .65; }
+  100% { transform: scale(1); opacity: .95; }
+}
+.bme-logo:hover .brand-dot { animation: pulse 800ms ease-out infinite; }
+
+.bme-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.55rem 0.65rem !important;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background-color 180ms ease, color 180ms ease;
+  color: rgba(248, 250, 255, 0.85) !important;
+}
+html[data-theme="light"] .bme-nav-link { color: rgba(30, 27, 75, 0.78) !important; }
+.bme-nav-link:hover { background: rgba(124, 58, 237, 0.12); color: var(--clr-highlight) !important; }
+
+.bme-nav-link[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--clr-primary), var(--clr-highlight));
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: slideIn 420ms ease forwards;
+}
+@keyframes slideIn { to { transform: scaleX(1); } }
+
+/* Hero */
+.bme-hero {
+  padding: 82px 0 34px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bme-hero::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: -60px;
+  height: 360px;
+  background:
+    radial-gradient(700px 260px at 18% 30%, rgba(124, 58, 237, 0.25), transparent 58%),
+    radial-gradient(650px 260px at 90% 20%, rgba(236, 72, 153, 0.18), transparent 52%);
+  pointer-events: none;
+}
+
+/* Confetti canvas */
+#landingConfetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.bme-hero > .container { position: relative; z-index: 1; }
+
+.bme-hero h1 {
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.landing-typewriter__cursor {
+  display: inline-block;
+  margin-left: 10px;
+  color: var(--clr-accent);
+  animation: cursorBlink 900ms steps(2) infinite;
+}
+@keyframes cursorBlink {
+  0%, 45% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+/* Counters */
+.bme-counter {
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+html[data-theme="light"] .bme-counter {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(15, 23, 42, 0.10);
+}
+
+/* Search */
+.bme-search-row {
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+html[data-theme="light"] .bme-search-row {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.10);
+}
+
+/* Marquee */
+.bme-marquee {
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.bme-marquee__track {
+  display: flex;
+  gap: 22px;
+  padding: 14px 0;
+  width: max-content;
+  animation: scroll-left linear infinite;
+  animation-duration: 26s;
+}
+@keyframes scroll-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Vendor logo pills */
+.bme-vendor-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(124,58,237,.18);
+  background: rgba(237,233,254,.10);
+  color: rgba(248,250,255,.86);
+  white-space: nowrap;
+  font-weight: 800;
+}
+html[data-theme="light"] .bme-vendor-logo {
+  background: rgba(124,58,237,.06);
+  border-color: rgba(124,58,237,.20);
+  color: rgba(30,27,75,.82);
+}
+
+/* Chips */
+.bme-chip-row button {
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.05);
+  color: inherit;
+  padding: 10px 14px;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+html[data-theme="light"] .bme-chip-row button {
+  background: rgba(255,255,255,.75);
+  border-color: rgba(15,23,42,.12);
+}
+.bme-chip-row button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124,58,237,.45);
+  box-shadow: 0 8px 18px rgba(124,58,237,.12);
+}
+
+.bme-category-card {
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+html[data-theme="light"] .bme-category-card {
+  background: rgba(255,255,255,.72);
+  border-color: rgba(15,23,42,.10);
+}
+.bme-category-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(124,58,237,0.15);
+  border-color: rgba(124,58,237,.55);
+}
+
+.bme-emoji {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124,58,237,.12);
+  border: 1px solid rgba(124,58,237,.26);
+  font-size: 22px;
+}
+
+.bme-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(124,58,237,.35);
+  background: rgba(237,233,254,.25);
+  color: var(--clr-accent);
+  font-weight: 900;
+  font-size: .8rem;
+}
+
+/* Testimonials */
+.bme-testimonial-card {
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  min-height: 220px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+html[data-theme="light"] .bme-testimonial-card {
+  background: rgba(255,255,255,.78);
+  border-color: rgba(15,23,42,.10);
+}
+.bme-testimonial-card.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Toast mini stack */
+#landingToastStack {
+  position: fixed;
+  top: 80px;
+  right: 18px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.landing-mini-toast {
+  width: 320px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(124,58,237,.25);
+  background: rgba(255,255,255,.05);
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+html[data-theme="light"] .landing-mini-toast {
+  background: rgba(255,255,255,.85);
+  border-color: rgba(124,58,237,.20);
+}
+.landing-mini-toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.landing-mini-toast__check {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20,184,166,.16);
+  border: 1px solid rgba(20,184,166,.35);
+  font-weight: 900;
+}
+
+footer {
+  background: var(--clr-dark);
+  color: #fff;
+}
+footer a { color: rgba(255,255,255,.85); text-decoration: none; }
+footer a:hover { color: #fff; }
+
+/* Feature highlights ("Why Book Me Events") */
+.bme-feature-card {
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  height: 100%;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  transition: transform var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard);
+}
+html[data-theme="light"] .bme-feature-card {
+  background: rgba(255,255,255,.78);
+  border-color: rgba(15,23,42,.10);
+}
+.bme-feature-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124,58,237,.4);
+}
+.bme-feature-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124,58,237,.14);
+  border: 1px solid rgba(124,58,237,.3);
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+
+/* Final conversion banner before footer */
+.bme-cta-banner {
+  border-radius: var(--radius-xl);
+  padding: 48px 32px;
+  text-align: center;
+  background: var(--gradient-primary);
+  color: #fff;
+}
+.bme-cta-banner h2 { color: #fff; }
+.bme-cta-banner p { color: rgba(255,255,255,.85); }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .bme-marquee__track { animation: none; }
+  .landing-mini-toast { transition: none; }
+}

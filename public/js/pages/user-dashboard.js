@@ -78,7 +78,7 @@ export async function initUserDashboard() {
       clearToken();
     }
     toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-    window.location.href = 'auth-login.html';
+    window.location.replace('auth-login.html');
   });
 
   if (avatarFileInput) {
@@ -108,7 +108,7 @@ export async function initUserDashboard() {
 
   const me = await fetchMe().catch(() => {
     clearToken();
-    window.location.href = 'auth-login.html';
+    window.location.replace('auth-login.html');
     return null;
   });
 

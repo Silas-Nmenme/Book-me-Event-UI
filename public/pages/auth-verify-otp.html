@@ -62,7 +62,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Verify OTP</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">Step</span>
+                <span class="badge badge-outline-brand">Step</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Confirm your email</h1>
@@ -138,7 +138,7 @@
 
           toast({ title: 'Verified', message: 'Redirecting to login…', variant: 'success' });
           sessionStorage.removeItem('bme_pending_verify_email');
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         } catch (err) {
           const status = err?.status || err?.response?.status;
           const msg = status === 429 ? (err?.message || err?.data?.message || 'Too many OTP attempts. Try again later.') : (err?.message || 'OTP verification failed.');

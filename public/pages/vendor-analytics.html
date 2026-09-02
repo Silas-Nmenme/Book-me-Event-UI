@@ -53,40 +53,40 @@
 
               <div class="mt-4 row g-3">
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Total bookings</div>
-                    <div class="h4 fw-bold mb-0" id="mTotalBookings">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total bookings</div>
+                    <div class="bme-stat-card__value" id="mTotalBookings">—</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Completed bookings</div>
-                    <div class="h4 fw-bold mb-0" id="mCompletedBookings">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Completed bookings</div>
+                    <div class="bme-stat-card__value" id="mCompletedBookings">—</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Total revenue</div>
-                    <div class="h4 fw-bold mb-0" id="mTotalRevenue">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total revenue</div>
+                    <div class="bme-stat-card__value" id="mTotalRevenue">—</div>
                   </div>
                 </div>
 
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Average rating</div>
-                    <div class="h4 fw-bold mb-0" id="mAvgRating">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Average rating</div>
+                    <div class="bme-stat-card__value" id="mAvgRating">—</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">Total reviews</div>
-                    <div class="h4 fw-bold mb-0" id="mTotalReviews">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total reviews</div>
+                    <div class="bme-stat-card__value" id="mTotalReviews">—</div>
                   </div>
                 </div>
                 <div class="col-12 col-md-4">
-                  <div class="card card-glass p-3 h-100 bme-card-item">
-                    <div class="text-muted-soft small">SLA breach rate</div>
-                    <div class="h4 fw-bold mb-0" id="mBreachRate">—</div>
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">SLA breach rate</div>
+                    <div class="bme-stat-card__value" id="mBreachRate">—</div>
                   </div>
                 </div>
               </div>
@@ -113,7 +113,7 @@
 
       document.getElementById('btnLogout')?.addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       const errEl = document.getElementById('err');

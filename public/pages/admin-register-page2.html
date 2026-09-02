@@ -62,7 +62,7 @@
                   <span class="brand-dot"></span>
                   <span class="fw-bold">Admin signup</span>
                 </span>
-                <span class="badge text-bg-dark border badge-outline-brand">Step 2</span>
+                <span class="badge badge-outline-brand">Step 2</span>
               </div>
 
               <h1 class="h4 fw-bold mb-1">Verify OTP</h1>
@@ -136,7 +136,7 @@
           if (res?.token) localStorage.setItem('bme_token', res.token);
 
           toast({ title: 'Admin verified', message: 'Redirecting to admin dashboard…', variant: 'success' });
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         } catch (err) {
           hint.textContent = err?.message || 'OTP verification failed.';
           toast({ title: 'Verify failed', message: err?.message || 'Try again.', variant: 'danger' });

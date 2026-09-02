@@ -122,19 +122,19 @@
           document.getElementById('title').textContent = `Welcome, ${me?.firstName || 'there'}!`;
           document.getElementById('subtitle').textContent = `Redirecting to your ${role} dashboard…`;
 
-          window.location.href = next;
+          window.location.replace(next);
         } catch (err) {
           hint.textContent = err?.message || 'Session required.';
           toast({ title: 'Login required', message: 'Please log in again.', variant: 'danger' });
           clearToken();
-          window.location.href = 'auth-login.html';
+          window.location.replace('auth-login.html');
         }
       }
 
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
-        window.location.href = 'auth-login.html';
+        window.location.replace('auth-login.html');
       });
 
       routeToRole();
