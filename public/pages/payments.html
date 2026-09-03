@@ -9,26 +9,6 @@
     <link rel="stylesheet" href="../css/styles.css" />
     <link rel="stylesheet" href="../css/landing-professional.css" />
 
-    <style>
-      .bme-pill { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(124,58,237,.35); background: rgba(124,58,237,.12); font-weight: 800; font-size: .78rem; }
-      .bme-pill--confirmed { border-color: rgba(20,184,166,.35); background: rgba(20,184,166,.16); }
-      .bme-pill--pending { border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.16); }
-      .bme-pill--cancelled { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.16); }
-      .bme-pill--refunded { border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.16); }
-
-      .bme-table th { color: rgba(255,255,255,.85); }
-      .bme-muted { color: rgba(255,255,255,.7); }
-
-      .bme-empty { border: 1px dashed rgba(255,255,255,.16); border-radius: 14px; padding: 16px; }
-
-      .bme-loading {
-        min-height: 140px;
-      }
-
-      @media (max-width: 576px) {
-        .bme-table td, .bme-table th { font-size: .92rem; }
-      }
-    </style>
   </head>
 
   <body>
@@ -187,7 +167,7 @@
 
     <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content bg-dark text-light">
+        <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="receiptModalLabel">Payment receipt</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

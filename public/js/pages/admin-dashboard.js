@@ -40,6 +40,7 @@ const selectedVendorIds = new Set();
 
 let revenueChart = null;
 let growthChart = null;
+let chartStats = null;
 
 function escapeHtml(s) {
   return (s ?? '')
@@ -595,6 +596,23 @@ function renderCharts(stats) {
   const monthlyRevenue = Array.isArray(stats?.monthlyRevenue) ? stats.monthlyRevenue : [];
   const monthlySignups = Array.isArray(stats?.monthlySignups) ? stats.monthlySignups : [];
   const monthlyBookings = Array.isArray(stats?.monthlyBookings) ? stats.monthlyBookings : [];
+  chartStats = stats;
+  const css = getComputedStyle(document.documentElement);
+  const chartText = css.getPropertyValue('--mutedText').trim();
+  const chartGrid = css.getPropertyValue('--surfaceBorder').trim();
+  const chartSurface = css.getPropertyValue('--surface-strong').trim();
+  const chartOptions = {
+    responsive: true,
+    scales: {
+      x: { ticks: { color: chartText }, grid: { color: chartGrid } },
+      y: { ticks: { color: chartText }, grid: { color: chartGrid } },
+    },
+    plugins: {
+      title: { color: chartText },
+      legend: { labels: { color: chartText } },
+      tooltip: { backgroundColor: chartSurface, titleColor: chartText, bodyColor: chartText, borderColor: chartGrid, borderWidth: 1 },
+    },
+  };
 
   revenueChart?.destroy();
   revenueChart = new window.Chart(revenueCanvas, {
@@ -612,10 +630,7 @@ function renderCharts(stats) {
         },
       ],
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false }, title: { display: true, text: 'Monthly revenue' } },
-    },
+    options: { ...chartOptions, plugins: { ...chartOptions.plugins, legend: { display: false }, title: { display: true, text: 'Monthly revenue', color: chartText } } },
   });
 
   // Merge signup/booking months so both series share the same x-axis labels.
@@ -643,12 +658,13 @@ function renderCharts(stats) {
         },
       ],
     },
-    options: {
-      responsive: true,
-      plugins: { title: { display: true, text: 'New signups & bookings' } },
-    },
+    options: { ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: 'New signups & bookings', color: chartText } } },
   });
 }
+
+window.addEventListener('bme:themechange', () => {
+  if (chartStats) renderCharts(chartStats);
+});
 
 function renderGlobalSearchResults(data) {
   const resultsEl = document.getElementById('globalSearchResults');

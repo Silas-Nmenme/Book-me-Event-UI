@@ -345,6 +345,12 @@ html[data-theme="light"] .bme-pill { color: #111827; }
 .bme-pill--pending { background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.45); color: var(--clr-accent); }
 .bme-pill--confirmed { background: rgba(20,184,166,.16); border-color: rgba(20,184,166,.45); color: var(--clr-teal); }
 .bme-pill--cancelled { background: rgba(244,63,94,.16); border-color: rgba(244,63,94,.45); color: #F43F5E; }
+.bme-pill--refunded { background: rgba(99,102,241,.16); border-color: rgba(99,102,241,.45); color: #a5b4fc; }
+.bme-priority-badge { background: var(--surface-subtle); border: 1px solid var(--surfaceBorder); color: var(--text); }
+
+.bme-table th { color: var(--mutedText); }
+.bme-empty { border: 1px dashed var(--surfaceBorder); border-radius: var(--radius-md); padding: var(--space-4); }
+.bme-loading { min-height: 140px; }
 
 /* Shimmer skeleton loader (required) */
 .skeleton {
@@ -912,6 +918,15 @@ html[data-theme="light"] .bme-empty-state__icon { background: var(--clr-primary-
   border: 1px solid var(--surfaceBorder);
   border-radius: var(--radius-lg);
 }
+
+.bme-section {
+  border: 1px solid var(--surfaceBorder);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+.bme-form-label { color: var(--text); font-weight: var(--fw-bold); }
+.bme-preserve-whitespace { white-space: pre-wrap; }
 
 /* QR codes need a fixed light background/dark modules to stay scannable in both themes */
 .bme-qr-panel {

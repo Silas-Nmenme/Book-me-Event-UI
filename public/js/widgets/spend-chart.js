@@ -1,6 +1,9 @@
 import { apiFetch } from '../api.js';
 import { toast } from '../ui.js';
 
+let spendChart = null;
+let chartPoints = null;
+
 function loadChartJs() {
   return new Promise((resolve, reject) => {
     if (window.Chart) return resolve(window.Chart);
@@ -40,13 +43,18 @@ export function initSpendChartWidget() {
 
       const labels = points.map((p) => p.month);
       const amounts = points.map((p) => Number(p.amount) || 0);
+      chartPoints = points;
 
       const css = getComputedStyle(document.documentElement);
       const primary = css.getPropertyValue('--clr-primary').trim() || '#7C3AED';
       const accent = css.getPropertyValue('--clr-accent').trim() || '#F59E0B';
+      const text = css.getPropertyValue('--mutedText').trim();
+      const grid = css.getPropertyValue('--surfaceBorder').trim();
+      const surface = css.getPropertyValue('--surface-strong').trim();
 
       const ctx = canvas.getContext('2d');
-      new window.Chart(ctx, {
+      spendChart?.destroy();
+      spendChart = new window.Chart(ctx, {
         type: 'bar',
         data: {
           labels,
@@ -65,6 +73,11 @@ export function initSpendChartWidget() {
           plugins: {
             legend: { display: false },
             tooltip: {
+              backgroundColor: surface,
+              titleColor: text,
+              bodyColor: text,
+              borderColor: grid,
+              borderWidth: 1,
               callbacks: {
                 label: (ctx) => ` ₦${new Intl.NumberFormat().format(ctx.parsed.y)}`,
               }
@@ -73,12 +86,12 @@ export function initSpendChartWidget() {
           scales: {
             y: {
               beginAtZero: true,
-              grid: { color: 'rgba(255,255,255,0.08)' },
-              ticks: { color: 'rgba(255,255,255,0.8)' }
+              grid: { color: grid },
+              ticks: { color: text }
             },
             x: {
               grid: { display: false },
-              ticks: { color: 'rgba(255,255,255,0.8)' }
+              ticks: { color: text }
             }
           }
         }
@@ -90,5 +103,9 @@ export function initSpendChartWidget() {
   };
 
   run();
+
+  window.addEventListener('bme:themechange', () => {
+    if (chartPoints) run();
+  });
 }
 

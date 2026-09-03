@@ -26,6 +26,7 @@ export function setTheme(theme) {
   document.documentElement.dataset.theme = t;
   safeStorageWrite(t);
   updateToggleIcon(t);
+  window.dispatchEvent(new CustomEvent('bme:themechange', { detail: { theme: t } }));
 }
 
 function updateToggleIcon(theme) {
