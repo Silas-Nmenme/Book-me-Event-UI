@@ -21,11 +21,11 @@
 .bme-navbar {
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  background: var(--surface-strong) !important;
+  background: var(--header-bg) !important;
   border-bottom: 1px solid var(--surfaceBorder);
 }
 html[data-theme="light"] .bme-navbar {
-  background: var(--surface-strong) !important;
+  background: var(--header-bg) !important;
   border-bottom-color: var(--surfaceBorder);
 }
 

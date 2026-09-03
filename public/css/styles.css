@@ -29,6 +29,13 @@
 
   --surface: rgba(30,41,59,.92);
   --surfaceBorder: rgba(255,255,255,.12);
+  --surface-strong: #1a2b2d;
+  --surface-subtle: rgba(255,255,255,.055);
+  --header-bg: #162629;
+  --header-text: #f8faff;
+  --soft-bg: rgba(255,255,255,.08);
+  --soft-bg-hover: rgba(255,255,255,.14);
+  --soft-border: rgba(255,255,255,.18);
 
   --color-primary: var(--clr-primary);
   --color-accent: var(--clr-accent);
@@ -76,6 +83,15 @@ html[data-theme="light"] {
 
   --surface: rgba(255,255,255,.92);
   --surfaceBorder: rgba(15,23,42,.10);
+  --surface-strong: #ffffff;
+  --surface-subtle: rgba(15,118,110,.055);
+  --header-bg: #ffffff;
+  --header-text: #17211f;
+  --soft-bg: #ffffff;
+  --soft-bg-hover: #ecf7f5;
+  --soft-border: rgba(15,118,110,.24);
+  --shadow-sm: 0 2px 8px rgba(15, 35, 34, .08);
+  --shadow-md: 0 14px 30px rgba(15, 35, 34, .12);
 
   --inputBg: rgba(17,24,39,.06);
   --inputBorder: rgba(17,24,39,.14);
@@ -148,12 +164,12 @@ html[data-theme="light"] body {
 .btn-brand:hover { filter: brightness(1.05); color: #0b0f1c; }
 
 .btn-soft {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.14);
+  background: var(--soft-bg);
+  border: 1px solid var(--soft-border);
   color: var(--text);
   border-radius: 12px;
 }
-.btn-soft:hover { background: rgba(255,255,255,.09); color: var(--text); }
+.btn-soft:hover { background: var(--soft-bg-hover); color: var(--text); }
 
 .btn-primary { background: var(--clr-primary); border-color: var(--clr-primary); }
 .btn-outline-secondary,
@@ -178,6 +194,11 @@ select.form-select {
 .form-control::placeholder,
 .form-select::placeholder {
   color: var(--inputPlaceholder);
+}
+
+.form-select option {
+  background: var(--surface-strong);
+  color: var(--text);
 }
 
 .form-control:focus,
@@ -384,7 +405,7 @@ body.requests-page {
 .bme-navbar + .section,
 .bme-navbar + main,
 .bme-navbar + .container {
-  padding-top: var(--bme-navbar-height);
+  scroll-margin-top: var(--bme-navbar-height);
 }
 
 /* Theme transition tuning */
@@ -922,12 +943,7 @@ html[data-theme="light"] .bme-empty-state__icon { background: var(--clr-primary-
 :root {
   --page-gutter: clamp(1rem, 3vw, 2.5rem);
   --content-width: 1240px;
-  --surface-strong: #253342;
   --bme-dashboard-header-offset: 88px;
-}
-
-html[data-theme="light"] {
-  --surface-strong: #ffffff;
 }
 
 body {
@@ -951,6 +967,71 @@ body {
   border-bottom: 1px solid var(--surfaceBorder) !important;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
 }
+
+/* Legacy pages use Bootstrap's navbar-dark class. Override its fixed colors
+   with application tokens so the header stays balanced after theme changes. */
+.bme-navbar {
+  min-height: var(--bme-navbar-height);
+  background: var(--header-bg) !important;
+  border-color: var(--surfaceBorder) !important;
+  color: var(--header-text);
+  isolation: isolate;
+}
+
+.bme-navbar .navbar-brand,
+.bme-navbar.navbar-dark .navbar-brand,
+.bme-navbar .nav-link,
+.bme-navbar.navbar-dark .nav-link {
+  color: var(--header-text) !important;
+}
+
+.bme-navbar .navbar-toggler,
+.bme-navbar.navbar-dark .navbar-toggler {
+  color: var(--header-text);
+  border-color: var(--soft-border);
+}
+
+html[data-theme="light"] .bme-navbar .navbar-toggler-icon {
+  filter: invert(1) saturate(.2);
+}
+
+.bme-navbar .navbar-collapse { color: var(--header-text); }
+
+@media (max-width: 991.98px) {
+  .bme-navbar .navbar-collapse {
+    margin-top: .75rem;
+    padding-top: .75rem;
+    border-top: 1px solid var(--surfaceBorder);
+  }
+  .bme-navbar .navbar-collapse > div { width: 100%; }
+}
+
+.table.table-dark {
+  --bs-table-bg: var(--surface);
+  --bs-table-striped-bg: rgba(148,163,184,.08);
+  --bs-table-hover-bg: rgba(15,118,110,.10);
+  --bs-table-color: var(--text);
+  --bs-table-border-color: var(--surfaceBorder);
+}
+
+html[data-theme="light"] footer {
+  color: var(--text);
+}
+
+html[data-theme="light"] footer .text-white,
+html[data-theme="light"] footer .text-white-50,
+html[data-theme="light"] footer a {
+  color: var(--mutedText) !important;
+}
+
+html[data-theme="light"] footer .fw-bold { color: var(--text); }
+
+.modal-content.bg-dark.text-light {
+  background: var(--surface-strong) !important;
+  color: var(--text) !important;
+}
+
+html[data-theme="light"] .btn-close-white { filter: none; }
 
 .brand-pill {
   background: rgba(15, 118, 110, .12);
@@ -987,7 +1068,7 @@ body {
 }
 
 .bme-role-dashboard .card-glass .card-glass {
-  background: rgba(37, 51, 66, .55) !important;
+  background: var(--surface-subtle) !important;
   box-shadow: none;
 }
 
