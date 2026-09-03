@@ -25,6 +25,7 @@
 
       /* Count-up cards */
       .dashboard-card { border-radius: 16px; padding: 16px; }
+      .bme-user-avatar { width: 64px; height: 64px; }
 
       /* Upcoming cards scroll */
       .bme-horizontal-scroll {
@@ -37,6 +38,14 @@
 
       /* Chart */
       .bme-chart-wrap { height: 260px; }
+      .bme-skeleton--upcoming { height: 110px; }
+      .bme-skeleton--activity,
+      .bme-skeleton--chart { height: 260px; }
+      .bme-skeleton--chat,
+      .bme-skeleton--map,
+      .bme-vendor-map,
+      .bme-vendor-map-wrap { height: 220px; }
+      .bme-vendor-map-wrap { border-radius: 14px; overflow: hidden; }
 
       /* Confetti canvas for review nudge */
       #widgetConfettiCanvas {
@@ -79,7 +88,7 @@
 
         <div class="mt-auto pt-3">
           <div class="d-flex align-items-center gap-3">
-            <div id="avatar" class="rounded-circle border bme-avatar" style="width:64px;height:64px;">BME</div>
+            <div id="avatar" class="rounded-circle border bme-avatar bme-user-avatar">BME</div>
             <div>
               <div class="small text-muted-soft">Signed in as</div>
               <div class="fw-bold" id="meName">—</div>
@@ -228,7 +237,7 @@
                       <div class="badge badge-glow text-white">Widget</div>
                     </div>
                     <div class="mt-3">
-                      <div class="skeleton" style="height:110px;"></div>
+                      <div class="skeleton bme-skeleton--upcoming"></div>
                     </div>
                     <div class="mt-3 bme-horizontal-scroll" id="upcomingEventsContainer"></div>
                   </div>
@@ -242,7 +251,7 @@
                         <div class="text-muted-soft small">Latest updates on your bookings</div>
                       </div>
                     </div>
-                    <div class="mt-3 skeleton" style="height:260px;"></div>
+                    <div class="mt-3 skeleton bme-skeleton--activity"></div>
                     <div id="activityFeedContainer" class="mt-3"></div>
                     <div class="mt-3 d-grid">
                       <button class="btn btn-soft" id="activityFeedLoadMore" type="button">Load more</button>
@@ -257,7 +266,7 @@
                   <div class="widget-shell">
                     <div class="fw-bold">Chat inbox</div>
                     <div class="text-muted-soft small">Quick replies per vendor thread</div>
-                    <div class="mt-3 skeleton" style="height:220px;"></div>
+                    <div class="mt-3 skeleton bme-skeleton--chat"></div>
                     <div id="chatPreviewContainer" class="mt-3"></div>
                     <a href="user-message.html" class="btn btn-soft w-100 mt-3">Open full chat</a>
                   </div>
@@ -272,7 +281,7 @@
                       </div>
                       <div class="badge badge-glow text-white" id="spendChartTotal">—</div>
                     </div>
-                    <div class="mt-3 skeleton" style="height:260px;"></div>
+                    <div class="mt-3 skeleton bme-skeleton--chart"></div>
                     <div class="bme-chart-wrap mt-2" id="spendChartWrap">
                       <canvas id="spendChartCanvas"></canvas>
                     </div>
@@ -291,9 +300,9 @@
                   <div class="widget-shell">
                     <div class="fw-bold">Nearby vendors</div>
                     <div class="text-muted-soft small">Request vendors near your city</div>
-                    <div class="mt-3 skeleton" style="height:220px;"></div>
-                    <div id="vendorMapWrap" class="mt-3" style="height:220px;border-radius:14px;overflow:hidden;">
-                      <div id="vendorMap" style="height:220px;"></div>
+                    <div class="mt-3 skeleton bme-skeleton--map"></div>
+                    <div id="vendorMapWrap" class="mt-3 bme-vendor-map-wrap">
+                      <div id="vendorMap" class="bme-vendor-map"></div>
                     </div>
                   </div>
                 </div>
