@@ -121,7 +121,7 @@
                 </div>
 
                 <div class="d-flex gap-2 align-items-center">
-                  <select id="statusFilter" class="form-select form-select-sm" style="min-width: 180px;" title="Filter by status">
+                  <select id="statusFilter" class="form-select form-select-sm bme-filter-select-md" title="Filter by status">
                     <option value="">All statuses</option>
                     <option value="COMPLETED">COMPLETED</option>
                     <option value="PENDING">PENDING</option>
@@ -155,7 +155,7 @@
                       <th>Method</th>
                       <th>Status</th>
                       <th>Amount</th>
-                      <th style="width: 220px;">Actions</th>
+                      <th class="bme-col-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="paymentsTbody"></tbody>
@@ -185,10 +185,28 @@
       </div>
     </footer>
 
+    <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h5 class="modal-title" id="receiptModalLabel">Payment receipt</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="receiptModalBody">
+            <div class="text-muted-soft small">Loading…</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-soft btn-sm" id="btnPrintReceipt">Print</button>
+            <button type="button" class="btn btn-soft btn-sm" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
       import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
@@ -230,6 +248,17 @@
           avatarEl.style.backgroundImage = '';
           avatarEl.style.background = 'rgba(124,58,237,0.12)';
         }
+      }
+
+      try {
+        const summaryRes = await apiFetch('/api/v1/payments/summary', { method: 'GET' });
+        const summaryItems = summaryRes?.data || summaryRes || [];
+        const totalSpend = Array.isArray(summaryItems)
+          ? summaryItems.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0)
+          : 0;
+        document.getElementById('paymentsTotal').textContent = `₦${totalSpend.toLocaleString()}`;
+      } catch {
+        document.getElementById('paymentsTotal').textContent = '—';
       }
 
       await initPaymentsPage();

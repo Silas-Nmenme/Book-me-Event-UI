@@ -97,6 +97,33 @@
                 </div>
               </div>
 
+              <div class="row g-3 mb-3" id="bookingsStatsStrip">
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total bookings</div>
+                    <div class="bme-stat-card__value" id="statTotalBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Pending</div>
+                    <div class="bme-stat-card__value" id="statPendingBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Confirmed</div>
+                    <div class="bme-stat-card__value" id="statConfirmedBookings">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Completed</div>
+                    <div class="bme-stat-card__value" id="statCompletedBookings">—</div>
+                  </div>
+                </div>
+              </div>
+
               <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
               <div id="bookingsLoading" class="text-muted-soft small">Loading…</div>
               <div id="bookingsError" class="text-danger small d-none"></div>
@@ -146,7 +173,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken, apiFetch, getAdminBookings, exportAdminBookingsCsv } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken, apiFetch, getAdminBookings, exportAdminBookingsCsv, getAdminStats } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
       import { initNavbarBrandRoleRedirect } from '../js/role-redirect.js';
@@ -210,6 +237,23 @@
         const s = (status || '—').toString().toUpperCase();
         const variant = statusVariants[s] || 'secondary';
         return `<span class="badge text-bg-${variant}">${escapeHtml(s)}</span>`;
+      }
+
+      async function loadBookingsStats() {
+        try {
+          const res = await getAdminStats();
+          const data = res?.data || res;
+          const byStatus = data?.bookingsByStatus || [];
+          const countFor = (status) => byStatus.find((x) => (x?._id || '').toString().toUpperCase() === status)?.count ?? 0;
+          const total = byStatus.reduce((sum, x) => sum + (x?.count || 0), 0);
+
+          document.getElementById('statTotalBookings').textContent = total;
+          document.getElementById('statPendingBookings').textContent = countFor('PENDING');
+          document.getElementById('statConfirmedBookings').textContent = countFor('CONFIRMED');
+          document.getElementById('statCompletedBookings').textContent = countFor('COMPLETED');
+        } catch {
+          // Non-fatal: leave stat cards at their default placeholder.
+        }
       }
 
       const bookingsState = { page: 1, limit: 20, pages: 1 };
@@ -306,6 +350,7 @@
       document.getElementById('btnRefreshBookings')?.addEventListener('click', () => {
         bookingsState.page = 1;
         loadBookings();
+        loadBookingsStats();
       });
       document.getElementById('statusSelect')?.addEventListener('change', () => {
         bookingsState.page = 1;
@@ -340,7 +385,7 @@
 
       // init
       await loadMe();
-      await loadBookings();
+      await Promise.all([loadBookings(), loadBookingsStats()]);
     </script>
   </body>
 </html>

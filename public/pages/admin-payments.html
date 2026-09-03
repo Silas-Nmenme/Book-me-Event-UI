@@ -104,6 +104,33 @@
                 </div>
               </div>
 
+              <div class="row g-3 mb-3" id="paymentsStatsStrip">
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total payments</div>
+                    <div class="bme-stat-card__value" id="statTotalPayments">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Completed</div>
+                    <div class="bme-stat-card__value" id="statCompletedPayments">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Pending</div>
+                    <div class="bme-stat-card__value" id="statPendingPayments">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Total revenue</div>
+                    <div class="bme-stat-card__value" id="statTotalRevenue">—</div>
+                  </div>
+                </div>
+              </div>
+
               <div id="authzError" class="alert alert-danger d-none" role="alert"></div>
               <div id="paymentsLoading" class="text-muted-soft small">Loading…</div>
               <div id="paymentsError" class="text-danger small d-none"></div>
@@ -152,7 +179,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
-      import { fetchMe, logoutUser, clearToken, getAdminPayments, exportAdminPaymentsCsv } from '../js/api.js';
+      import { fetchMe, logoutUser, clearToken, getAdminPayments, exportAdminPaymentsCsv, getAdminStats } from '../js/api.js';
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
 
@@ -212,6 +239,25 @@
         const s = (status || '—').toString().toUpperCase();
         const variant = statusVariants[s] || 'secondary';
         return `<span class="badge text-bg-${variant}">${escapeHtml(s)}</span>`;
+      }
+
+      async function loadPaymentsStats() {
+        try {
+          const res = await getAdminStats();
+          const data = res?.data || res;
+          const byStatus = data?.paymentsByStatus || [];
+          const countFor = (status) => byStatus.find((x) => (x?._id || '').toString().toUpperCase() === status)?.count ?? 0;
+          const total = byStatus.reduce((sum, x) => sum + (x?.count || 0), 0);
+          const completedRow = byStatus.find((x) => (x?._id || '').toString().toUpperCase() === 'COMPLETED');
+          const totalRevenue = completedRow?.total ?? 0;
+
+          document.getElementById('statTotalPayments').textContent = total;
+          document.getElementById('statCompletedPayments').textContent = countFor('COMPLETED');
+          document.getElementById('statPendingPayments').textContent = countFor('PENDING');
+          document.getElementById('statTotalRevenue').textContent = fmtAmount({ amount: totalRevenue });
+        } catch {
+          // Non-fatal: leave stat cards at their default placeholder.
+        }
       }
 
       const paymentsState = { page: 1, limit: 20, pages: 1 };
@@ -307,6 +353,7 @@
       document.getElementById('btnRefreshPayments')?.addEventListener('click', () => {
         paymentsState.page = 1;
         loadPayments();
+        loadPaymentsStats();
       });
       document.getElementById('statusSelect')?.addEventListener('change', () => {
         paymentsState.page = 1;
@@ -340,7 +387,7 @@
       });
 
       await loadMe();
-      await loadPayments();
+      await Promise.all([loadPayments(), loadPaymentsStats()]);
     </script>
   </body>
 </html>

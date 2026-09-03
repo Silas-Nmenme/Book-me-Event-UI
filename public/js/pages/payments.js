@@ -28,6 +28,17 @@ function fmtAmount(amount, currency) {
   return `${symbol}${new Intl.NumberFormat().format(n)}`;
 }
 
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return '—';
+  return dt.toLocaleString();
+}
+
+// Keeps the last-loaded page of payments in memory so the receipt modal can
+// render full details without an extra network round-trip.
+const paymentsById = new Map();
+
 async function loadPayments({ status, page, limit }) {
   const res = await apiFetch(`/api/v1/payments?${new URLSearchParams({
     ...(status ? { status } : {}),
@@ -79,6 +90,8 @@ export function initPaymentsPage() {
 
   function renderRow(p) {
     const id = p?._id || p?.id || '—';
+    paymentsById.set(String(id), p);
+
     const booking = p?.booking || {};
     const bookingId = booking?._id || booking?.id || '—';
     const serviceName = booking?.service?.name || booking?.service?.serviceName || booking?.serviceName || booking?.title || '';
@@ -114,12 +127,51 @@ export function initPaymentsPage() {
           <div class="d-flex gap-2 flex-wrap">
             ${canPayAgain ? `<button class="btn btn-soft btn-sm" type="button" data-action="payAgain" data-payment-id="${escapeHtml(id)}" data-booking-id="${escapeHtml(bookingId)}">Pay again</button>` : ''}
             ${canRefund ? `<button class="btn btn-soft btn-sm" type="button" data-action="refund" data-payment-id="${escapeHtml(id)}">Refund</button>` : ''}
+            <button class="btn btn-soft btn-sm" type="button" data-action="receipt" data-payment-id="${escapeHtml(id)}">Receipt</button>
             <a class="btn btn-soft btn-sm" href="bookings.html?bookingId=${encodeURIComponent(bookingId)}">View</a>
           </div>
         </td>
       </tr>
     `;
   }
+
+  function openReceiptModal(paymentId) {
+    const modalEl = document.getElementById('receiptModal');
+    const bodyEl = document.getElementById('receiptModalBody');
+    if (!modalEl || !bodyEl || typeof window.bootstrap === 'undefined') return;
+
+    const p = paymentsById.get(String(paymentId));
+    if (!p) return;
+
+    const booking = p?.booking || {};
+    const serviceName = booking?.service?.name || booking?.service?.serviceName || booking?.serviceName || booking?.title || '—';
+    const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || booking?.vendorName || '—';
+    const pill = statusPill(p?.paymentStatus || p?.status);
+    const amount = fmtAmount(p?.amount, p?.currency || booking?.amountCurrency);
+
+    bodyEl.innerHTML = `
+      <div class="text-center mb-3">
+        <div class="fw-bold h5 mb-0">Book Me Events</div>
+        <div class="small text-muted-soft">Payment receipt</div>
+      </div>
+      <table class="table table-dark table-sm mb-0">
+        <tbody>
+          <tr><th>Payment ID</th><td>${escapeHtml(p?._id || p?.id || '—')}</td></tr>
+          <tr><th>Transaction ref</th><td>${escapeHtml(p?.transactionReference || '—')}</td></tr>
+          <tr><th>Status</th><td><span class="bme-pill ${pill.cls}">${escapeHtml(pill.label)}</span></td></tr>
+          <tr><th>Amount</th><td class="fw-bold">${escapeHtml(amount)}</td></tr>
+          <tr><th>Method</th><td>${escapeHtml((p?.paymentMethod || '—').toString().toUpperCase())}</td></tr>
+          <tr><th>Service</th><td>${escapeHtml(serviceName)}</td></tr>
+          <tr><th>Vendor</th><td>${escapeHtml(vendorName)}</td></tr>
+          <tr><th>Date</th><td>${escapeHtml(fmtDate(p?.createdAt))}</td></tr>
+        </tbody>
+      </table>
+    `;
+
+    window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  }
+
+  document.getElementById('btnPrintReceipt')?.addEventListener('click', () => window.print());
 
   async function refresh() {
     hideErrors();
@@ -182,6 +234,11 @@ export function initPaymentsPage() {
             } catch (e) {
               toast({ title: 'Refund failed', message: e?.message || 'Try again.', variant: 'danger' });
             }
+          }
+
+          if (action === 'receipt') {
+            const paymentId = btn.getAttribute('data-payment-id');
+            if (paymentId) openReceiptModal(paymentId);
           }
         });
       });

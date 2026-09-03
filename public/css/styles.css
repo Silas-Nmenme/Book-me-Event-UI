@@ -676,6 +676,7 @@ html[data-theme="light"] .badge-outline-brand { color: var(--clr-primary); }
 /* Fixed-width filter controls used on admin list pages (bookings/payments/stats) */
 .bme-filter-select-md { min-width: 170px; }
 .bme-filter-select-sm { min-width: 110px; }
+.bme-col-actions { width: 220px; }
 
 /* Clickable stat card (rendered as a <button> for accessibility) that opens a details modal */
 .bme-stat-click {
