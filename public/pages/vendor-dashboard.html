@@ -12,146 +12,123 @@
   <body class="bme-role-dashboard bme-vendor-page">
 <div id="toastHost" class="bme-toast-host p-3"></div>
 
-    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
-      <div class="container">
-        <a class="navbar-brand" href="vendor-dashboard.html">
-          <span class="brand-pill">
-            <span class="brand-dot"></span>
-            <span class="fw-bold">Book Me Events</span>
-          </span>
-        </a>
+    <div class="bme-dashboard">
+      <div id="vendorSidebar" class="bme-sidebar card-glass">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <a class="navbar-brand" href="vendor-dashboard.html">
+            <span class="brand-pill">
+              <span class="brand-dot" aria-hidden="true"></span>
+              <span class="fw-bold">Book Me Events</span>
+            </span>
+          </a>
+          <button class="btn btn-soft btn-sm d-md-none" id="vendorSidebarClose" aria-label="Close sidebar">✕</button>
+        </div>
 
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navVendorDashboardContent"
-          aria-controls="navVendorDashboardContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="bme-sidebar__section-label">Dashboard</div>
+        <div class="d-flex flex-column gap-1">
+          <a class="bme-nav-link active" href="vendor-dashboard.html">Dashboard</a>
+          <a class="bme-nav-link" href="services.html">Manage services</a>
+          <a class="bme-nav-link" href="vendor-service.html">Incoming requests</a>
+          <a class="bme-nav-link" href="bookings.html">Bookings</a>
+          <a class="bme-nav-link" href="messages.html">Messages</a>
+          <a class="bme-nav-link" href="annoncement.html">Announcements</a>
+          <a class="bme-nav-link" href="vendor-kyc.html">Vendor KYC</a>
+        </div>
 
-        <div id="navVendorDashboardContent" class="collapse navbar-collapse">
-          <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
-            <a class="btn btn-soft" href="vendor-dashboard.html" aria-current="page">Dashboard</a>
-            <a class="btn btn-soft" href="services.html">Browse</a>
-            <a class="btn btn-soft" href="vendor-service.html">Requests</a>
-            <a class="btn btn-soft" href="bookings.html">Bookings</a>
-            <a class="btn btn-soft" href="messages.html">Messages</a>
-
-            <div class="dropdown">
-              <button
-                class="btn btn-soft position-relative"
-                type="button"
-                id="announcementBellBtn"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-                aria-label="Announcements"
-                title="Announcements"
-              >
-                <span aria-hidden="true">🔔</span>
-                <span
-                  id="announcementBellDot"
-                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"
-                >!</span>
-              </button>
-              <div class="dropdown-menu dropdown-menu-end bme-popover-menu">
-                <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
-                <div id="announcementBellList" class="px-3 bme-scroll-panel">
-                  <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
-                </div>
-                <div class="px-3 pb-2">
-                  <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
-                  <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
-                </div>
+        <div class="mt-auto pt-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="d-flex flex-column align-items-center">
+              <div id="avatar" class="rounded-circle border bme-avatar" aria-label="Profile picture" title="Profile picture">BME</div>
+              <div class="mt-2">
+                <label class="btn btn-soft btn-sm" for="profilePictureInput">Change</label>
+                <input
+                  id="profilePictureInput"
+                  class="d-none"
+                  type="file"
+                  name="image"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                  aria-label="Change profile picture"
+                />
               </div>
             </div>
-
-            <button
-              id="themeToggleBtn"
-              class="btn btn-soft btn-sm bme-theme-toggle"
-              type="button"
-              aria-label="Toggle dark/light theme"
-              title="Toggle theme"
-            >
-              <span data-icon="sun">☀️</span>
-              <span data-icon="moon">🌙</span>
-            </button>
-
-            <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+            <div>
+              <div class="small text-muted-soft">Signed in as</div>
+              <div class="fw-bold" id="meName">—</div>
+              <div class="small text-muted-soft" id="meEmail">—</div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="bme-role-badge" id="meRole">VENDOR</span>
+              </div>
+              <div class="mt-2">
+                <span class="bme-pill bme-pill--pending" id="vendorKycBadge" aria-label="Vendor KYC status">KYC Not Verified</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </nav>
 
-<section class="section">
-      <div class="container">
-        <div class="row g-4 align-items-start">
-          <div class="col-12 col-lg-4">
-            <div class="card card-glass p-4 fade-slide">
-              <div class="badge badge-glow mb-3">Vendor dashboard</div>
-              <h2 class="h5 fw-bold mb-1" id="meName">—</h2>
-              <div class="text-muted-soft" id="meEmail">—</div>
-              <hr />
+      <div id="vendorSidebarBackdrop" class="bme-sidebar-backdrop"></div>
 
-              <div class="d-flex gap-3 align-items-center">
-                <div class="d-flex flex-column align-items-center">
-                  <div id="avatar" class="rounded-circle border bme-avatar" aria-label="Profile picture" title="Profile picture">
-                    BME
-                  </div>
-                  <div class="mt-2">
-                    <label class="btn btn-soft btn-sm" for="profilePictureInput">Change</label>
-                    <input
-                      id="profilePictureInput"
-                      class="d-none"
-                      type="file"
-                      name="image"
-                      accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                      aria-label="Change profile picture"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div class="small text-muted-soft">Role</div>
-                  <div class="fw-bold" id="meRole">VENDOR</div>
-
-                    <div class="mt-2">
-<span class="bme-pill bme-pill--pending" id="vendorKycBadge" aria-label="Vendor KYC status">KYC Not Verified</span>
-
-
-                  </div>
-                </div>
+      <div class="bme-main">
+        <div class="bme-topbar card-glass">
+          <div class="container py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-auto d-md-none">
+                <button class="btn btn-soft" id="vendorSidebarOpen" aria-label="Open sidebar">☰</button>
               </div>
+              <div class="col">
+                <div class="fw-bold">Turn requests into bookings</div>
+                <div class="small text-muted-soft">Professional vendor ops</div>
+              </div>
+              <div class="col-auto">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="dropdown">
+                    <button
+                      class="btn btn-soft position-relative"
+                      type="button"
+                      id="announcementBellBtn"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      aria-label="Announcements"
+                      title="Announcements"
+                    >
+                      <span aria-hidden="true">🔔</span>
+                      <span
+                        id="announcementBellDot"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"
+                      >!</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bme-popover-menu">
+                      <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
+                      <div id="announcementBellList" class="px-3 bme-scroll-panel">
+                        <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
+                      </div>
+                      <div class="px-3 pb-2">
+                        <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
+                        <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
+                      </div>
+                    </div>
+                  </div>
 
-            </div>
-
-            <div class="mt-4 card card-glass p-4 fade-slide">
-              <div class="fw-bold mb-2">Vendor workflow</div>
-              <div class="small text-muted-soft">Manage services and respond to requests quickly.</div>
-              <div class="mt-3 d-grid gap-2">
-                <a class="btn btn-brand" href="services.html">Manage services</a>
-                <a class="btn btn-soft" href="vendor-service.html">Incoming requests</a>
-                <a class="btn btn-soft" href="messages.html">Messages</a>
-
-                <a class="btn btn-soft" href="bookings.html">Bookings</a>
-                <a class="btn btn-soft" href="vendor-kyc.html">Vendor KYC</a>
+                  <button
+                    id="themeToggleBtn"
+                    class="btn btn-soft bme-theme-toggle"
+                    type="button"
+                    aria-label="Toggle dark/light theme"
+                    title="Toggle theme"
+                  >
+                    <span data-icon="sun">☀️</span>
+                    <span data-icon="moon">🌙</span>
+                  </button>
+                  <button class="btn btn-soft" id="btnLogout" type="button">Logout</button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="col-12 col-lg-8">
-            <div class="card card-glass p-4 fade-slide bme-chat-panel">
-              <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                <div>
-                  <div class="badge badge-glow text-white mb-2">Professional vendor ops</div>
-                  <h3 class="h5 fw-bold mb-0">Turn requests into bookings</h3>
-                </div>
-                <a class="btn btn-soft" href="profile.html">Refresh session</a>
-              </div>
-
+<section class="section">
+      <div class="container">
+        <div class="card card-glass bme-admin-card p-4 fade-slide bme-chat-panel">
               <div class="row g-3 mb-3" id="statsStrip">
                 <div class="col-6 col-md-4">
                   <div class="bme-stat-card h-100">

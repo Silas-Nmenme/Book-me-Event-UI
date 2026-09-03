@@ -8,125 +8,13 @@
     <link rel="stylesheet" href="../css/styles.css" />
 
     <style>
-      /* Admin dashboard shell: sidebar + topbar + content, mirrors the user dashboard pattern */
-      :root { --bme-sidebar-w: 260px; }
-      @media (max-width: 768px) { :root { --bme-sidebar-w: 0px; } }
-
-      .bme-dashboard {
-        min-height: 100vh;
-        display: grid;
-        grid-template-columns: var(--bme-sidebar-w) 1fr;
-        align-items: start;
-      }
-      @media (min-width: 769px) {
-        .bme-dashboard { grid-template-columns: 260px 1fr; }
-        .bme-sidebar { position: sticky; left: auto; width: 260px; transform: none !important; }
-        .bme-sidebar-backdrop { display: none; }
-      }
-      @media (max-width: 768px) {
-        .bme-dashboard { grid-template-columns: 1fr; overflow-x: hidden; }
-      }
-
-      .bme-sidebar {
-        position: sticky;
-        top: 0;
-        height: 100vh;
-        padding: 18px 14px;
-        border-right: 1px solid rgba(255,255,255,.08);
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
-      @media (max-width: 768px) {
-        .bme-sidebar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: min(86vw, 300px);
-          transform: translateX(-110%);
-          transition: transform 220ms ease;
-          z-index: 1100;
-          background: var(--surface);
-        }
-        .bme-sidebar.open { transform: translateX(0); }
-        .bme-sidebar-backdrop {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,.45);
-          display: none;
-          z-index: 1090;
-        }
-        .bme-sidebar-backdrop.show { display: block; }
-        .bme-sidebar:not(.open) { pointer-events: none; }
-        .bme-sidebar.open { pointer-events: auto; }
-      }
-
-      .bme-main { overflow: auto; padding-bottom: 48px; min-width: 0; }
-
-      .bme-topbar {
-        position: sticky;
-        top: 0;
-        z-index: 1050;
-        -webkit-backdrop-filter: blur(10px);
-        backdrop-filter: blur(10px);
-        border-radius: 0 !important;
-      }
-
-      .bme-sidebar__section-label {
-        font-size: .68rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        font-weight: 800;
-        color: var(--mutedText);
-        padding: .85rem .75rem .35rem;
-      }
-
-      .bme-role-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(15, 118, 110, .35);
-        background: rgba(15, 118, 110, .14);
-        font-weight: 800;
-        font-size: .72rem;
-      }
-
-      /* Section header used to introduce each admin content block */
-      .bme-section-heading {
-        display: flex;
-        align-items: center;
-        gap: .6rem;
-        margin-bottom: 1rem;
-      }
-      .bme-section-heading__icon {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.05rem;
-        background: rgba(15, 118, 110, .14);
-        border: 1px solid rgba(15, 118, 110, .3);
-      }
-      .bme-section-heading__title { font-weight: 800; font-size: 1.05rem; margin: 0; }
-      .bme-section-heading__subtitle { font-size: .82rem; color: var(--mutedText); margin: 0; }
-
+      /* Admin-specific: everything else (sidebar/topbar shell, nav links, cards)
+         now lives in the shared .bme-dashboard styles in styles.css. */
       #section-overview, #section-analytics, #section-vendors,
       #section-users, #section-announcements, #section-security, #section-billing {
         scroll-margin-top: 84px;
         margin-bottom: 2rem;
       }
-
-      /* Polished card surface for admin content */
-      .bme-admin-card {
-        border-radius: 18px;
-        box-shadow: var(--shadow-sm);
-        transition: box-shadow 200ms ease, transform 200ms ease;
-      }
-      .bme-admin-card:hover { box-shadow: var(--shadow-md); }
 
       .bme-role-dashboard .table-responsive { border-radius: var(--radius-md); }
       .bme-role-dashboard .table thead th {
