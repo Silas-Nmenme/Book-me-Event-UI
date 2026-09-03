@@ -86,6 +86,19 @@
                   <h3 class="h5 fw-bold mb-0">All payments (admin)</h3>
                 </div>
 
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <input id="paymentsSearch" class="form-control form-control-sm bme-filter-select-md" placeholder="Reference, customer, vendor, or service" />
+                <input id="paymentsFrom" class="form-control form-control-sm w-auto" type="date" title="Created from" />
+                <input id="paymentsTo" class="form-control form-control-sm w-auto" type="date" title="Created to" />
+                <select id="paymentsSort" class="form-select form-select-sm bme-filter-select-md" title="Sort payments">
+                  <option value="createdAt:desc">Newest created</option>
+                  <option value="createdAt:asc">Oldest created</option>
+                  <option value="amount:desc">Amount: high to low</option>
+                  <option value="amount:asc">Amount: low to high</option>
+                </select>
+                <button id="btnApplyPaymentFilters" class="btn btn-soft btn-sm" type="button">Apply filters</button>
+              </div>
+
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                   <select id="statusSelect" class="form-select form-select-sm bme-filter-select-md" title="Filter payment status">
                     <option value="">All statuses</option>
@@ -143,6 +156,8 @@
                       <th>User</th>
                       <th>Vendor</th>
                       <th>Booking</th>
+                      <th>Service</th>
+                      <th>Reference / method</th>
                       <th>Status</th>
                       <th>Amount</th>
                       <th>Created</th>
@@ -260,7 +275,7 @@
         }
       }
 
-      const paymentsState = { page: 1, limit: 20, pages: 1 };
+      const paymentsState = { page: 1, limit: 20, pages: 1, search: '', from: '', to: '', sort: 'createdAt:desc' };
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
@@ -306,7 +321,7 @@
         if (bodyEl) bodyEl.innerHTML = '';
 
         try {
-          const res = await getAdminPayments({ status, page: paymentsState.page, limit: paymentsState.limit });
+          const res = await getAdminPayments({ status, ...paymentsState });
           const data = res?.data || res;
           const items = data?.data || data?.results || data?.payments || [];
           paymentsState.pages = data?.pages || 1;
@@ -332,6 +347,7 @@
               const user = p?.user?.email || p?.user?.firstName || '';
               const vendor = p?.vendor?.businessName || p?.vendor?.name || '';
               const booking = p?.booking?._id || p?.booking?.id || '—';
+              const service = p?.booking?.service?.serviceName || p?.booking?.service?.name || '—';
               const createdAt = fmtDate(p?.createdAt);
 
               return `
@@ -340,6 +356,8 @@
                   <td>${escapeHtml(user)}</td>
                   <td>${escapeHtml(vendor)}</td>
                   <td>${escapeHtml(booking)}</td>
+                  <td>${escapeHtml(service)}</td>
+                  <td>${escapeHtml(p?.transactionReference || '—')}<div class="small text-muted-soft">${escapeHtml(p?.paymentMethod || '—')}</div></td>
                   <td>${statusBadge(p?.paymentStatus || p?.status)}</td>
                   <td>${escapeHtml(fmtAmount(p))}</td>
                   <td>${escapeHtml(createdAt)}</td>
@@ -366,6 +384,14 @@
       });
       document.getElementById('limitSelect')?.addEventListener('change', (e) => {
         paymentsState.limit = Number(e.target.value) || 20;
+        paymentsState.page = 1;
+        loadPayments();
+      });
+      document.getElementById('btnApplyPaymentFilters')?.addEventListener('click', () => {
+        paymentsState.search = document.getElementById('paymentsSearch')?.value.trim() || '';
+        paymentsState.from = document.getElementById('paymentsFrom')?.value || '';
+        paymentsState.to = document.getElementById('paymentsTo')?.value || '';
+        paymentsState.sort = document.getElementById('paymentsSort')?.value || 'createdAt:desc';
         paymentsState.page = 1;
         loadPayments();
       });

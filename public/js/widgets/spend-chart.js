@@ -35,7 +35,7 @@ export function initSpendChartWidget() {
         return;
       }
 
-      const total = points.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const total = Number(res?.total ?? points.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)) || 0;
       totalEl.textContent = `₦${new Intl.NumberFormat().format(total)}`;
 
       const labels = points.map((p) => p.month);

@@ -97,7 +97,7 @@ export function initPaymentsPage() {
     const bookingId = booking?._id || booking?.id || '—';
     const serviceName = booking?.service?.name || booking?.service?.serviceName || booking?.serviceName || booking?.title || '';
 
-    const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || booking?.vendorName || '';
+    const vendorName = p?.vendor?.businessName || booking?.vendor?.businessName || booking?.vendor?.name || booking?.vendorName || '';
 
     const method = (p?.paymentMethod || p?.payment_method || p?.gateway || '').toString().toUpperCase() || '—';
 
@@ -136,40 +136,54 @@ export function initPaymentsPage() {
     `;
   }
 
-  function openReceiptModal(paymentId) {
+  async function openReceiptModal(paymentId) {
     const modalEl = document.getElementById('receiptModal');
     const bodyEl = document.getElementById('receiptModalBody');
     if (!modalEl || !bodyEl || typeof window.bootstrap === 'undefined') return;
 
-    const p = paymentsById.get(String(paymentId));
-    if (!p) return;
-
-    const booking = p?.booking || {};
-    const serviceName = booking?.service?.name || booking?.service?.serviceName || booking?.serviceName || booking?.title || '—';
-    const vendorName = booking?.vendor?.businessName || booking?.vendor?.name || booking?.vendorName || '—';
-    const pill = statusPill(p?.paymentStatus || p?.status);
-    const amount = fmtAmount(p?.amount, p?.currency || booking?.amountCurrency);
-
-    bodyEl.innerHTML = `
-      <div class="text-center mb-3">
-        <div class="fw-bold h5 mb-0">Book Me Events</div>
-        <div class="small text-muted-soft">Payment receipt</div>
-      </div>
-      <table class="table table-dark table-sm mb-0">
-        <tbody>
-          <tr><th>Payment ID</th><td>${escapeHtml(p?._id || p?.id || '—')}</td></tr>
-          <tr><th>Transaction ref</th><td>${escapeHtml(p?.transactionReference || '—')}</td></tr>
-          <tr><th>Status</th><td><span class="bme-pill ${pill.cls}">${escapeHtml(pill.label)}</span></td></tr>
-          <tr><th>Amount</th><td class="fw-bold">${escapeHtml(amount)}</td></tr>
-          <tr><th>Method</th><td>${escapeHtml((p?.paymentMethod || '—').toString().toUpperCase())}</td></tr>
-          <tr><th>Service</th><td>${escapeHtml(serviceName)}</td></tr>
-          <tr><th>Vendor</th><td>${escapeHtml(vendorName)}</td></tr>
-          <tr><th>Date</th><td>${escapeHtml(fmtDate(p?.createdAt))}</td></tr>
-        </tbody>
-      </table>
-    `;
-
+    bodyEl.innerHTML = '<div class="text-muted-soft small">Loading receipt...</div>';
     window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+    try {
+      const receiptResponse = await apiFetch(`/api/v1/payments/${encodeURIComponent(paymentId)}/receipt`, { method: 'GET' });
+      const p = receiptResponse?.data || receiptResponse;
+      if (!p?._id && !p?.id) throw new Error('Receipt data is unavailable');
+
+      const booking = p?.booking || {};
+      const customer = p?.user || {};
+      const serviceName = booking?.service?.name || booking?.service?.serviceName || '—';
+      const vendorName = p?.vendor?.businessName || booking?.vendor?.businessName || '—';
+      const customerName = `${customer?.firstName || ''} ${customer?.lastName || ''}`.trim() || customer?.email || '—';
+      const pill = statusPill(p?.paymentStatus || p?.status);
+      const amount = fmtAmount(p?.amount, p?.currency || booking?.amountCurrency);
+
+      bodyEl.innerHTML = `
+        <div class="text-center mb-3">
+          <div class="fw-bold h5 mb-0">Book Me Events</div>
+          <div class="small text-muted-soft">Payment receipt</div>
+        </div>
+        <table class="table table-dark table-sm mb-0">
+          <tbody>
+            <tr><th>Receipt number</th><td>${escapeHtml(p?._id || p?.id || '—')}</td></tr>
+            <tr><th>Transaction ref</th><td>${escapeHtml(p?.transactionReference || '—')}</td></tr>
+            <tr><th>Status</th><td><span class="bme-pill ${pill.cls}">${escapeHtml(pill.label)}</span></td></tr>
+            <tr><th>Amount</th><td class="fw-bold">${escapeHtml(amount)}</td></tr>
+            <tr><th>Method</th><td>${escapeHtml((p?.paymentMethod || '—').toString().toUpperCase())}</td></tr>
+            <tr><th>Customer</th><td>${escapeHtml(customerName)}</td></tr>
+            <tr><th>Customer email</th><td>${escapeHtml(customer?.email || '—')}</td></tr>
+            <tr><th>Customer phone</th><td>${escapeHtml(customer?.phone || '—')}</td></tr>
+            <tr><th>Vendor</th><td>${escapeHtml(vendorName)}</td></tr>
+            <tr><th>Service</th><td>${escapeHtml(serviceName)}</td></tr>
+            <tr><th>Booking ref</th><td>${escapeHtml(booking?._id || booking?.id || '—')}</td></tr>
+            <tr><th>Booking date</th><td>${escapeHtml(fmtDate(booking?.eventDate))}</td></tr>
+            <tr><th>Payment date</th><td>${escapeHtml(fmtDate(p?.createdAt))}</td></tr>
+          </tbody>
+        </table>
+      `;
+    } catch (error) {
+      bodyEl.innerHTML = `<div class="text-danger small">${escapeHtml(error?.message || 'Failed to load receipt.')}</div>`;
+    }
+
   }
 
   document.getElementById('btnPrintReceipt')?.addEventListener('click', () => window.print());
@@ -242,7 +256,7 @@ export function initPaymentsPage() {
 
           if (action === 'receipt') {
             const paymentId = btn.getAttribute('data-payment-id');
-            if (paymentId) openReceiptModal(paymentId);
+            if (paymentId) await openReceiptModal(paymentId);
           }
         });
       });

@@ -893,17 +893,25 @@ export async function toggleUserStatus(userId) {
   return apiFetch(`/api/v1/admin/users/${userId}/toggle-status`, { method: 'PUT' });
 }
 
-export async function getAdminBookings({ status, page = 1, limit = 10 } = {}) {
+export async function getAdminBookings({ status, search, from, to, sort, page = 1, limit = 10 } = {}) {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
+  if (search) params.set('search', search);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  if (sort) params.set('sort', sort);
   if (page) params.set('page', page);
   if (limit) params.set('limit', limit);
   return apiFetch(`/api/v1/admin/bookings?${params.toString()}`, { method: 'GET' });
 }
 
-export async function getAdminPayments({ status, page = 1, limit = 10 } = {}) {
+export async function getAdminPayments({ status, search, from, to, sort, page = 1, limit = 10 } = {}) {
   const params = new URLSearchParams();
   if (status) params.set('status', status);
+  if (search) params.set('search', search);
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  if (sort) params.set('sort', sort);
   if (page) params.set('page', page);
   if (limit) params.set('limit', limit);
   return apiFetch(`/api/v1/admin/payments?${params.toString()}`, { method: 'GET' });

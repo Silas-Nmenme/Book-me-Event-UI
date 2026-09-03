@@ -116,7 +116,7 @@
             <div class="card card-glass p-4 fade-slide">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <div>
-                  <div class="badge badge-glow text-white mb-2">Your payments</div>
+                  <div class="badge badge-glow text-white mb-2" id="paymentsBadge">Your payments</div>
                   <h3 class="h5 fw-bold mb-0" id="pageTitle">Track payments and receipts</h3>
                 </div>
 
@@ -234,7 +234,13 @@
         const meData = me?.data || me;
         document.getElementById('meName').textContent = meData?.firstName ? `${meData.firstName} ${meData.lastName || ''}`.trim() : '—';
         document.getElementById('meEmail').textContent = meData?.email || '—';
-        document.getElementById('meRole').textContent = (meData?.role || meData?.user?.role || 'USER').toString().toUpperCase();
+        const role = (meData?.role || meData?.user?.role || 'USER').toString().toUpperCase();
+        document.getElementById('meRole').textContent = role;
+        if (role === 'VENDOR') {
+          document.getElementById('roleBadge').textContent = 'Vendor payments';
+          document.getElementById('paymentsBadge').textContent = 'Payments received';
+          document.getElementById('pageTitle').textContent = 'Track payments for your services';
+        }
 
         const avatarEl = document.getElementById('avatar');
         if (meData?.profilePicture) {
@@ -256,7 +262,8 @@
         const totalSpend = Array.isArray(summaryItems)
           ? summaryItems.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0)
           : 0;
-        document.getElementById('paymentsTotal').textContent = `₦${totalSpend.toLocaleString()}`;
+        const total = Number(summaryRes?.total ?? totalSpend) || 0;
+        document.getElementById('paymentsTotal').textContent = `₦${total.toLocaleString()}`;
       } catch {
         document.getElementById('paymentsTotal').textContent = '—';
       }
