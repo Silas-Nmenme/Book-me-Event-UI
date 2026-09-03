@@ -79,13 +79,18 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                  <select id="statusSelect" class="form-select form-select-sm" style="min-width: 170px;" title="Filter booking status">
+                  <select id="statusSelect" class="form-select form-select-sm bme-filter-select-md" title="Filter booking status">
                     <option value="">All statuses</option>
                     <option value="PENDING">PENDING</option>
                     <option value="CONFIRMED">CONFIRMED</option>
                     <option value="COMPLETED">COMPLETED</option>
                     <option value="CANCELED">CANCELED</option>
                     <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                  <select id="limitSelect" class="form-select form-select-sm bme-filter-select-sm" title="Rows per page">
+                    <option value="20">20 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
                   </select>
                   <button id="btnRefreshBookings" class="btn btn-soft btn-sm" type="button">Refresh</button>
                   <button id="btnExportBookings" class="btn btn-soft btn-sm" type="button">Export CSV</button>
@@ -115,6 +120,14 @@
               </div>
 
               <div id="noBookings" class="text-muted-soft small d-none mt-3">No bookings found.</div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3 gap-2">
+                <div class="small text-muted-soft" id="bookingsPageInfo">Page 1</div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-soft btn-sm" type="button" id="btnBookingsPrev">Prev</button>
+                  <button class="btn btn-soft btn-sm" type="button" id="btnBookingsNext">Next</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -183,6 +196,23 @@
         return `${currency} ${num.toLocaleString()}`;
       }
 
+      const statusVariants = {
+        PENDING: 'warning',
+        CONFIRMED: 'info',
+        COMPLETED: 'success',
+        CANCELED: 'secondary',
+        CANCELLED: 'secondary',
+        FAILED: 'danger',
+        REFUNDED: 'secondary',
+      };
+
+      function statusBadge(status) {
+        const s = (status || '—').toString().toUpperCase();
+        const variant = statusVariants[s] || 'secondary';
+        return `<span class="badge text-bg-${variant}">${escapeHtml(s)}</span>`;
+      }
+
+      const bookingsState = { page: 1, limit: 20, pages: 1 };
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
@@ -220,6 +250,7 @@
         const noBookingsEl = document.getElementById('noBookings');
         const loadingEl = document.getElementById('bookingsLoading');
         const errorEl = document.getElementById('bookingsError');
+        const pageInfoEl = document.getElementById('bookingsPageInfo');
 
         loadingEl?.classList.remove('d-none');
         errorEl?.classList.add('d-none');
@@ -227,9 +258,15 @@
         if (bodyEl) bodyEl.innerHTML = '';
 
         try {
-          const res = await getAdminBookings({ status, page: 1, limit: 30 });
+          const res = await getAdminBookings({ status, page: bookingsState.page, limit: bookingsState.limit });
           const data = res?.data || res;
           const items = data?.data || data?.results || data?.bookings || [];
+          bookingsState.pages = data?.pages || 1;
+
+          if (pageInfoEl) {
+            const total = data?.total ?? items.length;
+            pageInfoEl.textContent = `Page ${bookingsState.page} of ${bookingsState.pages} (${total} bookings)`;
+          }
 
           if (!Array.isArray(items) || items.length === 0) {
             noBookingsEl?.classList.remove('d-none');
@@ -242,8 +279,6 @@
               const customer = b?.user?.email || b?.user?.firstName || '';
               const vendor = b?.vendor?.businessName || b?.vendor?.name || '';
               const service = b?.service?.serviceName || b?.service?.name || '';
-              const bookingStatus = (b?.bookingStatus || b?.status || '—').toString();
-              const paymentStatus = (b?.paymentStatus || '—').toString();
               const createdAt = fmtDate(b?.createdAt);
 
               return `
@@ -252,8 +287,8 @@
                   <td>${escapeHtml(customer)}</td>
                   <td>${escapeHtml(vendor)}</td>
                   <td>${escapeHtml(service)}</td>
-                  <td>${escapeHtml(bookingStatus)}</td>
-                  <td>${escapeHtml(paymentStatus)}</td>
+                  <td>${statusBadge(b?.bookingStatus || b?.status)}</td>
+                  <td>${statusBadge(b?.paymentStatus)}</td>
                   <td>${escapeHtml(fmtAmount(b))}</td>
                   <td>${escapeHtml(createdAt)}</td>
                 </tr>
@@ -268,7 +303,31 @@
         }
       }
 
-      document.getElementById('btnRefreshBookings')?.addEventListener('click', loadBookings);
+      document.getElementById('btnRefreshBookings')?.addEventListener('click', () => {
+        bookingsState.page = 1;
+        loadBookings();
+      });
+      document.getElementById('statusSelect')?.addEventListener('change', () => {
+        bookingsState.page = 1;
+        loadBookings();
+      });
+      document.getElementById('limitSelect')?.addEventListener('change', (e) => {
+        bookingsState.limit = Number(e.target.value) || 20;
+        bookingsState.page = 1;
+        loadBookings();
+      });
+      document.getElementById('btnBookingsPrev')?.addEventListener('click', () => {
+        if (bookingsState.page > 1) {
+          bookingsState.page -= 1;
+          loadBookings();
+        }
+      });
+      document.getElementById('btnBookingsNext')?.addEventListener('click', () => {
+        if (bookingsState.page < bookingsState.pages) {
+          bookingsState.page += 1;
+          loadBookings();
+        }
+      });
 
       document.getElementById('btnExportBookings')?.addEventListener('click', async () => {
         const status = document.getElementById('statusSelect')?.value || undefined;

@@ -96,32 +96,64 @@
 
               <div id="statsShell" class="d-none">
                 <div class="row g-3">
-                  <div class="col-12">
-                    <div class="card card-glass p-3">
-                      <div class="fw-bold mb-2">Bookings by status</div>
-                      <div id="bookingsByStatus" class="small text-muted-soft">—</div>
-                    </div>
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardBookingsByStatus" data-detail="bookingsByStatus">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Bookings by status</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="bookingsByStatusSummary" class="small text-muted-soft">—</div>
+                    </button>
                   </div>
 
-                  <div class="col-12">
-                    <div class="card card-glass p-3">
-                      <div class="fw-bold mb-2">Payments by status</div>
-                      <div id="paymentsByStatus" class="small text-muted-soft">—</div>
-                    </div>
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardPaymentsByStatus" data-detail="paymentsByStatus">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Payments by status</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="paymentsByStatusSummary" class="small text-muted-soft">—</div>
+                    </button>
                   </div>
 
-                  <div class="col-12">
-                    <div class="card card-glass p-3">
-                      <div class="fw-bold mb-2">Top vendors</div>
-                      <div id="topVendors" class="small text-muted-soft">—</div>
-                    </div>
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardTopVendors" data-detail="topVendors">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Top vendors</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="topVendorsSummary" class="small text-muted-soft">—</div>
+                    </button>
                   </div>
 
-                  <div class="col-12">
-                    <div class="card card-glass p-3">
-                      <div class="fw-bold mb-2">Monthly revenue</div>
-                      <div id="monthlyRevenue" class="small text-muted-soft">—</div>
-                    </div>
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardMonthlyRevenue" data-detail="monthlyRevenue">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Monthly revenue</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="monthlyRevenueSummary" class="small text-muted-soft">—</div>
+                    </button>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardMonthlySignups" data-detail="monthlySignups">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Monthly signups</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="monthlySignupsSummary" class="small text-muted-soft">—</div>
+                    </button>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <button type="button" class="card card-glass p-3 w-100 text-start bme-stat-click" id="cardMonthlyBookings" data-detail="monthlyBookings">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold mb-1">Monthly bookings</div>
+                        <span class="text-muted-soft small">View details →</span>
+                      </div>
+                      <div id="monthlyBookingsSummary" class="small text-muted-soft">—</div>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -139,6 +171,20 @@
         </div>
       </div>
     </footer>
+
+    <div class="modal fade" id="statDetailModal" tabindex="-1" aria-labelledby="statDetailModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header">
+            <h5 class="modal-title" id="statDetailModalLabel">Details</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="statDetailModalBody">
+            <div class="text-muted-soft small">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -218,6 +264,89 @@
         return list.map(renderItem).join('');
       }
 
+      // Holds the last-loaded stats payload so the detail modal can render the full table on click.
+      let lastStatsData = null;
+
+      const detailConfig = {
+        bookingsByStatus: {
+          title: 'Bookings by status',
+          columns: ['Status', 'Count'],
+          rows: (data) => (data?.bookingsByStatus || []).map((x) => [x?._id || '—', x?.count ?? 0]),
+        },
+        paymentsByStatus: {
+          title: 'Payments by status',
+          columns: ['Status', 'Count', 'Total amount'],
+          rows: (data) => (data?.paymentsByStatus || []).map((x) => [x?._id || '—', x?.count ?? 0, fmtAmount(x?.total)]),
+        },
+        topVendors: {
+          title: 'Top vendors',
+          columns: ['Vendor', 'Bookings', 'Revenue'],
+          rows: (data) =>
+            (data?.topVendors || []).map((x) => {
+              const vendorInfo = Array.isArray(x?.vendorInfo) ? x.vendorInfo[0] : null;
+              const vendorName = vendorInfo?.businessName || vendorInfo?.name || x?._id || '—';
+              return [vendorName, x?.count ?? 0, fmtAmount(x?.revenue)];
+            }),
+        },
+        monthlyRevenue: {
+          title: 'Monthly revenue',
+          columns: ['Month', 'Revenue', 'Payments'],
+          rows: (data) => (data?.monthlyRevenue || []).map((x) => [x?._id || '—', fmtAmount(x?.total), x?.count ?? 0]),
+        },
+        monthlySignups: {
+          title: 'Monthly signups',
+          columns: ['Month', 'New users'],
+          rows: (data) => (data?.monthlySignups || []).map((x) => [x?._id || '—', x?.count ?? 0]),
+        },
+        monthlyBookings: {
+          title: 'Monthly bookings',
+          columns: ['Month', 'Bookings'],
+          rows: (data) => (data?.monthlyBookings || []).map((x) => [x?._id || '—', x?.count ?? 0]),
+        },
+      };
+
+      function renderSummary(elId, list, formatItem) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        if (!Array.isArray(list) || list.length === 0) {
+          el.textContent = 'No data yet.';
+          return;
+        }
+        el.textContent = `${list.length} ${list.length === 1 ? 'entry' : 'entries'} — ${formatItem(list[0])}${list.length > 1 ? ', …' : ''}`;
+      }
+
+      function openStatDetail(key) {
+        const config = detailConfig[key];
+        const modalEl = document.getElementById('statDetailModal');
+        const titleEl = document.getElementById('statDetailModalLabel');
+        const bodyEl = document.getElementById('statDetailModalBody');
+        if (!config || !modalEl || !bodyEl || typeof window.bootstrap === 'undefined') return;
+
+        titleEl.textContent = config.title;
+
+        const rows = lastStatsData ? config.rows(lastStatsData) : [];
+        if (!rows.length) {
+          bodyEl.innerHTML = `<div class="text-muted-soft small">No data available.</div>`;
+        } else {
+          bodyEl.innerHTML = `
+            <div class="table-responsive">
+              <table class="table table-dark table-hover mb-0">
+                <thead><tr>${config.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>
+                <tbody>
+                  ${rows.map((r) => `<tr>${r.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+      }
+
+      document.querySelectorAll('.bme-stat-click').forEach((btn) => {
+        btn.addEventListener('click', () => openStatDetail(btn.getAttribute('data-detail')));
+      });
+
       async function loadStats() {
         const loadingEl = document.getElementById('loadingStats');
         const errorEl = document.getElementById('errorStats');
@@ -230,28 +359,18 @@
         try {
           const res = await getAdminStats();
           const data = res?.data || res;
+          lastStatsData = data;
 
-          const bookingsByStatusEl = document.getElementById('bookingsByStatus');
-          const paymentsByStatusEl = document.getElementById('paymentsByStatus');
-          const topVendorsEl = document.getElementById('topVendors');
-          const monthlyRevenueEl = document.getElementById('monthlyRevenue');
-
-          const bookingsByStatus = data?.bookingsByStatus || [];
-          const paymentsByStatus = data?.paymentsByStatus || [];
-          const topVendors = data?.topVendors || [];
-          const monthlyRevenue = data?.monthlyRevenue || [];
-
-          bookingsByStatusEl.innerHTML = renderArrays(bookingsByStatus, (x) => `• ${escapeHtml(x?._id || '—')}: ${escapeHtml(x?.count ?? '0')}<br/>`);
-          paymentsByStatusEl.innerHTML = renderArrays(paymentsByStatus, (x) => `• ${escapeHtml(x?._id || '—')}: ${escapeHtml(x?.count ?? '0')} (total ${fmtAmount(x?.total)})<br/>`);
-
-          topVendorsEl.innerHTML = renderArrays(topVendors, (x) => {
-            const vendorId = x?._id || '';
+          renderSummary('bookingsByStatusSummary', data?.bookingsByStatus, (x) => `${x?._id || '—'}: ${x?.count ?? 0}`);
+          renderSummary('paymentsByStatusSummary', data?.paymentsByStatus, (x) => `${x?._id || '—'}: ${x?.count ?? 0} (${fmtAmount(x?.total)})`);
+          renderSummary('topVendorsSummary', data?.topVendors, (x) => {
             const vendorInfo = Array.isArray(x?.vendorInfo) ? x.vendorInfo[0] : null;
-            const vendorName = vendorInfo?.businessName || vendorInfo?.name || vendorId || '—';
-            return `• ${escapeHtml(vendorName)}: ${escapeHtml(x?.count ?? '0')} bookings (revenue ${fmtAmount(x?.revenue)})<br/>`;
+            const vendorName = vendorInfo?.businessName || vendorInfo?.name || x?._id || '—';
+            return `${vendorName}: ${x?.count ?? 0} bookings`;
           });
-
-          monthlyRevenueEl.innerHTML = renderArrays(monthlyRevenue, (x) => `• ${escapeHtml(x?._id || '—')}: ${fmtAmount(x?.total)} (${escapeHtml(x?.count ?? '0')} payments)<br/>`);
+          renderSummary('monthlyRevenueSummary', data?.monthlyRevenue, (x) => `${x?._id || '—'}: ${fmtAmount(x?.total)}`);
+          renderSummary('monthlySignupsSummary', data?.monthlySignups, (x) => `${x?._id || '—'}: ${x?.count ?? 0} new users`);
+          renderSummary('monthlyBookingsSummary', data?.monthlyBookings, (x) => `${x?._id || '—'}: ${x?.count ?? 0} bookings`);
 
           shell.classList.remove('d-none');
         } catch (e) {

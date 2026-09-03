@@ -673,6 +673,18 @@ html[data-theme="light"] .badge-outline-brand { color: var(--clr-primary); }
   overflow-y: auto;
 }
 
+/* Fixed-width filter controls used on admin list pages (bookings/payments/stats) */
+.bme-filter-select-md { min-width: 170px; }
+.bme-filter-select-sm { min-width: 110px; }
+
+/* Clickable stat card (rendered as a <button> for accessibility) that opens a details modal */
+.bme-stat-click {
+  border: 1px solid var(--surfaceBorder);
+  cursor: pointer;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.bme-stat-click:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
 /* Icon chip used inside stat cards / activity rows (replaces inline background styles) */
 .bme-stat-card__header { display: flex; align-items: center; justify-content: space-between; }
 .bme-icon-chip {

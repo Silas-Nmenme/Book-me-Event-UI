@@ -87,12 +87,17 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                  <select id="statusSelect" class="form-select form-select-sm" style="min-width: 170px;" title="Filter payment status">
+                  <select id="statusSelect" class="form-select form-select-sm bme-filter-select-md" title="Filter payment status">
                     <option value="">All statuses</option>
                     <option value="PENDING">PENDING</option>
                     <option value="COMPLETED">COMPLETED</option>
                     <option value="FAILED">FAILED</option>
                     <option value="REFUNDED">REFUNDED</option>
+                  </select>
+                  <select id="limitSelect" class="form-select form-select-sm bme-filter-select-sm" title="Rows per page">
+                    <option value="20">20 / page</option>
+                    <option value="50">50 / page</option>
+                    <option value="100">100 / page</option>
                   </select>
                   <button id="btnRefreshPayments" class="btn btn-soft btn-sm" type="button">Refresh</button>
                   <button id="btnExportPayments" class="btn btn-soft btn-sm" type="button">Export CSV</button>
@@ -121,6 +126,14 @@
               </div>
 
               <div id="noPayments" class="text-muted-soft small d-none mt-3">No payments found.</div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3 gap-2">
+                <div class="small text-muted-soft" id="paymentsPageInfo">Page 1</div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-soft btn-sm" type="button" id="btnPaymentsPrev">Prev</button>
+                  <button class="btn btn-soft btn-sm" type="button" id="btnPaymentsNext">Next</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -188,6 +201,20 @@
         return `${currency} ${num.toLocaleString()}`;
       }
 
+      const statusVariants = {
+        PENDING: 'warning',
+        COMPLETED: 'success',
+        FAILED: 'danger',
+        REFUNDED: 'secondary',
+      };
+
+      function statusBadge(status) {
+        const s = (status || '—').toString().toUpperCase();
+        const variant = statusVariants[s] || 'secondary';
+        return `<span class="badge text-bg-${variant}">${escapeHtml(s)}</span>`;
+      }
+
+      const paymentsState = { page: 1, limit: 20, pages: 1 };
       document.getElementById('btnLogout').addEventListener('click', async () => {
         try { await logoutUser(); } finally { clearToken(); }
         toast({ title: 'Logged out', message: 'See you again.', variant: 'success' });
@@ -225,6 +252,7 @@
         const noPaymentsEl = document.getElementById('noPayments');
         const loadingEl = document.getElementById('paymentsLoading');
         const errorEl = document.getElementById('paymentsError');
+        const pageInfoEl = document.getElementById('paymentsPageInfo');
 
         loadingEl?.classList.remove('d-none');
         errorEl?.classList.add('d-none');
@@ -232,9 +260,15 @@
         if (bodyEl) bodyEl.innerHTML = '';
 
         try {
-          const res = await getAdminPayments({ status, page: 1, limit: 30 });
+          const res = await getAdminPayments({ status, page: paymentsState.page, limit: paymentsState.limit });
           const data = res?.data || res;
           const items = data?.data || data?.results || data?.payments || [];
+          paymentsState.pages = data?.pages || 1;
+
+          if (pageInfoEl) {
+            const total = data?.total ?? items.length;
+            pageInfoEl.textContent = `Page ${paymentsState.page} of ${paymentsState.pages} (${total} payments)`;
+          }
 
           if (!Array.isArray(items) || items.length === 0) {
             noPaymentsEl?.classList.remove('d-none');
@@ -247,7 +281,6 @@
               const user = p?.user?.email || p?.user?.firstName || '';
               const vendor = p?.vendor?.businessName || p?.vendor?.name || '';
               const booking = p?.booking?._id || p?.booking?.id || '—';
-              const statusText = (p?.paymentStatus || p?.status || '—').toString();
               const createdAt = fmtDate(p?.createdAt);
 
               return `
@@ -256,7 +289,7 @@
                   <td>${escapeHtml(user)}</td>
                   <td>${escapeHtml(vendor)}</td>
                   <td>${escapeHtml(booking)}</td>
-                  <td>${escapeHtml(statusText)}</td>
+                  <td>${statusBadge(p?.paymentStatus || p?.status)}</td>
                   <td>${escapeHtml(fmtAmount(p))}</td>
                   <td>${escapeHtml(createdAt)}</td>
                 </tr>
@@ -271,7 +304,31 @@
         }
       }
 
-      document.getElementById('btnRefreshPayments')?.addEventListener('click', loadPayments);
+      document.getElementById('btnRefreshPayments')?.addEventListener('click', () => {
+        paymentsState.page = 1;
+        loadPayments();
+      });
+      document.getElementById('statusSelect')?.addEventListener('change', () => {
+        paymentsState.page = 1;
+        loadPayments();
+      });
+      document.getElementById('limitSelect')?.addEventListener('change', (e) => {
+        paymentsState.limit = Number(e.target.value) || 20;
+        paymentsState.page = 1;
+        loadPayments();
+      });
+      document.getElementById('btnPaymentsPrev')?.addEventListener('click', () => {
+        if (paymentsState.page > 1) {
+          paymentsState.page -= 1;
+          loadPayments();
+        }
+      });
+      document.getElementById('btnPaymentsNext')?.addEventListener('click', () => {
+        if (paymentsState.page < paymentsState.pages) {
+          paymentsState.page += 1;
+          loadPayments();
+        }
+      });
 
       document.getElementById('btnExportPayments')?.addEventListener('click', async () => {
         const status = document.getElementById('statusSelect')?.value || undefined;
