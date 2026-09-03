@@ -1,4 +1,4 @@
-import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment, initializeFlutterwavePayment } from '../api.js';
+import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment, initializeFlutterwavePayment, verifyFlutterwavePayment } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -236,6 +236,19 @@ export async function initBookingsPage({ me, role } = {}) {
       bookingDetailsShell.classList.add('d-none');
       bookingDetailsShell.innerHTML = '';
       return;
+    }
+
+    // Fallback confirmation: if the user was just redirected back from Flutterwave
+    // checkout, actively verify the transaction instead of waiting on the webhook
+    // (which can be delayed or never arrive if misconfigured).
+    const returnedTxRef = qs('tx_ref') || qs('transaction_id');
+    if (returnedTxRef) {
+      try {
+        await verifyFlutterwavePayment(returnedTxRef);
+      } catch (e) {
+        // Non-fatal: the webhook may still confirm it, or the booking detail below
+        // will simply keep showing PENDING until it does.
+      }
     }
 
     try {

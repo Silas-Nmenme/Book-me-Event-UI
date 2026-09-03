@@ -781,6 +781,15 @@ export async function initializeFlutterwavePayment(bookingId) {
   });
 }
 
+// Fallback confirmation used on checkout return, in case the Flutterwave webhook
+// is delayed or never arrives (e.g. misconfigured webhook URL).
+export async function verifyFlutterwavePayment(reference) {
+  return apiFetch(`/api/v1/payments/verify/${encodeURIComponent(reference)}`, {
+    method: 'GET',
+    timeoutMs: 20000,
+  });
+}
+
 export async function refundPayment(id, payload = {}) {
   return apiFetch(`/api/v1/payments/${id}/refund`, {
     method: 'POST',
