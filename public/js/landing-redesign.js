@@ -12,7 +12,7 @@ async function fetchPlatformStats() {
 }
 
 async function fetchCategoryCounts() {
-  const res = await fetch(`${BACKEND_URL}/api/v1/widgets/landing/category-counts`, { method: 'GET' });
+  const res = await fetch(`${BACKEND_URL}/api/v1/landing/category-counts`, { method: 'GET' });
   const json = await res.json();
   return json?.data || {};
 }
@@ -209,7 +209,7 @@ function initMarquee() {
   (async () => {
     try {
       // Public endpoint (no auth required) for landing marquee vendors.
-      const res = await fetch(`${BACKEND_URL}/api/v1/widgets/landing/vendor-marquee?limit=12`);
+      const res = await fetch(`${BACKEND_URL}/api/v1/landing/vendor-marquee?limit=12`);
       const json = await res.json();
       const vendors = json?.data || json;
       if (Array.isArray(vendors) && vendors.length) {
