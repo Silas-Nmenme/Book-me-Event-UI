@@ -413,9 +413,9 @@ body.requests-page {
 
 .bme-theme-toggle [data-icon] { display: none; }
 
-/* Toast host: keep toast stack consistently below the sticky header/navbar */
+/* Toast host: must always render above the header/sidebar, never behind it */
 #toastHost {
-  z-index: 1082; /* below .bme-navbar (1085) so header stays visible */
+  z-index: 2000;
   top: var(--bme-navbar-height);
   right: 0;
   left: auto;
@@ -429,7 +429,7 @@ body.requests-page {
   top: var(--bme-navbar-height);
   right: 0;
   left: auto;
-  z-index: 1082;
+  z-index: 2000;
   padding: 0.75rem !important;
   width: auto;
 }

@@ -184,6 +184,7 @@
           <a class="bme-nav-link" href="services.html">Browse Vendors</a>
           <a class="bme-nav-link" href="user-request.html">My Requests</a>
           <a class="bme-nav-link" href="user-message.html">Messages</a>
+          <a class="bme-nav-link" href="annoncement.html">Announcements</a>
           <a class="bme-nav-link" href="payments.html">Payments</a>
           <a class="bme-nav-link" href="reviews.html">My Reviews</a>
           <a class="bme-nav-link" href="user-tickets.html">Support</a>
@@ -214,10 +215,33 @@
               </div>
               <div class="col-12 col-lg-7">
                 <div class="d-flex justify-content-lg-end align-items-center gap-2">
-                  <button class="btn btn-soft position-relative" id="btnNotif" aria-label="Notifications">
-                    <span aria-hidden="true">🔔</span>
-                    <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
-                  </button>
+                  <div class="dropdown">
+                    <button
+                      class="btn btn-soft position-relative"
+                      type="button"
+                      id="announcementBellBtn"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      aria-label="Announcements"
+                      title="Announcements"
+                    >
+                      <span aria-hidden="true">🔔</span>
+                      <span
+                        id="announcementBellDot"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"
+                      >!</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bme-popover-menu">
+                      <div class="px-3 pt-2 pb-1 small text-muted-soft">Latest announcements</div>
+                      <div id="announcementBellList" class="px-3 bme-scroll-panel">
+                        <div id="announcementBellEmpty" class="small text-muted-soft d-none py-2">No announcements.</div>
+                      </div>
+                      <div class="px-3 pb-2">
+                        <a class="dropdown-item" href="annoncement.html" id="announcementBellViewAll">View in dashboard</a>
+                        <button class="dropdown-item" type="button" id="announcementBellMarkAllRead">Mark as read</button>
+                      </div>
+                    </div>
+                  </div>
 
                   <button id="themeToggleBtn" class="btn btn-soft bme-theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
                     <span data-icon="sun">☀️</span>
@@ -423,6 +447,7 @@
       import { initActivityFeedWidget } from '../js/widgets/activity-feed.js';
       import { initReviewNudgeWidget } from '../js/widgets/review-nudge.js';
       import { initVendorMapWidget } from '../js/widgets/vendor-map.js';
+      import { initAnnouncements } from '../js/pages/announcements.js';
 
       const yearEl = document.getElementById('year');
       if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
@@ -529,6 +554,27 @@
         initActivityFeedWidget();
         initReviewNudgeWidget();
         initVendorMapWidget();
+
+        try {
+          const role = user?.role || user?.user?.role;
+          await initAnnouncements({ role });
+
+          document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const dotEl = document.getElementById('announcementBellDot');
+            if (dotEl) {
+              dotEl.textContent = '';
+              dotEl.style.display = 'none';
+            }
+
+            try {
+              await initAnnouncements({ role });
+            } catch {}
+
+            toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
+          });
+        } catch {}
       }
 
       loadMeAndStats().then(async () => {
