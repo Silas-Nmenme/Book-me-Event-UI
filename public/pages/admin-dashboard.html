@@ -430,26 +430,64 @@
 
                   <div class="col-12" id="section-billing">
                     <div class="card card-glass bme-admin-card p-3">
-                      <div class="fw-bold mb-2">Admin billing views</div>
-                      <div class="small text-muted-soft mb-3">Bookings & payments overview. Jump to full lists:</div>
-                      <div class="d-flex gap-2 flex-wrap mb-3">
+                      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div>
+                          <div class="fw-bold">Bookings & payments</div>
+                          <div class="small text-muted-soft">Complete platform records, newest first.</div>
+                        </div>
+                        <button class="btn btn-soft btn-sm" type="button" id="btnRefreshBilling">Refresh</button>
+                      </div>
+                      <div class="d-flex gap-2 flex-wrap mb-4">
                         <a class="btn btn-soft btn-sm" href="admin-bookings.html">Bookings list</a>
                         <a class="btn btn-soft btn-sm" href="admin-payments.html">Payments list</a>
                         <a class="btn btn-soft btn-sm" href="admin-stats.html">Stats breakdown</a>
                       </div>
 
-                      <div class="text-muted-soft small mb-3">Bookings & payments overview. (Optional: add filters later.)</div>
                       <div class="row g-3">
                         <div class="col-12 col-lg-6">
-                          <div class="card card-glass p-2">
-                            <div class="small text-muted-soft">Bookings</div>
-                            <div class="h5 fw-bold" id="bookingsCount">—</div>
+                          <div class="bme-panel p-3 h-100">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                              <div>
+                                <div class="fw-bold">All bookings</div>
+                                <div class="small text-muted-soft" id="bookingsBillingPageInfo">Loading...</div>
+                              </div>
+                              <div class="h5 fw-bold mb-0" id="bookingsCount">—</div>
+                            </div>
+                            <div id="bookingsBillingError" class="text-danger small d-none"></div>
+                            <div class="table-responsive bme-scroll-panel">
+                              <table class="table table-dark table-hover mb-0">
+                                <thead><tr><th>Customer</th><th>Vendor</th><th>Status</th><th>Created</th></tr></thead>
+                                <tbody id="bookingsBillingBody"></tbody>
+                              </table>
+                            </div>
+                            <div id="bookingsBillingEmpty" class="text-muted-soft small d-none mt-3">No bookings found.</div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                              <button class="btn btn-soft btn-sm" type="button" id="btnBillingBookingsPrev">Prev</button>
+                              <button class="btn btn-soft btn-sm" type="button" id="btnBillingBookingsNext">Next</button>
+                            </div>
                           </div>
                         </div>
                         <div class="col-12 col-lg-6">
-                          <div class="card card-glass p-2">
-                            <div class="small text-muted-soft">Payments</div>
-                            <div class="h5 fw-bold" id="paymentsCount">—</div>
+                          <div class="bme-panel p-3 h-100">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                              <div>
+                                <div class="fw-bold">All payments</div>
+                                <div class="small text-muted-soft" id="paymentsBillingPageInfo">Loading...</div>
+                              </div>
+                              <div class="h5 fw-bold mb-0" id="paymentsCount">—</div>
+                            </div>
+                            <div id="paymentsBillingError" class="text-danger small d-none"></div>
+                            <div class="table-responsive bme-scroll-panel">
+                              <table class="table table-dark table-hover mb-0">
+                                <thead><tr><th>User</th><th>Vendor</th><th>Amount</th><th>Status</th></tr></thead>
+                                <tbody id="paymentsBillingBody"></tbody>
+                              </table>
+                            </div>
+                            <div id="paymentsBillingEmpty" class="text-muted-soft small d-none mt-3">No payments found.</div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                              <button class="btn btn-soft btn-sm" type="button" id="btnBillingPaymentsPrev">Prev</button>
+                              <button class="btn btn-soft btn-sm" type="button" id="btnBillingPaymentsNext">Next</button>
+                            </div>
                           </div>
                         </div>
                       </div>

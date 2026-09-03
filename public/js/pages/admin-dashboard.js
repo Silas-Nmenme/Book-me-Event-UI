@@ -31,6 +31,8 @@ import { initThemeToggle } from '../theme-toggle.js';
 // Client-side filter/pagination state for the users & vendors tables.
 const usersState = { role: '', search: '', page: 1, limit: 10, pages: 1 };
 const vendorsState = { status: '', search: '', page: 1, limit: 10, pages: 1 };
+const billingBookingsState = { page: 1, limit: 10, pages: 1 };
+const billingPaymentsState = { page: 1, limit: 10, pages: 1 };
 
 // Row selection state for bulk actions (cleared whenever a table re-renders).
 const selectedUserIds = new Set();
@@ -71,6 +73,21 @@ function formatDateMaybe(d) {
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return '—';
   return dt.toLocaleDateString();
+}
+
+function formatAmount(amount, currency = 'NGN') {
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return '—';
+  return `${currency} ${value.toLocaleString()}`;
+}
+
+function statusBadge(status) {
+  const value = (status || '—').toString().toUpperCase();
+  const variant = value === 'COMPLETED' ? 'success'
+    : value === 'CONFIRMED' ? 'info'
+      : value === 'PENDING' ? 'warning'
+        : value === 'FAILED' ? 'danger' : 'secondary';
+  return `<span class="badge text-bg-${variant}">${escapeHtml(value)}</span>`;
 }
 
 async function loadStats() {
@@ -515,15 +532,56 @@ async function renderAllVendors() {
 async function renderBillingViews() {
   const bookingsCountEl = document.getElementById('bookingsCount');
   const paymentsCountEl = document.getElementById('paymentsCount');
-  if (!bookingsCountEl || !paymentsCountEl) return;
+  const bookingsBodyEl = document.getElementById('bookingsBillingBody');
+  const paymentsBodyEl = document.getElementById('paymentsBillingBody');
+  if (!bookingsCountEl || !paymentsCountEl || !bookingsBodyEl || !paymentsBodyEl) return;
 
   try {
-    const counts = await loadAdminCounts();
-    bookingsCountEl.textContent = counts?.totalBookings ?? '—';
-    paymentsCountEl.textContent = counts?.totalPayments ?? '—';
-  } catch {
+    const [bookingsRes, paymentsRes] = await Promise.all([
+      getAdminBookings(billingBookingsState),
+      getAdminPayments(billingPaymentsState),
+    ]);
+    const bookingsData = normalizePagePayload(bookingsRes);
+    const paymentsData = normalizePagePayload(paymentsRes);
+    const bookings = Array.isArray(bookingsData?.data) ? bookingsData.data : [];
+    const payments = Array.isArray(paymentsData?.data) ? paymentsData.data : [];
+
+    billingBookingsState.pages = bookingsData?.pages || 1;
+    billingPaymentsState.pages = paymentsData?.pages || 1;
+    bookingsCountEl.textContent = bookingsData?.total ?? 0;
+    paymentsCountEl.textContent = paymentsData?.total ?? 0;
+    bookingsBodyEl.innerHTML = bookings.map((booking) => `
+      <tr>
+        <td>${escapeHtml(booking?.user?.email || booking?.user?.firstName || '—')}</td>
+        <td>${escapeHtml(booking?.vendor?.businessName || '—')}</td>
+        <td>${statusBadge(booking?.bookingStatus)}</td>
+        <td>${escapeHtml(formatDateMaybe(booking?.createdAt))}</td>
+      </tr>`).join('');
+    paymentsBodyEl.innerHTML = payments.map((payment) => `
+      <tr>
+        <td>${escapeHtml(payment?.user?.email || payment?.user?.firstName || '—')}</td>
+        <td>${escapeHtml(payment?.vendor?.businessName || '—')}</td>
+        <td>${escapeHtml(formatAmount(payment?.amount, payment?.currency || payment?.amountCurrency))}</td>
+        <td>${statusBadge(payment?.paymentStatus)}</td>
+      </tr>`).join('');
+
+    document.getElementById('bookingsBillingEmpty')?.classList.toggle('d-none', bookings.length > 0);
+    document.getElementById('paymentsBillingEmpty')?.classList.toggle('d-none', payments.length > 0);
+    document.getElementById('bookingsBillingError')?.classList.add('d-none');
+    document.getElementById('paymentsBillingError')?.classList.add('d-none');
+    document.getElementById('bookingsBillingPageInfo').textContent = `Page ${billingBookingsState.page} of ${billingBookingsState.pages}`;
+    document.getElementById('paymentsBillingPageInfo').textContent = `Page ${billingPaymentsState.page} of ${billingPaymentsState.pages}`;
+    document.getElementById('btnBillingBookingsPrev').disabled = billingBookingsState.page <= 1;
+    document.getElementById('btnBillingBookingsNext').disabled = billingBookingsState.page >= billingBookingsState.pages;
+    document.getElementById('btnBillingPaymentsPrev').disabled = billingPaymentsState.page <= 1;
+    document.getElementById('btnBillingPaymentsNext').disabled = billingPaymentsState.page >= billingPaymentsState.pages;
+  } catch (error) {
     bookingsCountEl.textContent = '—';
     paymentsCountEl.textContent = '—';
+    document.getElementById('bookingsBillingError').textContent = error?.message || 'Failed to load bookings.';
+    document.getElementById('paymentsBillingError').textContent = error?.message || 'Failed to load payments.';
+    document.getElementById('bookingsBillingError')?.classList.remove('d-none');
+    document.getElementById('paymentsBillingError')?.classList.remove('d-none');
   }
 }
 
@@ -826,6 +884,35 @@ async function initAdminDashboard() {
   document.getElementById('btnRefreshVendors')?.addEventListener('click', () => {
     vendorsState.page = 1;
     renderAllVendors();
+  });
+  document.getElementById('btnRefreshBilling')?.addEventListener('click', () => {
+    billingBookingsState.page = 1;
+    billingPaymentsState.page = 1;
+    renderBillingViews();
+  });
+  document.getElementById('btnBillingBookingsPrev')?.addEventListener('click', () => {
+    if (billingBookingsState.page > 1) {
+      billingBookingsState.page -= 1;
+      renderBillingViews();
+    }
+  });
+  document.getElementById('btnBillingBookingsNext')?.addEventListener('click', () => {
+    if (billingBookingsState.page < billingBookingsState.pages) {
+      billingBookingsState.page += 1;
+      renderBillingViews();
+    }
+  });
+  document.getElementById('btnBillingPaymentsPrev')?.addEventListener('click', () => {
+    if (billingPaymentsState.page > 1) {
+      billingPaymentsState.page -= 1;
+      renderBillingViews();
+    }
+  });
+  document.getElementById('btnBillingPaymentsNext')?.addEventListener('click', () => {
+    if (billingPaymentsState.page < billingPaymentsState.pages) {
+      billingPaymentsState.page += 1;
+      renderBillingViews();
+    }
   });
 
   // Users: select-all, bulk actions, export
