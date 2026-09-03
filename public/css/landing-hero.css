@@ -315,6 +315,10 @@ footer {
 }
 footer a { color: rgba(255,255,255,.85); text-decoration: none; }
 footer a:hover { color: #fff; }
+html[data-theme="light"] footer { color: #fff; }
+html[data-theme="light"] footer .text-white-50 { color: rgba(255,255,255,.72) !important; }
+html[data-theme="light"] footer a { color: rgba(255,255,255,.88) !important; }
+html[data-theme="light"] footer a:hover { color: #fff !important; }
 
 /* Feature highlights ("Why Book Me Events") */
 .bme-feature-card {

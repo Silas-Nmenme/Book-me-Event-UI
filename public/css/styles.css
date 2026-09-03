@@ -1037,17 +1037,17 @@ html[data-theme="light"] .bme-navbar .navbar-toggler-icon {
   --bs-table-border-color: var(--surfaceBorder);
 }
 
-html[data-theme="light"] footer {
+html[data-theme="light"] .footer {
   color: var(--text);
 }
 
-html[data-theme="light"] footer .text-white,
-html[data-theme="light"] footer .text-white-50,
-html[data-theme="light"] footer a {
+html[data-theme="light"] .footer .text-white,
+html[data-theme="light"] .footer .text-white-50,
+html[data-theme="light"] .footer a {
   color: var(--mutedText) !important;
 }
 
-html[data-theme="light"] footer .fw-bold { color: var(--text); }
+html[data-theme="light"] .footer .fw-bold { color: var(--text); }
 
 .modal-content.bg-dark.text-light {
   background: var(--surface-strong) !important;
