@@ -312,6 +312,11 @@
             pageInfoEl.textContent = `Page ${bookingsState.page} of ${bookingsState.pages} (${total} bookings)`;
           }
 
+          const btnPrevEl = document.getElementById('btnBookingsPrev');
+          const btnNextEl = document.getElementById('btnBookingsNext');
+          if (btnPrevEl) btnPrevEl.disabled = bookingsState.page <= 1;
+          if (btnNextEl) btnNextEl.disabled = bookingsState.page >= bookingsState.pages;
+
           if (!Array.isArray(items) || items.length === 0) {
             noBookingsEl?.classList.remove('d-none');
             return;

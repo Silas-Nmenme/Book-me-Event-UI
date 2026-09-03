@@ -301,6 +301,11 @@ async function renderUsers() {
       pageInfoEl.textContent = `Page ${usersState.page} of ${usersState.pages} (${total} users)`;
     }
 
+    const btnUsersPrevEl = document.getElementById('btnUsersPrev');
+    const btnUsersNextEl = document.getElementById('btnUsersNext');
+    if (btnUsersPrevEl) btnUsersPrevEl.disabled = usersState.page <= 1;
+    if (btnUsersNextEl) btnUsersNextEl.disabled = usersState.page >= usersState.pages;
+
     if (!Array.isArray(users) || users.length === 0) {
       bodyEl.innerHTML = `<tr><td colspan="6" class="text-muted-soft">No users found.</td></tr>`;
       return;
@@ -429,6 +434,11 @@ async function renderAllVendors() {
       const total = res?.total ?? vendors.length;
       pageInfoEl.textContent = `Page ${vendorsState.page} of ${vendorsState.pages} (${total} vendors)`;
     }
+
+    const btnVendorsPrevEl = document.getElementById('btnVendorsPrev');
+    const btnVendorsNextEl = document.getElementById('btnVendorsNext');
+    if (btnVendorsPrevEl) btnVendorsPrevEl.disabled = vendorsState.page <= 1;
+    if (btnVendorsNextEl) btnVendorsNextEl.disabled = vendorsState.page >= vendorsState.pages;
 
     if (!Array.isArray(vendors) || vendors.length === 0) {
       bodyEl.innerHTML = `<tr><td colspan="6" class="text-muted-soft">No vendors found.</td></tr>`;

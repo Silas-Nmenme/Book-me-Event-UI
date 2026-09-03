@@ -316,6 +316,11 @@
             pageInfoEl.textContent = `Page ${paymentsState.page} of ${paymentsState.pages} (${total} payments)`;
           }
 
+          const btnPrevEl = document.getElementById('btnPaymentsPrev');
+          const btnNextEl = document.getElementById('btnPaymentsNext');
+          if (btnPrevEl) btnPrevEl.disabled = paymentsState.page <= 1;
+          if (btnNextEl) btnNextEl.disabled = paymentsState.page >= paymentsState.pages;
+
           if (!Array.isArray(items) || items.length === 0) {
             noPaymentsEl?.classList.remove('d-none');
             return;

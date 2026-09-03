@@ -69,7 +69,8 @@ export function initPaymentsPage() {
   }
 
   let page = 1;
-  const limit = 10;
+  let totalPages = 1;
+  const limit = 20;
 
   function setLoading(on) {
     loadingEl?.classList.toggle('d-none', !on);
@@ -192,12 +193,15 @@ export function initPaymentsPage() {
       const items = data?.data || data?.results || data?.items || [];
 
       const total = data?.total ?? items.length;
-      const pages = data?.pages ?? undefined;
+      const pages = data?.pages ?? 1;
       const cur = data?.currentPage ?? page;
-      shellMeta.textContent = `Page ${cur}${pages ? ` of ${pages}` : ''} • Total: ${total}`;
+      totalPages = pages || 1;
+      shellMeta.textContent = `Page ${cur} of ${totalPages} • Total: ${total} payment${total === 1 ? '' : 's'}`;
 
       if (!Array.isArray(items) || items.length === 0) {
         emptyEl?.classList.remove('d-none');
+        btnPrev.disabled = page <= 1;
+        btnNext.disabled = true;
         return;
       }
 
@@ -243,9 +247,9 @@ export function initPaymentsPage() {
         });
       });
 
-      // pagination: enable/disable via best effort
+      // pagination: reflect actual total pages from the server
       btnPrev.disabled = page <= 1;
-      btnNext.disabled = false;
+      btnNext.disabled = page >= totalPages;
 
       setLoading(false);
     } catch (e) {
@@ -280,6 +284,7 @@ export function initPaymentsPage() {
   });
 
   btnNext?.addEventListener('click', async () => {
+    if (page >= totalPages) return;
     page += 1;
     await refresh();
   });
