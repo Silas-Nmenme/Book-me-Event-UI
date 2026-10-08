@@ -37,6 +37,7 @@
           <div class="ms-auto d-flex gap-2 align-items-center justify-content-end flex-wrap">
             <a class="btn btn-soft" href="user-dashboard.html">Dashboard</a>
             <a class="btn btn-soft" href="user-activity.html">Activity</a>
+            <a class="btn btn-brand" href="report-vendor.html">Report a Vendor</a>
 
             <button
               id="themeToggleBtn"
@@ -64,6 +65,7 @@
               <div class="badge badge-glow mb-3">Support tickets</div>
               <h2 class="h5 fw-bold mb-1" id="ticketsTitle">Create a ticket</h2>
               <div class="text-muted-soft small mb-3">Get help about requests, bookings, payments, or chats.</div>
+              <a class="btn btn-outline-danger btn-sm mb-3" href="report-vendor.html">Report a Vendor</a>
 
               <div class="alert alert-info d-none" id="formInfo" role="alert"></div>
               <div class="alert alert-danger d-none" id="formError" role="alert"></div>
@@ -75,11 +77,25 @@
                 </div>
 
                 <div class="mb-3">
+                  <label class="form-label" for="ticketCategory">Category</label>
+                  <select class="form-select" id="ticketCategory" title="Category">
+                    <option value="GENERAL">General</option>
+                    <option value="ACCOUNT">Account</option>
+                    <option value="BOOKING">Booking</option>
+                    <option value="PAYMENT">Payment</option>
+                    <option value="SERVICE">Service</option>
+                    <option value="TECHNICAL">Technical</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
                   <label class="form-label">Priority</label>
                   <select class="form-select" id="ticketPriority" title="Priority">
                     <option value="LOW">LOW</option>
                     <option value="MEDIUM" selected>MEDIUM</option>
                     <option value="HIGH">HIGH</option>
+                    <option value="URGENT">URGENT</option>
                   </select>
                 </div>
 
@@ -115,6 +131,7 @@
                     <option value="">All statuses</option>
                     <option value="OPEN">OPEN</option>
                     <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    <option value="WAITING_RESPONSE">WAITING FOR RESPONSE</option>
                     <option value="RESOLVED">RESOLVED</option>
                     <option value="CLOSED">CLOSED</option>
                   </select>
@@ -153,6 +170,7 @@
       const form = document.getElementById('ticketForm');
       const subjectEl = document.getElementById('ticketSubject');
       const descEl = document.getElementById('ticketDescription');
+      const categoryEl = document.getElementById('ticketCategory');
       const priorityEl = document.getElementById('ticketPriority');
       const requestIdEl = document.getElementById('ticketRequestId');
       const bookingIdEl = document.getElementById('ticketBookingId');
@@ -255,6 +273,7 @@
         const payload = {
           subject: subjectEl.value.trim(),
           description: descEl.value.trim(),
+          category: categoryEl.value,
           priority: priorityEl.value,
         };
 

@@ -110,6 +110,8 @@ export async function initUserRequestPage({ role } = {}) {
     return;
   }
 
+  const vendorIdFromQuery = qs('vendorId');
+
   // Editing state
   let editingId = '';
 
@@ -129,16 +131,27 @@ export async function initUserRequestPage({ role } = {}) {
 
   async function loadServices() {
     const res = await apiFetch('/api/v1/services?limit=200', { method: 'GET' });
-    services = res?.data || res?.services || [];
+    const rawServices = res?.data || res?.services || [];
+    services = Array.isArray(rawServices) ? rawServices : [];
 
-    if (!Array.isArray(services) || services.length === 0) {
+    const vendorFilteredServices = vendorIdFromQuery
+      ? services.filter((s) => String(s?.vendor?._id || s?.vendor || '') === String(vendorIdFromQuery))
+      : services;
+
+    if ((!vendorFilteredServices || vendorFilteredServices.length === 0) && vendorIdFromQuery) {
+      toast({ title: 'Vendor services unavailable', message: 'This vendor has no services available right now.', variant: 'warning' });
+    }
+
+    const availableServices = vendorFilteredServices.length ? vendorFilteredServices : services;
+
+    if (!Array.isArray(availableServices) || availableServices.length === 0) {
       toast({ title: 'No services', message: 'No services available to request.', variant: 'danger' });
       return;
     }
 
     serviceSelect.innerHTML =
       `<option value="">Select a service</option>` +
-      services
+      availableServices
         .map((s) => {
           const label = `${s.serviceCategory} - ${s.serviceName}`;
           return `<option value="${escapeHtml(s._id)}">${escapeHtml(label)}</option>`;
@@ -146,7 +159,14 @@ export async function initUserRequestPage({ role } = {}) {
         .join('');
 
     const prefillServiceId = qs('serviceId');
-    if (prefillServiceId) serviceSelect.value = prefillServiceId;
+    if (prefillServiceId) {
+      serviceSelect.value = prefillServiceId;
+      return;
+    }
+
+    if (vendorIdFromQuery && availableServices.length === 1) {
+      serviceSelect.value = availableServices[0]?._id || '';
+    }
   }
 
   async function loadMyRequests() {

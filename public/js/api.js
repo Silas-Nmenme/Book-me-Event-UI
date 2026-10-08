@@ -379,6 +379,10 @@ export async function getVendor(id) {
   return apiFetch(`/api/v1/vendors/${encodeURIComponent(id)}`, { method: 'GET' });
 }
 
+export async function getMyVendor() {
+  return apiFetch('/api/v1/vendors/me', { method: 'GET' });
+}
+
 export async function getVendorServices(id) {
   return apiFetch(`/api/v1/vendors/${encodeURIComponent(id)}/services`, { method: 'GET' });
 }

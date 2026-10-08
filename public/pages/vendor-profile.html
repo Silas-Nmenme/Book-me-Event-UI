@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor profile - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="index.html"><span class="brand-pill"><span class="brand-dot"></span><span class="fw-bold">Book Me Events</span></span></a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-soft" href="services.html">Browse services</a>
+          <button id="themeToggleBtn" class="btn btn-soft btn-sm bme-theme-toggle" type="button" aria-label="Toggle dark/light theme" title="Toggle theme"><span data-icon="sun">☀️</span><span data-icon="moon">🌙</span></button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="section">
+      <div class="container" style="max-width: 1080px">
+        <div id="profileError" class="alert alert-danger d-none" role="alert"></div>
+        <section id="profileHeader" class="d-none mb-4">
+          <div class="row g-4 align-items-center">
+            <div class="col-12 col-md-auto">
+              <img id="vendorPicture" class="rounded-circle border" alt="Vendor profile" style="width: 144px; height: 144px; object-fit: cover" />
+            </div>
+            <div class="col">
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="badge badge-glow" id="vendorCategory">Vendor</span>
+                <span class="badge text-bg-success d-none" id="vendorVerified">Verified</span>
+              </div>
+              <h1 class="h2 fw-bold mb-1" id="vendorName"></h1>
+              <div class="text-muted-soft" id="vendorLocation"></div>
+              <div class="d-flex flex-wrap gap-2 mt-3" id="vendorContacts"></div>
+              <div class="mt-3"><button id="saveVendorButton" class="btn btn-soft btn-sm d-none" type="button">Save vendor</button></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="row g-4">
+          <div class="col-12 col-lg-8">
+            <section id="aboutSection" class="card card-glass p-4 mb-4 d-none">
+              <h2 class="h5 fw-bold">About</h2>
+              <p id="vendorBio" class="mb-2"></p>
+              <p id="vendorDescription" class="text-muted-soft mb-0"></p>
+            </section>
+            <section id="gallerySection" class="mb-4 d-none">
+              <h2 class="h5 fw-bold mb-3">Portfolio</h2>
+              <div id="vendorGallery" class="row g-3"></div>
+            </section>
+            <section id="servicesSection" class="mb-4 d-none">
+              <h2 class="h5 fw-bold mb-3">Services</h2>
+              <div id="vendorServices" class="row g-3"></div>
+            </section>
+            <section id="reviewsSection" class="mb-4 d-none">
+              <h2 class="h5 fw-bold mb-3">Client reviews</h2>
+              <div id="vendorReviews" class="d-grid gap-3"></div>
+            </section>
+          </div>
+          <aside class="col-12 col-lg-4">
+            <section id="coverageSection" class="card card-glass p-4 mb-4 d-none">
+              <h2 class="h6 fw-bold">Service area</h2>
+              <div id="coverageStateList" class="d-flex flex-wrap gap-2 mb-2"></div>
+              <div id="coverageAreaList" class="small text-muted-soft"></div>
+            </section>
+            <section id="socialSection" class="card card-glass p-4 d-none">
+              <h2 class="h6 fw-bold">Follow this vendor</h2>
+              <div id="socialLinks" class="d-flex flex-column gap-2"></div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <script type="module">
+      import { apiFetch, fetchMe, getVendor, getVendorReviews, getVendorServices, getToken } from '../js/api.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+
+      initThemeToggle();
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+      const safeHttpUrl = (value) => /^https?:\/\//i.test(String(value || '')) ? String(value) : '';
+      const id = new URLSearchParams(window.location.search).get('id');
+
+      function formatDate(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+      }
+
+      async function loadProfile() {
+        if (!id) throw new Error('Vendor profile was not specified.');
+        const [vendorResult, reviewResult, serviceResult] = await Promise.allSettled([
+          getVendor(id),
+          getVendorReviews(id),
+          getVendorServices(id),
+        ]);
+        if (vendorResult.status !== 'fulfilled') throw vendorResult.reason;
+
+        const vendor = vendorResult.value?.data || vendorResult.value;
+        const reviews = reviewResult.status === 'fulfilled'
+          ? (reviewResult.value?.data?.data || reviewResult.value?.data || [])
+          : [];
+        const services = serviceResult.status === 'fulfilled'
+          ? (serviceResult.value?.data?.data || serviceResult.value?.data || [])
+          : [];
+        const user = vendor.user || {};
+        const saveButton = document.getElementById('saveVendorButton');
+        const signedInUser = getToken() ? await fetchMe().catch(() => null) : null;
+        const currentUser = signedInUser?.data || signedInUser;
+        if (currentUser?.role === 'USER' && saveButton) {
+          const favoriteResponse = await apiFetch('/api/v1/users/me/favorites').catch(() => null);
+          const favoriteVendors = Array.isArray(favoriteResponse?.data) ? favoriteResponse.data : [];
+          let isSaved = favoriteVendors.some((item) => String(item?._id || item?.id) === String(vendor._id || id));
+          saveButton.textContent = isSaved ? 'Remove from saved' : 'Save vendor';
+          saveButton.classList.remove('d-none');
+          saveButton.addEventListener('click', async () => {
+            saveButton.disabled = true;
+            try {
+              const vendorId = vendor._id || id;
+              await apiFetch(`/api/v1/users/me/favorites/${encodeURIComponent(vendorId)}`, {
+                method: isSaved ? 'DELETE' : 'POST',
+              });
+              isSaved = !isSaved;
+              saveButton.textContent = isSaved ? 'Remove from saved' : 'Save vendor';
+            } catch (error) {
+              window.alert(error?.message || 'Could not update saved vendors.');
+            } finally {
+              saveButton.disabled = false;
+            }
+          });
+        }
+
+        document.title = `${vendor.businessName || 'Vendor'} - Book Me Events`;
+        document.getElementById('vendorName').textContent = vendor.businessName || 'Vendor';
+        document.getElementById('vendorCategory').textContent = vendor.serviceCategories?.[0] || 'Vendor';
+        document.getElementById('vendorLocation').textContent = [vendor.currentLocation?.city, vendor.currentLocation?.state].filter(Boolean).join(', ');
+        const picture = safeHttpUrl(vendor.profilePicture || user.profilePicture);
+        const image = document.getElementById('vendorPicture');
+        if (picture) image.src = picture;
+        else image.classList.add('d-none');
+        if (vendor.isVerified) document.getElementById('vendorVerified').classList.remove('d-none');
+        document.getElementById('profileHeader').classList.remove('d-none');
+
+        const contactParts = [];
+        if (user.email) contactParts.push(`<a class="btn btn-brand btn-sm" href="mailto:${encodeURIComponent(user.email)}">Email vendor</a>`);
+        if (user.phone) contactParts.push(`<a class="btn btn-soft btn-sm" href="tel:${encodeURIComponent(user.phone)}">Call vendor</a>`);
+        document.getElementById('vendorContacts').innerHTML = contactParts.join('');
+
+        const aboutText = vendor.bio || vendor.testimonial || vendor.businessDescription;
+        if (aboutText || vendor.businessDescription) {
+          document.getElementById('vendorBio').textContent = vendor.bio || vendor.testimonial || '';
+          document.getElementById('vendorDescription').textContent = vendor.businessDescription || '';
+          document.getElementById('aboutSection').classList.remove('d-none');
+        }
+
+        const gallery = (vendor.gallery || []).filter((item) => safeHttpUrl(item.url));
+        if (gallery.length) {
+          document.getElementById('vendorGallery').innerHTML = gallery.map((item) => `
+            <div class="col-6 col-md-4"><figure class="card card-glass h-100 overflow-hidden mb-0">
+              <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.caption || `${vendor.businessName} portfolio image`)}" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+              ${item.caption ? `<figcaption class="p-2 small">${escapeHtml(item.caption)}</figcaption>` : ''}
+            </figure></div>`).join('');
+          document.getElementById('gallerySection').classList.remove('d-none');
+        }
+
+        const coverageStates = vendor.serviceCoverageStates || [];
+        const coverageAreas = vendor.coverageAreas || [];
+        if (coverageStates.length || coverageAreas.length) {
+          document.getElementById('coverageStateList').innerHTML = coverageStates.map((state) => `<span class="badge text-bg-light border">${escapeHtml(state)}</span>`).join('');
+          document.getElementById('coverageAreaList').textContent = coverageAreas.join(', ');
+          document.getElementById('coverageSection').classList.remove('d-none');
+        }
+
+        const socialLabels = { facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', whatsapp: 'WhatsApp' };
+        const socialItems = Object.entries(vendor.socialLinks || {}).filter(([, url]) => safeHttpUrl(url));
+        if (socialItems.length) {
+          document.getElementById('socialLinks').innerHTML = socialItems.map(([key, url]) => `<a class="link-body-emphasis" href="${escapeHtml(safeHttpUrl(url))}" target="_blank" rel="noopener noreferrer">${socialLabels[key] || escapeHtml(key)}</a>`).join('');
+          document.getElementById('socialSection').classList.remove('d-none');
+        }
+
+        if (services.length) {
+          document.getElementById('vendorServices').innerHTML = services.map((service) => `
+            <div class="col-12 col-md-6"><article class="card card-glass p-3 h-100">
+              <h3 class="h6 fw-bold">${escapeHtml(service.serviceName || 'Service')}</h3>
+              <p class="small text-muted-soft flex-grow-1">${escapeHtml(service.description || '')}</p>
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <span>${escapeHtml(service.priceCurrency || 'NGN')} ${Number(service.basePrice || 0).toLocaleString()}</span>
+                <a class="btn btn-brand btn-sm" href="user-request.html?serviceId=${encodeURIComponent(service._id || '')}">Request</a>
+              </div>
+            </article></div>`).join('');
+          document.getElementById('servicesSection').classList.remove('d-none');
+        }
+
+        const combinedReviews = [...(vendor.previousReviews || []), ...reviews];
+        if (combinedReviews.length) {
+          document.getElementById('vendorReviews').innerHTML = combinedReviews.map((review) => {
+            const reviewer = review.reviewerName || `${review.user?.firstName || ''} ${review.user?.lastName || ''}`.trim() || 'Client';
+            return `<article class="card card-glass p-3"><div class="d-flex justify-content-between gap-2"><strong>${escapeHtml(reviewer)}</strong><span aria-label="Rating ${escapeHtml(review.rating)} out of 5">${escapeHtml(review.rating || '—')}/5</span></div><p class="mb-1 mt-2">${escapeHtml(review.reviewText || review.comment || '')}</p><div class="small text-muted-soft">${escapeHtml(formatDate(review.reviewDate || review.createdAt))}</div></article>`;
+          }).join('');
+          document.getElementById('reviewsSection').classList.remove('d-none');
+        }
+      }
+
+      loadProfile().catch((error) => {
+        const box = document.getElementById('profileError');
+        box.textContent = error?.message || 'Could not load this vendor profile.';
+        box.classList.remove('d-none');
+      });
+    </script>
+  </body>
+</html>

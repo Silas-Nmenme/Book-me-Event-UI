@@ -77,13 +77,15 @@
           <a class="bme-nav-link active" href="user-dashboard.html">Dashboard</a>
           <a class="bme-nav-link" href="bookings.html">My Bookings</a>
           <a class="bme-nav-link" href="services.html">Browse Vendors</a>
+          <a class="bme-nav-link" href="saved-vendors.html">Saved vendors</a>
           <a class="bme-nav-link" href="user-request.html">My Requests</a>
           <a class="bme-nav-link" href="user-message.html">Messages</a>
           <a class="bme-nav-link" href="annoncement.html">Announcements</a>
           <a class="bme-nav-link" href="payments.html">Payments</a>
           <a class="bme-nav-link" href="reviews.html">My Reviews</a>
           <a class="bme-nav-link" href="user-tickets.html">Support</a>
-          <a class="bme-nav-link" href="settings.html">Settings</a>
+          <a class="bme-nav-link" href="profile.html">Profile</a>
+          <a class="bme-nav-link" href="settings.html#security">Settings & security</a>
         </div>
 
         <div class="mt-auto pt-3">
@@ -138,6 +140,23 @@
                     </div>
                   </div>
 
+                  <div class="dropdown">
+                    <button class="btn btn-soft position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                      <span aria-hidden="true">♢</span>
+                      <span id="notificationUnreadCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bme-popover-menu p-2">
+                      <div class="px-2 pt-1 pb-2 small fw-bold">Notifications</div>
+                      <div id="notificationList" class="px-2 bme-scroll-panel" style="max-height: 320px; min-width: 280px">
+                        <div id="notificationEmpty" class="small text-muted-soft py-2">No notifications.</div>
+                      </div>
+                      <div class="px-2 pt-2">
+                        <button class="dropdown-item" type="button" id="notificationsMarkAllRead">Mark all as read</button>
+                        <a class="dropdown-item" href="notifications.html">View all notifications</a>
+                      </div>
+                    </div>
+                  </div>
+
                   <button id="themeToggleBtn" class="btn btn-soft bme-theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
                     <span data-icon="sun">☀️</span>
                     <span data-icon="moon">🌙</span>
@@ -175,20 +194,20 @@
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
                 <div class="bme-stat-card h-100">
                   <div class="bme-stat-card__header">
-                    <div class="bme-stat-card__label">Bookings</div>
+                    <div class="bme-stat-card__label">Accepted requests</div>
                     <div class="bme-icon-chip bme-icon-chip--brand">📅</div>
                   </div>
-                  <div class="bme-stat-card__value" id="statBookings">—</div>
+                  <div class="bme-stat-card__value" id="statAcceptedRequests">—</div>
                 </div>
               </div>
 
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
                 <div class="bme-stat-card h-100">
                   <div class="bme-stat-card__header">
-                    <div class="bme-stat-card__label">Support</div>
+                    <div class="bme-stat-card__label">Open tickets</div>
                     <div class="bme-icon-chip bme-icon-chip--brand">🎫</div>
                   </div>
-                  <div class="bme-stat-card__value" id="statTickets">—</div>
+                  <div class="bme-stat-card__value" id="statOpenTickets">—</div>
                 </div>
               </div>
 
@@ -205,7 +224,7 @@
               <div class="col-12 col-md-4 col-lg-2 dashboard-card">
                 <div class="bme-stat-card h-100">
                   <div class="bme-stat-card__header">
-                    <div class="bme-stat-card__label">Completed</div>
+                    <div class="bme-stat-card__label">Completed services</div>
                     <div class="bme-icon-chip bme-icon-chip--success">✅</div>
                   </div>
                   <div class="bme-stat-card__value" id="statCompletedBookings">—</div>
@@ -219,6 +238,26 @@
                     <div class="bme-icon-chip bme-icon-chip--pink">⭐</div>
                   </div>
                   <div class="bme-stat-card__value" id="statAvgRating">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Payments</div>
+                    <div class="bme-icon-chip bme-icon-chip--success">₦</div>
+                  </div>
+                  <div class="bme-stat-card__value" id="statTotalPayments">—</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4 col-lg-2 dashboard-card">
+                <div class="bme-stat-card h-100">
+                  <div class="bme-stat-card__header">
+                    <div class="bme-stat-card__label">Unread messages</div>
+                    <div class="bme-icon-chip bme-icon-chip--pink">✉</div>
+                  </div>
+                  <div class="bme-stat-card__value" id="statUnreadMessages">—</div>
                 </div>
               </div>
             </div>
@@ -327,6 +366,7 @@
 
     <!-- Bootstrap bundle (for dropdowns) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <!-- Chart + Leaflet in widgets (CDN load from widgets) -->
 
@@ -343,6 +383,7 @@
       import { initReviewNudgeWidget } from '../js/widgets/review-nudge.js';
       import { initVendorMapWidget } from '../js/widgets/vendor-map.js';
       import { initAnnouncements } from '../js/pages/announcements.js';
+      import { initNotificationCenter } from '../js/pages/notifications.js';
 
       const yearEl = document.getElementById('year');
       if (yearEl) yearEl.textContent = new Date().getFullYear().toString();
@@ -413,10 +454,12 @@
           const res = await apiFetch('/api/v1/dashboard/user', { method: 'GET' });
           const data = res?.data || res;
           document.getElementById('statRequests').textContent = data?.requestsTotal ?? '—';
-          document.getElementById('statBookings').textContent = data?.bookingsTotal ?? '—';
-          document.getElementById('statTickets').textContent = data?.ticketsTotal ?? '—';
+          document.getElementById('statAcceptedRequests').textContent = data?.requestsAccepted ?? '—';
+          document.getElementById('statOpenTickets').textContent = data?.openTickets ?? '—';
           document.getElementById('statPendingRequests').textContent = data?.requestsPending ?? '—';
           document.getElementById('statCompletedBookings').textContent = data?.bookingsCompleted ?? '—';
+          document.getElementById('statTotalPayments').textContent = data?.totalPayments ?? '—';
+          document.getElementById('statUnreadMessages').textContent = data?.unreadMessages ?? '—';
 
           // Rating
           // If backend returns averageRating: render it (including 0). Otherwise show —.
@@ -449,6 +492,7 @@
         initActivityFeedWidget();
         initReviewNudgeWidget();
         initVendorMapWidget();
+        initNotificationCenter({ userId: user?._id || user?.id || user?.user?._id });
 
         try {
           const role = user?.role || user?.user?.role;
@@ -457,17 +501,14 @@
           document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
             e.preventDefault();
 
-            const dotEl = document.getElementById('announcementBellDot');
-            if (dotEl) {
-              dotEl.textContent = '';
-              dotEl.style.display = 'none';
-            }
-
             try {
+              const { markAllAnnouncementsRead, initAnnouncements } = await import('./../js/pages/announcements.js');
+              await markAllAnnouncementsRead();
               await initAnnouncements({ role });
-            } catch {}
-
-            toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
+              toast({ title: 'Marked', message: 'Announcements marked as read.', variant: 'success' });
+            } catch (err) {
+              toast({ title: 'Failed', message: err?.message || 'Could not mark announcements as read.', variant: 'danger' });
+            }
           });
         } catch {}
       }

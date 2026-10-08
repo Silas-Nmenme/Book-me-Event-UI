@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saved vendors - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html"><span class="brand-pill"><span class="brand-dot" aria-hidden="true"></span><span class="fw-bold">Book Me Events</span></span></a>
+        <a class="btn btn-soft" href="user-dashboard.html">Dashboard</a>
+      </div>
+    </nav>
+    <main class="section">
+      <div class="container" style="max-width: 980px">
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+          <div>
+            <div class="badge badge-glow mb-2">Your shortlist</div>
+            <h1 class="h3 fw-bold mb-0">Saved vendors</h1>
+          </div>
+          <a class="btn btn-brand" href="services.html">Browse vendors</a>
+        </div>
+        <div id="favoritesError" class="alert alert-danger d-none" role="alert"></div>
+        <div id="favoritesList" class="row g-3" aria-live="polite"></div>
+        <section id="favoritesEmpty" class="card card-glass p-4 d-none" aria-live="polite">
+          <h2 class="h5 fw-bold">No saved vendors yet</h2>
+          <p class="text-muted-soft mb-3">Save vendors you may want to contact later. They will appear here.</p>
+          <div><a class="btn btn-brand" href="services.html">Browse vendors</a></div>
+        </section>
+      </div>
+    </main>
+    <script type="module">
+      import { apiFetch, fetchMe, clearToken } from '../js/api.js';
+      import { toast } from '../js/ui.js';
+
+      const list = document.getElementById('favoritesList');
+      const empty = document.getElementById('favoritesEmpty');
+      const error = document.getElementById('favoritesError');
+
+      function render(vendors) {
+        list.replaceChildren();
+        empty.classList.toggle('d-none', vendors.length > 0);
+        for (const vendor of vendors) {
+          const id = vendor?._id || vendor?.id;
+          if (!id) continue;
+          const column = document.createElement('div');
+          column.className = 'col-12 col-md-6';
+          const card = document.createElement('article');
+          card.className = 'card card-glass p-3 h-100';
+          const title = document.createElement('h2');
+          title.className = 'h5 fw-bold';
+          title.textContent = vendor.businessName || 'Vendor';
+          const detail = document.createElement('p');
+          detail.className = 'small text-muted-soft flex-grow-1';
+          detail.textContent = [vendor.serviceCategories?.join(', '), vendor.currentLocation?.city, vendor.currentLocation?.state]
+            .filter(Boolean).join(' · ') || 'Service details are not available.';
+          const rating = document.createElement('div');
+          rating.className = 'small mb-3';
+          rating.textContent = vendor.rating ? `${vendor.rating} / 5 · ${vendor.totalReviews || 0} reviews` : 'No ratings yet';
+          const actions = document.createElement('div');
+          actions.className = 'd-flex gap-2';
+          const view = document.createElement('a');
+          view.className = 'btn btn-brand btn-sm';
+          view.href = `vendor-profile.html?id=${encodeURIComponent(id)}`;
+          view.textContent = 'View profile';
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'btn btn-soft btn-sm';
+          remove.textContent = 'Remove';
+          remove.addEventListener('click', async () => {
+            remove.disabled = true;
+            try {
+              await apiFetch(`/api/v1/users/me/favorites/${encodeURIComponent(id)}`, { method: 'DELETE' });
+              await load();
+              toast({ title: 'Removed', message: 'Vendor removed from your saved list.', variant: 'success' });
+            } catch (e) {
+              remove.disabled = false;
+              toast({ title: 'Could not remove', message: e?.message || 'Try again.', variant: 'danger' });
+            }
+          });
+          actions.append(view, remove);
+          card.append(title, detail, rating, actions);
+          column.append(card);
+          list.append(column);
+        }
+      }
+
+      async function load() {
+        error.classList.add('d-none');
+        try {
+          await fetchMe();
+          const response = await apiFetch('/api/v1/users/me/favorites');
+          render(Array.isArray(response?.data) ? response.data : []);
+        } catch (e) {
+          if (e?.status === 401 || e?.status === 403) {
+            clearToken();
+            window.location.replace('auth-login.html');
+            return;
+          }
+          error.textContent = e?.message || 'Could not load saved vendors.';
+          error.classList.remove('d-none');
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>

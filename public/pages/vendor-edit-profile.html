@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Edit vendor profile - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="vendor-dashboard.html"><span class="brand-pill"><span class="brand-dot"></span><span class="fw-bold">Book Me Events</span></span></a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-soft" href="vendor-dashboard.html">Dashboard</a>
+          <button id="themeToggleBtn" class="btn btn-soft btn-sm bme-theme-toggle" type="button" aria-label="Toggle dark/light theme" title="Toggle theme"><span data-icon="sun">☀️</span><span data-icon="moon">🌙</span></button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="section">
+      <div class="container" style="max-width: 960px">
+        <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+          <div>
+            <div class="badge badge-glow mb-2">Vendor profile</div>
+            <h1 class="h3 fw-bold mb-1">Edit your public profile</h1>
+            <p class="text-muted-soft mb-0">Keep your business details and portfolio current.</p>
+          </div>
+          <a id="publicProfileLink" class="btn btn-soft d-none" href="#">View public profile</a>
+        </div>
+
+        <div id="profileLoadError" class="alert alert-danger d-none" role="alert"></div>
+        <form id="vendorEditForm" class="card card-glass p-3 p-md-4 row g-3">
+          <fieldset id="profileFields" disabled>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="businessName">Business name</label>
+                <input class="form-control" id="businessName" maxlength="100" required />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="businessDescription">Business description</label>
+                <input class="form-control" id="businessDescription" maxlength="2000" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="bio">Vendor bio</label>
+                <textarea class="form-control" id="bio" maxlength="1200" rows="4"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="testimonial">Featured testimonial</label>
+                <textarea class="form-control" id="testimonial" maxlength="800" rows="3"></textarea>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="serviceCategories">Service categories</label>
+                <input class="form-control" id="serviceCategories" placeholder="Photography, Catering" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="coverageAreas">Coverage areas</label>
+                <input class="form-control" id="coverageAreas" placeholder="Ikeja, Lagos Island" />
+              </div>
+              <div class="col-12">
+                <label class="form-label">States served</label>
+                <div id="coverageStates" class="row g-2"></div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="locationCity">Current city</label>
+                <input class="form-control" id="locationCity" maxlength="80" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="locationState">Current state</label>
+                <input class="form-control" id="locationState" maxlength="80" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="facebook">Facebook</label>
+                <input class="form-control" id="facebook" type="url" placeholder="https://..." />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="instagram">Instagram</label>
+                <input class="form-control" id="instagram" type="url" placeholder="https://..." />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="tiktok">TikTok</label>
+                <input class="form-control" id="tiktok" type="url" placeholder="https://..." />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="whatsapp">WhatsApp</label>
+                <input class="form-control" id="whatsapp" type="url" placeholder="https://wa.me/..." />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="profilePictureFile">Profile picture</label>
+                <input class="form-control" id="profilePictureFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                <input id="profilePictureUrl" type="hidden" />
+                <img id="profilePicturePreview" class="mt-2 rounded d-none" alt="Current vendor profile picture" style="width: 96px; height: 96px; object-fit: cover" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="galleryUrls">Portfolio gallery URLs</label>
+                <textarea class="form-control" id="galleryUrls" rows="4" placeholder="One image URL per line"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="galleryFiles">Add gallery images</label>
+                <input class="form-control" id="galleryFiles" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+              </div>
+              <div class="col-12">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                  <label class="form-label mb-0">Previous client reviews</label>
+                  <button class="btn btn-soft btn-sm" type="button" id="addReview">Add review</button>
+                </div>
+                <div id="reviewFields" class="d-grid gap-3"></div>
+              </div>
+              <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                <button class="btn btn-brand" id="saveProfile" type="submit">Save profile</button>
+                <a class="btn btn-soft" href="vendor-dashboard.html">Cancel</a>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </main>
+
+    <script type="module">
+      import { apiFetch, getMyVendor, updateVendor } from '../js/api.js';
+      import { toast, setYear } from '../js/ui.js';
+      import { initThemeToggle } from '../js/theme-toggle.js';
+
+      setYear('year');
+      initThemeToggle();
+
+      const states = ['Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'];
+      const stateHost = document.getElementById('coverageStates');
+      stateHost.innerHTML = states.map((state) => `<div class="col-6 col-md-3"><label class="form-check-label d-flex align-items-center gap-2 border rounded px-2 py-2"><input class="form-check-input coverage-state" type="checkbox" value="${state}"><span>${state}</span></label></div>`).join('');
+
+      const reviewHost = document.getElementById('reviewFields');
+      function addReview(review = {}) {
+        if (reviewHost.children.length >= 5) return;
+        const section = document.createElement('section');
+        section.className = 'border rounded p-3';
+        section.innerHTML = `
+          <div class="row g-2">
+            <div class="col-12 col-md-4"><label class="form-label">Reviewer name</label><input class="form-control review-name" maxlength="120" value=""></div>
+            <div class="col-6 col-md-3"><label class="form-label">Rating (1-5)</label><input class="form-control review-rating" type="number" min="1" max="5" step="1" value="5"></div>
+            <div class="col-6 col-md-5"><label class="form-label">Review date</label><input class="form-control review-date" type="date"></div>
+            <div class="col-12"><label class="form-label">Review</label><textarea class="form-control review-text" maxlength="800" rows="2"></textarea></div>
+            <div class="col-12 text-end"><button class="btn btn-soft btn-sm remove-review" type="button">Remove review</button></div>
+          </div>`;
+        section.querySelector('.review-name').value = review.reviewerName || '';
+        section.querySelector('.review-rating').value = review.rating || 5;
+        section.querySelector('.review-date').value = review.reviewDate ? new Date(review.reviewDate).toISOString().slice(0, 10) : '';
+        section.querySelector('.review-text').value = review.reviewText || '';
+        section.querySelector('.remove-review').addEventListener('click', () => section.remove());
+        reviewHost.append(section);
+      }
+
+      document.getElementById('addReview').addEventListener('click', () => addReview());
+
+      const splitList = (value) => value.split(',').map((item) => item.trim()).filter(Boolean);
+      const profilePictureFile = document.getElementById('profilePictureFile');
+      const galleryFiles = document.getElementById('galleryFiles');
+      const profilePictureUrl = document.getElementById('profilePictureUrl');
+      const profilePreview = document.getElementById('profilePicturePreview');
+
+      async function upload(file, path) {
+        const form = new FormData();
+        form.append('image', file);
+        const result = await apiFetch(path, { method: 'POST', body: form });
+        const data = result?.data || result;
+        if (!data?.url) throw new Error('Image upload did not return a URL.');
+        return data.url;
+      }
+
+      let vendor;
+      try {
+        const response = await getMyVendor();
+        vendor = response?.data || response;
+        document.getElementById('profileFields').disabled = false;
+
+        const values = {
+          businessName: vendor.businessName,
+          businessDescription: vendor.businessDescription,
+          bio: vendor.bio,
+          testimonial: vendor.testimonial,
+          serviceCategories: (vendor.serviceCategories || []).join(', '),
+          coverageAreas: (vendor.coverageAreas || []).join(', '),
+          locationCity: vendor.currentLocation?.city,
+          locationState: vendor.currentLocation?.state,
+          facebook: vendor.socialLinks?.facebook,
+          instagram: vendor.socialLinks?.instagram,
+          tiktok: vendor.socialLinks?.tiktok,
+          whatsapp: vendor.socialLinks?.whatsapp,
+          galleryUrls: (vendor.gallery || []).map((item) => item.url).join('\n'),
+        };
+        Object.entries(values).forEach(([id, value]) => {
+          const input = document.getElementById(id);
+          if (input) input.value = value || '';
+        });
+
+        const served = new Set(vendor.serviceCoverageStates || []);
+        document.querySelectorAll('.coverage-state').forEach((checkbox) => { checkbox.checked = served.has(checkbox.value); });
+        (vendor.previousReviews || []).forEach(addReview);
+        if (!vendor.previousReviews?.length) addReview();
+
+        const picture = vendor.profilePicture || vendor.user?.profilePicture || '';
+        profilePictureUrl.value = picture;
+        if (picture) {
+          profilePreview.src = picture;
+          profilePreview.classList.remove('d-none');
+        }
+        const publicLink = document.getElementById('publicProfileLink');
+        publicLink.href = `vendor-profile.html?id=${encodeURIComponent(vendor._id)}`;
+        publicLink.classList.remove('d-none');
+      } catch (error) {
+        const errorBox = document.getElementById('profileLoadError');
+        errorBox.textContent = error?.message || 'Could not load your vendor profile.';
+        errorBox.classList.remove('d-none');
+      }
+
+      document.getElementById('vendorEditForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!vendor) return;
+        const saveButton = document.getElementById('saveProfile');
+        saveButton.disabled = true;
+
+        try {
+          if (profilePictureFile.files?.[0]) {
+            profilePictureUrl.value = await upload(profilePictureFile.files[0], '/api/v1/uploads/profile-picture');
+          }
+
+          let gallery = document.getElementById('galleryUrls').value.split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
+          for (const file of Array.from(galleryFiles.files || [])) {
+            gallery.push(await upload(file, '/api/v1/uploads/generic'));
+          }
+          gallery = [...new Set(gallery)].map((url) => ({ url }));
+
+          const previousReviews = [...reviewHost.querySelectorAll('section')].map((section) => ({
+            reviewerName: section.querySelector('.review-name').value.trim(),
+            rating: Number(section.querySelector('.review-rating').value),
+            reviewDate: section.querySelector('.review-date').value || undefined,
+            reviewText: section.querySelector('.review-text').value.trim(),
+          })).filter((review) => review.reviewerName || review.reviewText);
+
+          const payload = {
+            businessName: document.getElementById('businessName').value.trim(),
+            businessDescription: document.getElementById('businessDescription').value.trim(),
+            bio: document.getElementById('bio').value.trim(),
+            testimonial: document.getElementById('testimonial').value.trim(),
+            serviceCategories: splitList(document.getElementById('serviceCategories').value),
+            coverageAreas: splitList(document.getElementById('coverageAreas').value),
+            serviceCoverageStates: [...document.querySelectorAll('.coverage-state:checked')].map((checkbox) => checkbox.value),
+            currentLocation: {
+              city: document.getElementById('locationCity').value.trim(),
+              state: document.getElementById('locationState').value.trim(),
+            },
+            socialLinks: {
+              facebook: document.getElementById('facebook').value.trim(),
+              instagram: document.getElementById('instagram').value.trim(),
+              tiktok: document.getElementById('tiktok').value.trim(),
+              whatsapp: document.getElementById('whatsapp').value.trim(),
+            },
+            gallery,
+            previousReviews,
+          };
+          if (profilePictureUrl.value) payload.profilePicture = profilePictureUrl.value;
+          if (!payload.currentLocation.city && !payload.currentLocation.state) delete payload.currentLocation;
+
+          const response = await updateVendor(vendor._id, payload);
+          vendor = response?.data || response;
+          toast({ title: 'Profile saved', message: 'Your public vendor profile has been updated.', variant: 'success' });
+          window.location.href = `vendor-profile.html?id=${encodeURIComponent(vendor._id)}`;
+        } catch (error) {
+          toast({ title: 'Could not save profile', message: error?.message || 'Please check your entries and try again.', variant: 'danger' });
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

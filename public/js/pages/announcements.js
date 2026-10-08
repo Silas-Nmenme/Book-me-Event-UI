@@ -76,6 +76,19 @@ function setupBellUI(items) {
   listEl.innerHTML = previewItems.map(renderBellItem).join('');
 }
 
+export async function markAllAnnouncementsRead() {
+  const res = await apiFetch('/api/v1/announcements?unreadOnly=true&page=1&limit=200', { method: 'GET' });
+  const data = res?.data || res;
+  const items = Array.isArray(data) ? data : data?.data || data?.items || [];
+  const ids = items.map((item) => item?._id || item?.id).filter(Boolean);
+
+  await Promise.allSettled(
+    ids.map((id) => apiFetch(`/api/v1/announcements/${encodeURIComponent(id)}/read`, { method: 'POST' }))
+  );
+
+  return ids.length;
+}
+
 export async function initAnnouncements({ role } = {}) {
   const shell = document.getElementById('announcementsShell');
   const listEl = document.getElementById('announcementsList');
@@ -89,7 +102,7 @@ export async function initAnnouncements({ role } = {}) {
   if (!hasListUI) {
     // Still attempt to fill bell UI if present.
     try {
-      const res = await apiFetch('/api/v1/announcements?page=1&limit=5', { method: 'GET' });
+      const res = await apiFetch('/api/v1/announcements?unreadOnly=true&page=1&limit=5', { method: 'GET' });
       const data = res?.data || res;
       const items = Array.isArray(data) ? data : data?.data || data?.items || [];
       setupBellUI(items);

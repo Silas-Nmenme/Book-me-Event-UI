@@ -16,6 +16,7 @@ function statusPill(status) {
   if (s === 'PENDING') return { cls: 'bme-pill--pending', label: 'PENDING' };
   if (s === 'FAILED') return { cls: 'bme-pill--cancelled', label: 'FAILED' };
   if (s === 'REFUNDED') return { cls: 'bme-pill--refunded', label: 'REFUNDED' };
+  if (s === 'CANCELLED') return { cls: 'bme-pill--cancelled', label: 'CANCELLED' };
   if (s === 'REFUND') return { cls: 'bme-pill--refunded', label: 'REFUND' };
   return { cls: 'bme-pill', label: s || '—' };
 }

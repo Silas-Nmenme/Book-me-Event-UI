@@ -125,6 +125,30 @@
                 </div>
               </form>
             </div>
+
+            <div id="security" class="bme-section fade-slide mt-4">
+              <div class="badge badge-glow text-white mb-2">Security</div>
+              <h3 class="h5 fw-bold">Change password</h3>
+              <div class="alert alert-danger d-none" id="passwordError" role="alert"></div>
+              <div class="alert alert-success d-none" id="passwordSuccess" role="status"></div>
+              <form id="passwordForm" autocomplete="off">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label" for="currentPassword">Current password</label>
+                    <input class="form-control" id="currentPassword" type="password" autocomplete="current-password" required />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="newPassword">New password</label>
+                    <input class="form-control" id="newPassword" type="password" autocomplete="new-password" minlength="8" required />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="passwordConfirm">Confirm new password</label>
+                    <input class="form-control" id="passwordConfirm" type="password" autocomplete="new-password" minlength="8" required />
+                  </div>
+                  <div class="col-12"><button class="btn btn-brand" id="btnChangePassword" type="submit">Update password</button></div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -169,6 +193,9 @@
       const lastNameEl = document.getElementById('lastName');
       const emailEl = document.getElementById('email');
       const phoneEl = document.getElementById('phone');
+      const passwordForm = document.getElementById('passwordForm');
+      const passwordError = document.getElementById('passwordError');
+      const passwordSuccess = document.getElementById('passwordSuccess');
 
       const avatarEl = document.getElementById('avatar');
       const avatarFileInput = document.getElementById('profilePictureInput');
@@ -294,6 +321,32 @@
         } finally {
           document.getElementById('btnSave').disabled = false;
           document.getElementById('btnSave').textContent = 'Save changes';
+        }
+      });
+
+      passwordForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        passwordError.classList.add('d-none');
+        passwordSuccess.classList.add('d-none');
+        const button = document.getElementById('btnChangePassword');
+        button.disabled = true;
+        try {
+          await apiFetch('/api/v1/auth/change-password', {
+            method: 'PUT',
+            body: {
+              currentPassword: document.getElementById('currentPassword').value,
+              newPassword: document.getElementById('newPassword').value,
+              passwordConfirm: document.getElementById('passwordConfirm').value,
+            },
+          });
+          passwordForm.reset();
+          passwordSuccess.textContent = 'Password updated successfully.';
+          passwordSuccess.classList.remove('d-none');
+        } catch (error) {
+          passwordError.textContent = error?.message || 'Could not update the password.';
+          passwordError.classList.remove('d-none');
+        } finally {
+          button.disabled = false;
         }
       });
 

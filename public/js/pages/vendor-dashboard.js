@@ -54,13 +54,9 @@ async function fetchVendorStats({ me, role }) {
   if (myRole !== 'VENDOR') return;
 
   try {
-    const vendorId = getMeVendorId(me);
-    const [analyticsResult, slaResult, servicesResult] = await Promise.allSettled([
+    const [analyticsResult, slaResult] = await Promise.allSettled([
       apiFetch('/api/v1/vendors/analytics', { method: 'GET' }),
       apiFetch('/api/v1/vendors/sla', { method: 'GET' }),
-      vendorId
-        ? apiFetch(`/api/v1/vendors/${encodeURIComponent(vendorId)}/services`, { method: 'GET' })
-        : Promise.resolve([]),
     ]);
 
     const analytics = analyticsResult.status === 'fulfilled'
@@ -69,34 +65,39 @@ async function fetchVendorStats({ me, role }) {
     const sla = slaResult.status === 'fulfilled'
       ? slaResult.value?.data || slaResult.value
       : null;
-    const servicesData = servicesResult.status === 'fulfilled'
-      ? servicesResult.value?.data || servicesResult.value || []
-      : [];
-    const serviceCount = Array.isArray(servicesData)
-      ? servicesData.length
-      : Array.isArray(servicesData?.data || servicesData?.services)
-        ? (servicesData.data || servicesData.services).length
-        : 0;
 
+    const totalServices = Number(analytics?.totalServices ?? analytics?.myServices ?? analytics?.servicesTotal ?? 0);
+    const pendingRequests = Number(analytics?.pendingRequests ?? analytics?.incomingRequests ?? 0);
+    const acceptedRequests = Number(analytics?.acceptedRequests ?? 0);
     const totalBookings = Number(analytics?.totalBookings ?? 0);
     const completedBookings = Number(analytics?.completedBookings ?? 0);
     const pendingBookings = Number(analytics?.pendingBookings ?? Math.max(0, totalBookings - completedBookings));
-    const incomingRequests = Number(analytics?.incomingRequests ?? 0);
-    const acceptedRequests = Number(analytics?.acceptedRequests ?? 0);
+    const openSupportTickets = Number(analytics?.openSupportTickets ?? analytics?.supportTickets ?? 0);
+    const totalPayments = Number(analytics?.totalPayments ?? 0);
+    const totalRevenue = Number(analytics?.totalRevenue ?? 0);
+    const unreadMessages = Number(analytics?.unreadMessages ?? 0);
 
-    setText('vStatRequests', incomingRequests);
+    setText('vStatRequests', pendingRequests);
     setText('vStatAccepted', acceptedRequests);
-    setText('vStatServices', serviceCount);
+    setText('vStatServices', totalServices);
     setText('vStatPendingBookings', pendingBookings);
     setText('vStatCompletedBookings', completedBookings);
+    setText('vStatSupportTickets', openSupportTickets);
+    setText('vStatPayments', totalPayments);
+    setText('vStatRevenue', Number.isFinite(totalRevenue) ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(totalRevenue) : '—');
+    setText('vStatUnreadMessages', unreadMessages);
     setPct('vStatBreachRate', sla?.breachRate ?? 0);
   } catch (e) {
-    setText('vStatRequests', 0);
-    setText('vStatAccepted', 0);
-    setText('vStatServices', 0);
-    setText('vStatPendingBookings', 0);
-    setText('vStatCompletedBookings', 0);
-    setPct('vStatBreachRate', 0);
+    setText('vStatRequests', '—');
+    setText('vStatAccepted', '—');
+    setText('vStatServices', '—');
+    setText('vStatPendingBookings', '—');
+    setText('vStatCompletedBookings', '—');
+    setText('vStatSupportTickets', '—');
+    setText('vStatPayments', '—');
+    setText('vStatRevenue', '—');
+    setText('vStatUnreadMessages', '—');
+    setPct('vStatBreachRate', null);
   }
 }
 

@@ -104,14 +104,59 @@
                   <textarea class="form-control" id="businessDescription" name="businessDescription" rows="3" required></textarea>
                 </div>
 
+                <div class="col-12">
+                  <label class="form-label" for="bio">Vendor bio</label>
+                  <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Tell clients about your experience, style, and what makes your business stand out."></textarea>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="testimonial">Featured testimonial</label>
+                  <textarea class="form-control" id="testimonial" name="testimonial" rows="3" placeholder="Short client or partner quote. Optional but recommended."></textarea>
+                </div>
+
                 <div class="col-12 col-md-6">
-                  <label class="form-label" for="serviceRendered">Service rendered (comma-separated)</label>
-                  <input class="form-control" id="serviceRendered" name="serviceRendered" type="text" placeholder="Photography, Catering" />
+                  <label class="form-label" for="serviceRendered">Service categories (comma-separated)</label>
+                  <input class="form-control" id="serviceRendered" name="serviceRendered" type="text" placeholder="Photography, Catering, Events" />
                 </div>
 
                 <div class="col-12 col-md-6">
                   <label class="form-label" for="coverageAreas">Coverage areas (comma-separated)</label>
-                  <input class="form-control" id="coverageAreas" name="coverageAreas" type="text" placeholder="Lagos, Abuja" />
+                  <input class="form-control" id="coverageAreas" name="coverageAreas" type="text" placeholder="Lagos, Abuja, Port Harcourt" />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label">Service coverage states</label>
+                  <div id="serviceCoverageStatesWrapper" class="row g-2"></div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="currentLocationCity">Current city</label>
+                  <input class="form-control" id="currentLocationCity" name="currentLocationCity" type="text" placeholder="e.g. Ikeja" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="currentLocationState">Current state</label>
+                  <input class="form-control" id="currentLocationState" name="currentLocationState" type="text" placeholder="e.g. Lagos" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="socialInstagram">Instagram</label>
+                  <input class="form-control" id="socialInstagram" name="socialInstagram" type="url" placeholder="https://instagram.com/yourbrand" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="socialFacebook">Facebook</label>
+                  <input class="form-control" id="socialFacebook" name="socialFacebook" type="url" placeholder="https://facebook.com/yourbrand" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="socialTiktok">TikTok</label>
+                  <input class="form-control" id="socialTiktok" name="socialTiktok" type="url" placeholder="https://tiktok.com/@yourbrand" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="socialWhatsapp">WhatsApp</label>
+                  <input class="form-control" id="socialWhatsapp" name="socialWhatsapp" type="url" placeholder="https://wa.me/2348000000000" />
                 </div>
 
                 <div class="col-12 col-md-6">
@@ -120,8 +165,19 @@
                 </div>
 
                 <div class="col-12 col-md-6">
-                  <label class="form-label" for="passportPhotograph">Passport photograph (URL or file upload handled elsewhere)</label>
-                  <input class="form-control" id="passportPhotograph" name="passportPhotograph" type="text" placeholder="Paste image URL or later upload" />
+                  <label class="form-label" for="profilePictureUpload">Profile picture</label>
+                  <input class="form-control" id="profilePictureUpload" name="profilePictureUpload" type="url" placeholder="https://..." />
+                  <input type="hidden" id="profilePicture" name="profilePicture" />
+                  <div class="small text-muted-soft mt-1">Use a hosted image URL for now. You can upload a profile image securely from your dashboard after email verification.</div>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="galleryUrls">Gallery URLs</label>
+                  <textarea class="form-control" id="galleryUrls" name="galleryUrls" rows="3" placeholder="Paste one image URL per line."></textarea>
+                </div>
+
+                <div class="col-12">
+                  <div class="small text-muted-soft">Gallery images can be uploaded securely from your dashboard after email verification.</div>
                 </div>
 
                 <div class="col-12">
@@ -159,6 +215,25 @@
       setYear('year');
       initThemeToggle();
 
+      const allStates = [
+        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno', 'Cross River',
+        'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano',
+        'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo',
+        'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+      ];
+
+      const stateWrapper = document.getElementById('serviceCoverageStatesWrapper');
+      stateWrapper.innerHTML = allStates
+        .map((state) => `
+          <div class="col-6 col-md-4">
+            <label class="form-check-label d-flex align-items-center gap-2 border rounded px-2 py-2">
+              <input class="form-check-input me-1 coverage-state" type="checkbox" value="${state}" />
+              <span>${state}</span>
+            </label>
+          </div>
+        `)
+        .join('');
+
       function splitComma(s) {
         return (s || '')
           .split(',')
@@ -166,8 +241,25 @@
           .filter(Boolean);
       }
 
+      function splitLines(s) {
+        return (s || '')
+          .split(/\r?\n/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+      }
+
       document.getElementById('vendorProfileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const selectedCoverageStates = [...document.querySelectorAll('.coverage-state:checked')].map((node) => node.value);
+        const socialLinks = {
+          facebook: document.getElementById('socialFacebook').value.trim(),
+          instagram: document.getElementById('socialInstagram').value.trim(),
+          tiktok: document.getElementById('socialTiktok').value.trim(),
+          whatsapp: document.getElementById('socialWhatsapp').value.trim(),
+        };
+
+        const galleryUrls = [...new Set(splitLines(document.getElementById('galleryUrls').value))];
 
         const payload = {
           email: document.getElementById('email').value.trim(),
@@ -177,11 +269,26 @@
           bankAccountNumber: document.getElementById('bankAccountNumber').value.trim(),
           bankName: document.getElementById('bankName').value.trim(),
           businessDescription: document.getElementById('businessDescription').value.trim(),
+          bio: document.getElementById('bio').value.trim(),
+          testimonial: document.getElementById('testimonial').value.trim(),
           serviceCategories: splitComma(document.getElementById('serviceRendered').value),
           coverageAreas: splitComma(document.getElementById('coverageAreas').value),
+          serviceCoverageStates: selectedCoverageStates.length ? selectedCoverageStates : undefined,
+          currentLocation: {
+            city: document.getElementById('currentLocationCity').value.trim(),
+            state: document.getElementById('currentLocationState').value.trim(),
+          },
+          socialLinks,
+          profilePicture: document.getElementById('profilePictureUpload').value.trim(),
+          gallery: galleryUrls.length ? galleryUrls.map((url) => ({ url })) : undefined,
+          previousReviews: [],
           nin: document.getElementById('nin').value.trim(),
-          passportPhotograph: document.getElementById('passportPhotograph').value.trim(),
+          passportPhotograph: document.getElementById('profilePictureUpload').value.trim(),
         };
+
+        if (!payload.currentLocation.city && !payload.currentLocation.state) {
+          delete payload.currentLocation;
+        }
 
         const btn = document.getElementById('btnVendorContinue');
         btn.disabled = true;

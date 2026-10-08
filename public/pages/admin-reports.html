@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reports - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <main class="section">
+      <div class="container" style="max-width: 1000px">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+          <div>
+            <div class="badge badge-glow mb-2">Moderation</div>
+            <h1 class="h3 fw-bold mb-0">Participant reports</h1>
+          </div>
+          <a class="btn btn-soft" href="admin-dashboard.html">Admin dashboard</a>
+        </div>
+        <div class="mb-3" style="max-width: 280px">
+          <label class="form-label" for="reportStatusFilter">Filter reports</label>
+          <select id="reportStatusFilter" class="form-select">
+            <option value="">All statuses</option>
+            <option value="PENDING_REVIEW">Pending Review</option>
+            <option value="UNDER_INVESTIGATION">Under Investigation</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="ESCALATED">Escalated</option>
+          </select>
+        </div>
+        <div id="reportError" class="alert alert-danger d-none" role="alert"></div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div id="reportPageInfo" class="small text-muted-soft"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-soft btn-sm" id="reportPrev" type="button">Previous</button>
+            <button class="btn btn-soft btn-sm" id="reportNext" type="button">Next</button>
+          </div>
+        </div>
+        <div id="reportList" class="d-grid gap-3" aria-live="polite"></div>
+        <section id="reportEmpty" class="card card-glass p-4 d-none" aria-live="polite">
+          <h2 class="h5 fw-bold">No reports to review</h2>
+          <p class="text-muted-soft mb-0">New participant reports will appear here.</p>
+        </section>
+      </div>
+    </main>
+    <script type="module">
+      import { apiFetch, fetchMe, clearToken } from '../js/api.js';
+
+      const list = document.getElementById('reportList');
+      const empty = document.getElementById('reportEmpty');
+      const error = document.getElementById('reportError');
+      const statusFilter = document.getElementById('reportStatusFilter');
+      const pageInfo = document.getElementById('reportPageInfo');
+      const previousButton = document.getElementById('reportPrev');
+      const nextButton = document.getElementById('reportNext');
+      let currentPage = 1;
+      let totalPages = 1;
+
+      const appendText = (parent, tagName, className, value) => {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        element.textContent = value || '';
+        parent.append(element);
+        return element;
+      };
+
+      const linkButton = (label, email) => {
+        if (!email) return null;
+        const link = document.createElement('a');
+        link.className = 'btn btn-soft btn-sm';
+        link.href = `mailto:${encodeURIComponent(email)}`;
+        link.textContent = label;
+        return link;
+      };
+
+      async function load() {
+        error.classList.add('d-none');
+        try {
+          const params = new URLSearchParams({ limit: '50', page: String(currentPage) });
+          if (statusFilter.value) params.set('status', statusFilter.value);
+          const reportId = new URLSearchParams(window.location.search).get('reportId');
+          if (reportId) params.set('reportId', reportId);
+          const response = await apiFetch(`/api/v1/admin/reports?${params.toString()}`);
+          const reports = Array.isArray(response?.data) ? response.data : [];
+          totalPages = Math.max(1, Number(response?.pages) || 1);
+          pageInfo.textContent = `${response?.total || 0} reports · Page ${currentPage} of ${totalPages}`;
+          previousButton.disabled = currentPage <= 1;
+          nextButton.disabled = currentPage >= totalPages;
+          list.replaceChildren();
+          empty.classList.toggle('d-none', reports.length > 0);
+          for (const report of reports) {
+            const card = document.createElement('article');
+            card.className = 'card card-glass p-3';
+            const heading = document.createElement('h2');
+            heading.className = 'h6 fw-bold';
+            const reporter = report.reporter || {};
+            const reported = report.reportedUser || {};
+            const vendor = report.vendor || {};
+            heading.textContent = `${report.reportId || report._id} · ${report.reportedRole || 'ACCOUNT'} report`;
+            card.append(heading);
+            const meta = document.createElement('div');
+            meta.className = 'small text-muted-soft mb-2';
+            const reporterName = [reporter.firstName, reporter.lastName].filter(Boolean).join(' ') || reporter.email || 'Unknown';
+            const reportedName = report.reportedRole === 'VENDOR'
+              ? vendor.businessName || reported.email || 'Unknown vendor'
+              : [reported.firstName, reported.lastName].filter(Boolean).join(' ') || reported.email || 'Unknown user';
+            meta.textContent = `Reporter: ${reporterName} · Reported: ${reportedName} · Submitted: ${report.createdAt ? new Date(report.createdAt).toLocaleString() : 'Unknown date'}`;
+            card.append(meta);
+            appendText(card, 'div', 'small mb-2', `Status: ${(report.status || '').replaceAll('_', ' ')} · Priority: ${report.priority || 'MEDIUM'}`);
+            const reasonText = report.reason === 'OTHER' ? report.otherReason || 'Other' : (report.reason || '').replaceAll('_', ' ');
+            appendText(card, 'div', 'fw-semibold mt-2', `Reason: ${reasonText}`);
+            const reason = document.createElement('p');
+            reason.className = 'mb-3 mt-2';
+            reason.textContent = report.description || '';
+            card.append(reason);
+
+            const relationParts = [];
+            if (report.request) relationParts.push(`Request ${report.request._id} · ${report.request.eventDate ? new Date(report.request.eventDate).toLocaleDateString() : ''} · ${report.request.eventLocation || ''}`);
+            if (report.booking) relationParts.push(`Booking ${report.booking._id} · ${report.booking.bookingStatus || ''} · ${report.booking.paymentStatus || ''}`);
+            appendText(card, 'div', 'small text-muted-soft mb-3', relationParts.length ? relationParts.join(' | ') : 'No related request or booking');
+
+            const evidence = document.createElement('div');
+            evidence.className = 'd-flex flex-wrap gap-2 mb-3';
+            appendText(evidence, 'strong', 'small w-100', 'Evidence');
+            for (const asset of report.evidence || []) {
+              const link = document.createElement('a');
+              link.href = asset.url;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.className = 'btn btn-soft btn-sm';
+              link.textContent = `Review ${asset.originalName || 'evidence'}`;
+              evidence.append(link);
+              if (asset.resourceType === 'image') {
+                const imageLink = document.createElement('a');
+                imageLink.href = asset.url;
+                imageLink.target = '_blank';
+                imageLink.rel = 'noopener noreferrer';
+                const image = document.createElement('img');
+                image.src = asset.url;
+                image.alt = `Evidence: ${asset.originalName || 'uploaded image'}`;
+                image.loading = 'lazy';
+                image.style.cssText = 'width: 112px; height: 84px; object-fit: cover; border-radius: 6px';
+                imageLink.append(image);
+                evidence.append(imageLink);
+              }
+            }
+            if (!report.evidence?.length) appendText(evidence, 'span', 'small text-muted-soft', 'No files attached');
+            card.append(evidence);
+
+            const contacts = document.createElement('div');
+            contacts.className = 'd-flex flex-wrap gap-2 mb-3';
+            const reporterContact = linkButton('Contact reporter', reporter.email);
+            const reportedContact = linkButton('Contact reported account', reported.email);
+            if (reporterContact) contacts.append(reporterContact);
+            if (reportedContact) contacts.append(reportedContact);
+            card.append(contacts);
+
+            if (Array.isArray(report.internalNotes) && report.internalNotes.length) {
+              const history = document.createElement('div');
+              history.className = 'small border-top pt-2 mb-3';
+              appendText(history, 'strong', '', 'Internal note history');
+              for (const entry of report.internalNotes) {
+                const adminName = [entry.admin?.firstName, entry.admin?.lastName].filter(Boolean).join(' ') || entry.admin?.email || 'Admin';
+                appendText(history, 'div', 'text-muted-soft mt-1', `${adminName} · ${entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ''}: ${entry.note}`);
+              }
+              card.append(history);
+            }
+            if (Array.isArray(report.moderationActions) && report.moderationActions.length) {
+              const actionHistory = document.createElement('div');
+              actionHistory.className = 'small border-top pt-2 mb-3';
+              appendText(actionHistory, 'strong', '', 'Moderation action history');
+              for (const entry of report.moderationActions) {
+                const adminName = [entry.admin?.firstName, entry.admin?.lastName].filter(Boolean).join(' ') || entry.admin?.email || 'Admin';
+                const endDate = entry.until ? ` · Until ${new Date(entry.until).toLocaleString()}` : '';
+                appendText(actionHistory, 'div', 'text-muted-soft mt-1', `${adminName} · ${entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ''}: ${entry.action.replaceAll('_', ' ')}${endDate}${entry.details ? ` · ${entry.details}` : ''}`);
+              }
+              card.append(actionHistory);
+            }
+
+            const controls = document.createElement('div');
+            controls.className = 'row g-2 align-items-end';
+            const status = document.createElement('select');
+            status.className = 'form-select';
+            for (const [value, label] of [['PENDING_REVIEW', 'Pending Review'], ['UNDER_INVESTIGATION', 'Under Investigation'], ['RESOLVED', 'Resolved'], ['REJECTED', 'Rejected'], ['ESCALATED', 'Escalated']]) {
+              const option = document.createElement('option');
+              option.value = value;
+              option.textContent = label;
+              status.append(option);
+            }
+            if (!Array.from(status.options).some((option) => option.value === report.status)) {
+              status.add(new Option((report.status || 'OPEN').replaceAll('_', ' '), report.status || 'OPEN'));
+            }
+            status.value = report.status || 'PENDING_REVIEW';
+            const priority = document.createElement('select');
+            priority.className = 'form-select';
+            for (const value of ['LOW', 'MEDIUM', 'HIGH', 'URGENT']) priority.add(new Option(value, value));
+            priority.value = report.priority || 'MEDIUM';
+            const notes = document.createElement('input');
+            notes.className = 'form-control';
+            notes.maxLength = 2000;
+            notes.placeholder = 'Add internal note';
+            const action = document.createElement('select');
+            action.className = 'form-select';
+            action.add(new Option('No moderation action', ''));
+            for (const [value, label] of [['WARNING', 'Issue warning'], ['TEMPORARY_SUSPENSION', 'Temporary suspension'], ['PERMANENT_SUSPENSION', 'Permanent suspension'], ['RESTRICTION', 'Restrict account'], ['RESTORE_ACCOUNT', 'Restore account access']]) action.add(new Option(label, value));
+            const duration = document.createElement('input');
+            duration.type = 'number';
+            duration.className = 'form-control';
+            duration.min = '1';
+            duration.max = '365';
+            duration.placeholder = 'Suspension days';
+            duration.value = '7';
+            duration.classList.add('d-none');
+            action.addEventListener('change', () => duration.classList.toggle('d-none', action.value !== 'TEMPORARY_SUSPENSION'));
+            const details = document.createElement('input');
+            details.className = 'form-control';
+            details.maxLength = 1000;
+            details.placeholder = 'Reason or action details';
+            const update = document.createElement('button');
+            update.type = 'button';
+            update.className = 'btn btn-brand';
+            update.textContent = 'Save review';
+            update.addEventListener('click', async () => {
+              if (['TEMPORARY_SUSPENSION', 'PERMANENT_SUSPENSION', 'RESTRICTION'].includes(action.value)
+                && !window.confirm(`Apply ${action.options[action.selectedIndex].text.toLowerCase()} to ${reportedName}?`)) return;
+              if (action.value === 'TEMPORARY_SUSPENSION' && (!Number.isInteger(Number(duration.value)) || Number(duration.value) < 1 || Number(duration.value) > 365)) {
+                error.textContent = 'Temporary suspension must be between 1 and 365 days.';
+                error.classList.remove('d-none');
+                return;
+              }
+              update.disabled = true;
+              try {
+                await apiFetch(`/api/v1/admin/reports/${encodeURIComponent(report._id)}`, {
+                  method: 'PUT',
+                  body: {
+                    status: status.value,
+                    priority: priority.value,
+                    note: notes.value,
+                    moderationAction: action.value || undefined,
+                    durationDays: action.value === 'TEMPORARY_SUSPENSION' ? Number(duration.value) : undefined,
+                    details: details.value,
+                  },
+                });
+                await load();
+              } catch (e) {
+                error.textContent = e?.message || 'Could not update this report.';
+                error.classList.remove('d-none');
+                update.disabled = false;
+              }
+            });
+            const controlFields = [
+              ['Status', status],
+              ['Priority', priority],
+              ['Internal note', notes],
+              ['Moderation action', action],
+              ['Duration (days)', duration],
+              ['Action details', details],
+            ];
+            for (const [label, field] of controlFields) {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'col-12 col-md-6';
+              appendText(wrapper, 'label', 'form-label small', label).htmlFor = `report-${report._id}-${field === status ? 'status' : field === priority ? 'priority' : field === notes ? 'note' : field === action ? 'action' : field === duration ? 'duration' : 'details'}`;
+              field.id = `report-${report._id}-${field === status ? 'status' : field === priority ? 'priority' : field === notes ? 'note' : field === action ? 'action' : field === duration ? 'duration' : 'details'}`;
+              wrapper.append(field);
+              controls.append(wrapper);
+            }
+            const saveWrap = document.createElement('div');
+            saveWrap.className = 'col-12';
+            saveWrap.append(update);
+            controls.append(saveWrap);
+            card.append(controls);
+            list.append(card);
+          }
+        } catch (e) {
+          if (e?.status === 401 || e?.status === 403) {
+            clearToken();
+            window.location.replace('auth-login.html');
+            return;
+          }
+          error.textContent = e?.message || 'Could not load reports.';
+          error.classList.remove('d-none');
+        }
+      }
+
+      statusFilter.addEventListener('change', () => {
+        currentPage = 1;
+        load();
+      });
+      previousButton.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          load();
+        }
+      });
+      nextButton.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          load();
+        }
+      });
+
+      try {
+        const response = await fetchMe();
+        const user = response?.data || response;
+        if ((user?.role || '').toUpperCase() !== 'ADMIN') throw new Error('Admin access is required.');
+        await load();
+      } catch {
+        clearToken();
+        window.location.replace('auth-login.html');
+      }
+    </script>
+  </body>
+</html>

@@ -20,7 +20,7 @@ function formatPrice(svc) {
 }
 
 function getPreselectServiceId() {
-  return qs('preselectServiceId') || null;
+  return qs('serviceId') || qs('preselectServiceId') || null;
 }
 
 function buildServiceCard(svc, { hideCreateRequest = false } = {}) {
@@ -28,16 +28,20 @@ function buildServiceCard(svc, { hideCreateRequest = false } = {}) {
 
   const vendor = svc?.vendor;
   const vendorName = vendor?.businessName || 'Vendor';
+  const vendorId = typeof vendor === 'string' ? vendor : (vendor?._id || vendor?.id);
   const category = svc?.serviceCategory || 'Service';
   const title = svc?.serviceName || 'Untitled';
   const image = Array.isArray(svc?.images) && svc.images[0] ? svc.images[0] : '';
   const price = formatPrice(svc);
 
-  const href = `requests.html?prefillServiceId=${encodeURIComponent(id || '')}`;
+  const href = `user-request.html?serviceId=${encodeURIComponent(id || '')}`;
 
   const createRequestHtml = hideCreateRequest
     ? ''
     : `<a class="btn btn-brand btn-sm" href="${href}">Create request</a>`;
+  const vendorProfileHtml = vendorId
+    ? `<a class="btn btn-soft btn-sm" href="vendor-profile.html?id=${encodeURIComponent(vendorId)}">Vendor profile</a>`
+    : '';
 
   return `
     <div class="col-12 col-md-6">
@@ -60,6 +64,7 @@ function buildServiceCard(svc, { hideCreateRequest = false } = {}) {
 
         <div class="mt-3 d-flex flex-wrap gap-2">
           ${createRequestHtml}
+          ${vendorProfileHtml}
           <button
             class="btn btn-soft btn-sm"
             type="button"
@@ -105,11 +110,11 @@ export async function initServicesPage({ me, role } = {}) {
   const btnGoIncoming = document.getElementById('btnGoIncoming');
 
   btnGoCreateRequest?.addEventListener('click', () => {
-    window.location.href = 'requests.html';
+    window.location.href = 'user-request.html';
   });
 
   btnGoIncoming?.addEventListener('click', () => {
-    window.location.href = 'requests.html?status=pending';
+    window.location.href = 'user-request.html?status=pending';
   });
 
   serviceList.innerHTML = '';

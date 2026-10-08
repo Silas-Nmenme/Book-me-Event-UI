@@ -47,8 +47,8 @@ export function initVendorMapWidget() {
       }).addTo(map);
 
       const res = await apiFetch(`/api/v1/vendors?city=${encodeURIComponent(userCity)}&limit=20`, { method: 'GET' });
-      const data = res?.data || res;
-      const vendors = Array.isArray(data) ? data : (data?.items || []);
+      const data = res?.data ?? res;
+      const vendors = Array.isArray(data) ? data : (data?.items || data?.data || []);
 
       if (!vendors.length) {
         mapWrap.innerHTML = `<div class="text-muted-soft p-3">No vendors found near ${userCity}.</div>`;
@@ -91,8 +91,9 @@ export function initVendorMapWidget() {
           btn.addEventListener('click', async () => {
             const vendorId = btn.getAttribute('data-vendor-id');
             if (!vendorId) return;
-            toast({ title: 'Request', message: 'Hook this to your request flow.', variant: 'warning' });
-            // Future: open request-create with vendor prefilled.
+
+            const destination = `user-request.html?vendorId=${encodeURIComponent(vendorId)}`;
+            window.location.href = destination;
           });
         });
       });

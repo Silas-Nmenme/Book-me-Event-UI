@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Report a Vendor - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div id="toastHost" class="position-fixed top-0 end-0 p-3"></div>
+    <nav class="navbar navbar-dark navbar-glass sticky-top bme-navbar">
+      <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html"><span class="brand-pill"><span class="brand-dot" aria-hidden="true"></span><span class="fw-bold">Book Me Events</span></span></a>
+        <a class="btn btn-soft" href="user-tickets.html">User Support</a>
+      </div>
+    </nav>
+    <main class="section">
+      <div class="container" style="max-width: 820px">
+        <div class="mb-4">
+          <div class="badge badge-glow mb-2">User Support</div>
+          <h1 class="h3 fw-bold mb-1">Report a Vendor</h1>
+          <p class="text-muted-soft mb-0">Reports are reviewed by the platform. Submitting a report does not determine fault.</p>
+        </div>
+        <div id="reportError" class="alert alert-danger d-none" role="alert"></div>
+        <div id="reportSuccess" class="alert alert-success d-none" role="status"></div>
+        <form id="vendorReportForm" class="card card-glass p-4" autocomplete="off">
+          <div class="mb-3">
+            <label class="form-label" for="vendorSearch">Find vendor</label>
+            <input class="form-control mb-2" id="vendorSearch" type="search" placeholder="Search vendor name" autocomplete="off" />
+            <select class="form-select" id="vendorId" required aria-describedby="vendorHint">
+              <option value="">Loading vendors...</option>
+            </select>
+            <div class="form-text" id="vendorHint">Vendors you have requested or booked with are listed first.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="reason">Report reason</label>
+            <select class="form-select" id="reason" required>
+              <option value="">Select a reason</option>
+              <option value="FRAUD_SCAM">Fraud / Scam</option>
+              <option value="POOR_SERVICE">Poor Service</option>
+              <option value="MISREPRESENTATION">Misrepresentation</option>
+              <option value="HARASSMENT">Harassment</option>
+              <option value="NO_SHOW">No-show</option>
+              <option value="PAYMENT_ISSUE">Payment issue</option>
+              <option value="FAKE_PROFILE">Fake profile</option>
+              <option value="INAPPROPRIATE_BEHAVIOR">Inappropriate behavior</option>
+              <option value="ABUSE">Abuse</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="mb-3 d-none" id="otherReasonWrap">
+            <label class="form-label" for="otherReason">Specify other reason</label>
+            <input class="form-control" id="otherReason" type="text" maxlength="200" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="requestId">Related service request (optional)</label>
+            <select class="form-select" id="requestId"><option value="">No request selected</option></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="bookingId">Related booking (optional)</label>
+            <select class="form-select" id="bookingId"><option value="">No booking selected</option></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" rows="6" minlength="20" maxlength="5000" required aria-describedby="descriptionHint"></textarea>
+            <div class="form-text" id="descriptionHint">Describe what happened, when it happened, and any relevant details (20-5000 characters).</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="evidence">Evidence (optional)</label>
+            <input class="form-control" id="evidence" type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple />
+            <div class="form-text">Up to 4 PNG, JPEG, WebP, GIF, or PDF files; 5 MB maximum per file.</div>
+            <div id="evidenceList" class="small text-muted-soft mt-2" aria-live="polite"></div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-brand" id="submitReport" type="submit">Submit report</button>
+            <a class="btn btn-soft" href="user-tickets.html">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </main>
+    <script type="module">
+      import { apiFetch, fetchMe, clearToken } from '../js/api.js';
+
+      const form = document.getElementById('vendorReportForm');
+      const vendorSelect = document.getElementById('vendorId');
+      const requestSelect = document.getElementById('requestId');
+      const bookingSelect = document.getElementById('bookingId');
+      const reasonSelect = document.getElementById('reason');
+      const otherWrap = document.getElementById('otherReasonWrap');
+      const otherInput = document.getElementById('otherReason');
+      const evidenceInput = document.getElementById('evidence');
+      const evidenceList = document.getElementById('evidenceList');
+      const errorBox = document.getElementById('reportError');
+      const successBox = document.getElementById('reportSuccess');
+      const submitButton = document.getElementById('submitReport');
+      let reportData = { vendors: [], requests: [], bookings: [] };
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.remove('d-none');
+      }
+
+      function fillRelatedSelect(select, items, placeholder) {
+        const currentValue = select.value;
+        select.replaceChildren(new Option(placeholder, ''));
+        const vendorId = vendorSelect.value;
+        for (const item of items.filter((entry) => String(entry.vendorId || '') === vendorId)) {
+          select.add(new Option(item.label, item._id));
+        }
+        if ([...select.options].some((option) => option.value === currentValue)) select.value = currentValue;
+      }
+
+      function renderVendors(search = '') {
+        const currentValue = vendorSelect.value;
+        const normalized = search.trim().toLocaleLowerCase();
+        const matches = reportData.vendors.filter((vendor) => vendor.businessName.toLocaleLowerCase().includes(normalized));
+        vendorSelect.replaceChildren(new Option(matches.length ? 'Select a vendor' : 'No matching vendors', ''));
+        for (const vendor of matches) {
+          const label = vendor.preferred ? `${vendor.businessName} · Previous request or booking` : vendor.businessName;
+          vendorSelect.add(new Option(label, vendor._id));
+        }
+        if ([...vendorSelect.options].some((option) => option.value === currentValue)) vendorSelect.value = currentValue;
+      }
+
+      document.getElementById('vendorSearch').addEventListener('input', (event) => renderVendors(event.target.value));
+      vendorSelect.addEventListener('change', () => {
+        fillRelatedSelect(requestSelect, reportData.requests, 'No request selected');
+        fillRelatedSelect(bookingSelect, reportData.bookings, 'No booking selected');
+      });
+      reasonSelect.addEventListener('change', () => {
+        const isOther = reasonSelect.value === 'OTHER';
+        otherWrap.classList.toggle('d-none', !isOther);
+        otherInput.required = isOther;
+      });
+
+      evidenceInput.addEventListener('change', () => {
+        const files = Array.from(evidenceInput.files || []);
+        const allowed = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'application/pdf']);
+        const invalid = files.length > 4 || files.some((file) => !allowed.has(file.type) || file.size > 5 * 1024 * 1024);
+        if (invalid) {
+          evidenceInput.value = '';
+          evidenceList.textContent = 'Choose no more than 4 supported files, each 5 MB or smaller.';
+          evidenceList.classList.add('text-danger');
+          return;
+        }
+        evidenceList.classList.remove('text-danger');
+        evidenceList.textContent = files.length ? files.map((file) => `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`).join(' · ') : '';
+      });
+
+      async function loadFormData() {
+        try {
+          const userResponse = await fetchMe();
+          const user = userResponse?.data || userResponse;
+          if (user?.role !== 'USER') throw new Error('User access is required to report a vendor.');
+          const response = await apiFetch('/api/v1/reports/vendors');
+          reportData = response?.data || reportData;
+          renderVendors();
+          fillRelatedSelect(requestSelect, reportData.requests, 'No request selected');
+          fillRelatedSelect(bookingSelect, reportData.bookings, 'No booking selected');
+
+          const requestedId = new URLSearchParams(window.location.search).get('requestId');
+          const matchedRequest = reportData.requests.find((request) => request._id === requestedId);
+          if (matchedRequest) {
+            vendorSelect.value = matchedRequest.vendorId;
+            vendorSelect.dispatchEvent(new Event('change'));
+            requestSelect.value = matchedRequest._id;
+          }
+          if (!reportData.vendors.length) {
+            vendorSelect.replaceChildren(new Option('No available vendors', ''));
+            vendorSelect.disabled = true;
+            document.getElementById('submitReport').disabled = true;
+            showError('There are no active vendor accounts available to report.');
+          }
+        } catch (error) {
+          if (error?.status === 401 || error?.status === 403) {
+            clearToken();
+            window.location.replace('auth-login.html');
+            return;
+          }
+          showError(error?.message || 'Could not load vendors. Try again later.');
+        }
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        errorBox.classList.add('d-none');
+        successBox.classList.add('d-none');
+        const files = Array.from(evidenceInput.files || []);
+        if (files.length > 4 || files.some((file) => file.size > 5 * 1024 * 1024)) {
+          showError('Choose no more than 4 files, each 5 MB or smaller.');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('target', 'VENDOR');
+        formData.append('vendorId', vendorSelect.value);
+        formData.append('reason', reasonSelect.value);
+        formData.append('otherReason', otherInput.value.trim());
+        formData.append('description', document.getElementById('description').value.trim());
+        if (requestSelect.value) formData.append('requestId', requestSelect.value);
+        if (bookingSelect.value) formData.append('bookingId', bookingSelect.value);
+        for (const file of files) formData.append('evidence', file);
+
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+        try {
+          const response = await apiFetch('/api/v1/reports', { method: 'POST', body: formData });
+          const report = response?.data || {};
+          successBox.textContent = `Report ${report.reportId || ''} submitted and is pending review. Keep this report ID for your records.`;
+          successBox.classList.remove('d-none');
+          form.reset();
+          evidenceList.textContent = '';
+          otherWrap.classList.add('d-none');
+          otherInput.required = false;
+          fillRelatedSelect(requestSelect, reportData.requests, 'No request selected');
+          fillRelatedSelect(bookingSelect, reportData.bookings, 'No booking selected');
+        } catch (error) {
+          showError(error?.message || 'Could not submit the report. Please try again.');
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Submit report';
+        }
+      });
+
+      await loadFormData();
+    </script>
+  </body>
+</html>

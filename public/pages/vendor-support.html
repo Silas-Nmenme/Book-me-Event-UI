@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor support - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <div class="container py-4" style="max-width: 960px">
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <div class="badge badge-glow mb-2">Vendor workspace</div>
+          <h1 class="h3 fw-bold mb-0">Support</h1>
+        </div>
+        <a class="btn btn-soft" href="vendor-dashboard.html">Dashboard</a>
+      </div>
+      <div id="supportError" class="alert alert-danger d-none" role="alert"></div>
+      <div class="d-flex flex-wrap gap-2 mb-3" role="tablist" aria-label="Vendor support actions">
+        <button class="btn btn-brand" id="showTicketForm" type="button" aria-pressed="true">Create a ticket</button>
+        <button class="btn btn-soft" id="showReportForm" type="button" aria-pressed="false">Report a User</button>
+      </div>
+
+      <form id="ticketForm" class="card card-glass p-4 mb-4" autocomplete="off">
+        <h2 class="h5 fw-bold mb-3">Create a support ticket</h2>
+        <div class="row g-3">
+          <div class="col-12 col-md-8">
+            <label class="form-label" for="ticketSubject">Subject</label>
+            <input class="form-control" id="ticketSubject" maxlength="140" required />
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="ticketCategory">Category</label>
+            <select class="form-select" id="ticketCategory" required>
+              <option value="GENERAL">General</option><option value="ACCOUNT">Account</option><option value="BOOKING">Booking</option><option value="PAYMENT">Payment</option><option value="SERVICE">Service</option><option value="TECHNICAL">Technical</option><option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="ticketPriority">Priority</label>
+            <select class="form-select" id="ticketPriority"><option value="LOW">Low</option><option value="MEDIUM" selected>Medium</option><option value="HIGH">High</option><option value="URGENT">Urgent</option></select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="ticketRequest">Related request</label>
+            <select class="form-select" id="ticketRequest"><option value="">None</option></select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="ticketBooking">Related booking</label>
+            <select class="form-select" id="ticketBooking"><option value="">None</option></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="ticketPayment">Related payment</label>
+            <select class="form-select" id="ticketPayment"><option value="">None</option></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="ticketDescription">Description</label>
+            <textarea class="form-control" id="ticketDescription" rows="4" minlength="10" maxlength="5000" required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="ticketAttachments">Attachments (optional)</label>
+            <input class="form-control" id="ticketAttachments" type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple />
+            <div class="form-text">Up to 4 image/PDF files, 5 MB each.</div>
+            <div id="ticketFilesHint" class="small text-muted-soft mt-1" aria-live="polite"></div>
+          </div>
+          <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-brand" id="submitTicket" type="submit">Submit ticket</button>
+            <span id="ticketFormError" class="small text-danger" role="alert"></span>
+          </div>
+        </div>
+      </form>
+
+      <form id="userReportForm" class="card card-glass p-4 mb-4 d-none" autocomplete="off">
+        <h2 class="h5 fw-bold mb-3">Report a User</h2>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label" for="reportUserSearch">Find a user</label>
+            <input class="form-control mb-2" id="reportUserSearch" type="search" placeholder="Search users you have interacted with" autocomplete="off" />
+            <select class="form-select" id="reportUserId" required><option value="">Loading users...</option></select>
+            <div class="form-text">Only active users connected to your requests, bookings, or conversations are listed.</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="reportReason">Reason</label>
+            <select class="form-select" id="reportReason" required>
+              <option value="">Select a reason</option><option value="FRAUD_SCAM">Fraud / Scam</option><option value="POOR_SERVICE">Poor Service</option><option value="MISREPRESENTATION">Misrepresentation</option><option value="HARASSMENT">Harassment</option><option value="NO_SHOW">No-show</option><option value="PAYMENT_ISSUE">Payment issue</option><option value="FAKE_PROFILE">Fake profile</option><option value="INAPPROPRIATE_BEHAVIOR">Inappropriate behavior</option><option value="ABUSE">Abuse</option><option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-6 d-none" id="reportOtherWrap">
+            <label class="form-label" for="reportOther">Specify other reason</label>
+            <input class="form-control" id="reportOther" maxlength="200" />
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="reportRequest">Related request (optional)</label>
+            <select class="form-select" id="reportRequest"><option value="">None</option></select>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="reportBooking">Related booking (optional)</label>
+            <select class="form-select" id="reportBooking"><option value="">None</option></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="reportDescription">Description</label>
+            <textarea class="form-control" id="reportDescription" rows="5" minlength="20" maxlength="5000" required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="reportEvidence">Evidence (optional)</label>
+            <input class="form-control" id="reportEvidence" type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple />
+            <div class="form-text">Up to 4 image/PDF files, 5 MB each.</div>
+            <div id="reportFilesHint" class="small text-muted-soft mt-1" aria-live="polite"></div>
+          </div>
+          <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-brand" id="submitUserReport" type="submit">Submit report</button>
+            <span id="userReportError" class="small text-danger" role="alert"></span>
+            <span id="userReportSuccess" class="small text-success" role="status"></span>
+          </div>
+        </div>
+      </form>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h2 class="h5 fw-bold mb-0">Your tickets</h2>
+        <select class="form-select form-select-sm" id="ticketStatusFilter" aria-label="Filter tickets by status" style="max-width: 220px">
+          <option value="">All statuses</option><option value="OPEN">Open</option><option value="IN_PROGRESS">In Progress</option><option value="WAITING_RESPONSE">Waiting for Response</option><option value="RESOLVED">Resolved</option><option value="CLOSED">Closed</option>
+        </select>
+      </div>
+      <div id="ticketList" class="d-grid gap-3" aria-live="polite"></div>
+      <section id="ticketEmpty" class="card card-glass p-4 d-none" aria-live="polite">
+        <h2 class="h5 fw-bold">No support tickets yet</h2>
+        <p class="text-muted-soft mb-0">Tickets you create and customer tickets linked to your requests or bookings will appear here.</p>
+      </section>
+    </div>
+    <script type="module">
+      import { initVendorSupport } from '../js/pages/vendor-support.js';
+      initVendorSupport();
+    </script>
+  </body>
+</html>

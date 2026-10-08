@@ -27,11 +27,15 @@
         <div class="bme-sidebar__section-label">Dashboard</div>
         <div class="d-flex flex-column gap-1">
           <a class="bme-nav-link active" href="vendor-dashboard.html">Dashboard</a>
+          <a class="bme-nav-link" href="vendor-edit-profile.html">Profile, gallery & coverage</a>
           <a class="bme-nav-link" href="services.html">Manage services</a>
           <a class="bme-nav-link" href="vendor-service.html">Incoming requests</a>
           <a class="bme-nav-link" href="bookings.html">Bookings</a>
           <a class="bme-nav-link" href="payments.html">Payments</a>
           <a class="bme-nav-link" href="messages.html">Messages</a>
+          <a class="bme-nav-link" href="vendor-support.html">Support</a>
+          <a class="bme-nav-link" href="vendor-analytics.html">Reports & reviews</a>
+          <a class="bme-nav-link" href="settings.html#security">Settings & security</a>
           <a class="bme-nav-link" href="annoncement.html">Announcements</a>
           <a class="bme-nav-link" href="vendor-kyc.html">Vendor KYC</a>
         </div>
@@ -110,6 +114,23 @@
                     </div>
                   </div>
 
+                  <div class="dropdown">
+                    <button class="btn btn-soft position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                      <span aria-hidden="true">♢</span>
+                      <span id="notificationUnreadCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bme-popover-menu p-2">
+                      <div class="px-2 pt-1 pb-2 small fw-bold">Notifications</div>
+                      <div id="notificationList" class="px-2 bme-scroll-panel" style="max-height: 320px; min-width: 280px">
+                        <div id="notificationEmpty" class="small text-muted-soft py-2">No notifications.</div>
+                      </div>
+                      <div class="px-2 pt-2">
+                        <button class="dropdown-item" type="button" id="notificationsMarkAllRead">Mark all as read</button>
+                        <a class="dropdown-item" href="notifications.html">View all notifications</a>
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     id="themeToggleBtn"
                     class="btn btn-soft bme-theme-toggle"
@@ -167,6 +188,30 @@
                     <div class="bme-stat-card__value" id="vStatBreachRate">—</div>
                   </div>
                 </div>
+                <div class="col-6 col-md-4">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Open support tickets</div>
+                    <div class="bme-stat-card__value" id="vStatSupportTickets">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Payments</div>
+                    <div class="bme-stat-card__value" id="vStatPayments">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Recorded revenue</div>
+                    <div class="bme-stat-card__value" id="vStatRevenue">—</div>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="bme-stat-card h-100">
+                    <div class="bme-stat-card__label">Unread messages</div>
+                    <div class="bme-stat-card__value" id="vStatUnreadMessages">—</div>
+                  </div>
+                </div>
               </div>
 
 
@@ -216,7 +261,7 @@
                 <div class="row g-3" id="vendorServiceList"></div>
 
                 <div id="vendorNoServices" class="text-muted-soft small d-none mt-3">
-                  No services found.
+                  You haven't listed any services yet. Create a service to start receiving requests.
                 </div>
 
                 <form id="vendorServiceForm" class="card card-glass p-3 mt-4 d-none" autocomplete="off">
@@ -303,6 +348,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <script type="module">
       import { fetchMe, logoutUser, clearToken, apiFetch } from '../js/api.js';
@@ -310,6 +356,7 @@
       import { toast, setYear } from '../js/ui.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
       import { initVendorDashboard } from '../js/pages/vendor-dashboard.js';
+      import { initNotificationCenter } from '../js/pages/notifications.js';
 
       // Vendor dashboard stats + avatar are handled by vendor-dashboard.js.
 
@@ -320,6 +367,37 @@
       setYear('year');
       initThemeToggle();
 
+      const sidebar = document.getElementById('vendorSidebar');
+      const sidebarBackdrop = document.getElementById('vendorSidebarBackdrop');
+      const sidebarOpenBtn = document.getElementById('vendorSidebarOpen');
+      const sidebarCloseBtn = document.getElementById('vendorSidebarClose');
+
+      const closeSidebar = () => {
+        sidebar?.classList.remove('open');
+        sidebarBackdrop?.classList.remove('show');
+        document.body.style.overflow = '';
+      };
+
+      const openSidebar = () => {
+        sidebar?.classList.add('open');
+        sidebarBackdrop?.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      };
+
+      sidebarOpenBtn?.addEventListener('click', openSidebar);
+      sidebarCloseBtn?.addEventListener('click', closeSidebar);
+      sidebarBackdrop?.addEventListener('click', closeSidebar);
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeSidebar();
+      });
+
+      document.querySelectorAll('.bme-nav-link').forEach((link) => {
+        link.addEventListener('click', () => {
+          closeSidebar();
+          document.querySelectorAll('.bme-nav-link').forEach((item) => item.classList.remove('active'));
+          link.classList.add('active');
+        });
+      });
 
       const avatarEl = document.getElementById('avatar');
 
@@ -353,6 +431,7 @@
           const me = res?.data || res;
           document.getElementById('meName').textContent = me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : '—';
           document.getElementById('meEmail').textContent = me?.email || '—';
+          initNotificationCenter({ userId: me?._id || me?.id || me?.user?._id });
 
           // Start vendor service CRUD UI
           try {
@@ -433,20 +512,14 @@
           document.getElementById('announcementBellMarkAllRead')?.addEventListener('click', async (e) => {
             e.preventDefault();
 
-            // Best-effort UX: since backend currently doesn’t track per-user read status,
-            // clear the bell badge immediately and refresh the bell dropdown preview.
-            const dotEl = document.getElementById('announcementBellDot');
-            if (dotEl) {
-              dotEl.textContent = '';
-              dotEl.style.display = 'none';
-            }
-
             try {
-              // Refresh bell UI so it stays consistent with the current announcements.
-              await import('../js/pages/announcements.js').then(m => m.initAnnouncements({ role }));
-            } catch {}
-
-            toast({ title: 'Marked', message: 'Announcements marked as read (best-effort).', variant: 'success' });
+              const { markAllAnnouncementsRead, initAnnouncements } = await import('../js/pages/announcements.js');
+              await markAllAnnouncementsRead();
+              await initAnnouncements({ role });
+              toast({ title: 'Marked', message: 'Announcements marked as read.', variant: 'success' });
+            } catch (err) {
+              toast({ title: 'Failed', message: err?.message || 'Could not mark announcements as read.', variant: 'danger' });
+            }
           });
         } catch {}
       });

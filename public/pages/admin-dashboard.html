@@ -58,6 +58,7 @@
           <a class="bme-nav-link" href="admin-bookings.html">📅 All bookings</a>
           <a class="bme-nav-link" href="admin-payments.html">💰 All payments</a>
           <a class="bme-nav-link" href="admin-audit.html">🧾 Audit log</a>
+          <a class="bme-nav-link" href="admin-reports.html">Reports</a>
           <a class="bme-nav-link" href="admin-stats.html">📉 Stats breakdown</a>
           <a class="bme-nav-link" href="admin-2fa-setup.html">🔐 2FA setup</a>
         </div>
@@ -113,6 +114,22 @@
               </div>
               <div class="col-auto">
                 <div class="d-flex align-items-center gap-2">
+                  <div class="dropdown">
+                    <button class="btn btn-soft position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+                      <span aria-hidden="true">♢</span>
+                      <span id="notificationUnreadCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none bme-badge-sm"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end bme-popover-menu p-2">
+                      <div class="px-2 pt-1 pb-2 small fw-bold">Notifications</div>
+                      <div id="notificationList" class="px-2 bme-scroll-panel" style="max-height: 320px; min-width: 280px">
+                        <div id="notificationEmpty" class="small text-muted-soft py-2">No notifications.</div>
+                      </div>
+                      <div class="px-2 pt-2">
+                        <button class="dropdown-item" type="button" id="notificationsMarkAllRead">Mark all as read</button>
+                        <a class="dropdown-item" href="notifications.html">View all notifications</a>
+                      </div>
+                    </div>
+                  </div>
                   <button
                     id="themeToggleBtn"
                     class="btn btn-soft bme-theme-toggle"
@@ -525,13 +542,20 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <script type="module">
       import { setYear } from '../js/ui.js';
+      import { fetchMe } from '../js/api.js';
       import { initThemeToggle } from '../js/theme-toggle.js';
+      import { initNotificationCenter } from '../js/pages/notifications.js';
 
       setYear('year');
       initThemeToggle();
+      fetchMe().then((response) => {
+        const user = response?.data || response;
+        initNotificationCenter({ userId: user?._id || user?.id || user?.user?._id });
+      }).catch(() => {});
 
       // Sidebar mobile behavior
       const sidebar = document.getElementById('adminSidebar');

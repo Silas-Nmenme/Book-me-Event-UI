@@ -1,4 +1,4 @@
-import { apiFetch, getBookings, getBooking, cancelBooking, completeBooking, createBooking, createPayment, initializeFlutterwavePayment, verifyFlutterwavePayment } from '../api.js';
+import { apiFetch, getBookings, getBooking, cancelBooking, createBooking, createPayment, initializeFlutterwavePayment, verifyFlutterwavePayment } from '../api.js';
 import { toast } from '../ui.js';
 
 function qs(name) {
@@ -18,6 +18,9 @@ function statusLabel(status) {
   if (s === 'confirmed') return { text: 'Confirmed', variant: 'success' };
   if (s === 'in_progress' || s === 'in progress') return { text: 'In progress', variant: 'info' };
   if (s === 'completed') return { text: 'Completed', variant: 'success' };
+  if (s === 'awaiting_client_confirmation') return { text: 'Awaiting client confirmation', variant: 'warning' };
+  if (s === 'awaiting_admin_review') return { text: 'Awaiting admin review', variant: 'warning' };
+  if (s === 'disputed') return { text: 'Under review', variant: 'danger' };
   if (s === 'canceled' || s === 'cancelled') return { text: 'Canceled', variant: 'secondary' };
   return { text: status || '—', variant: 'secondary' };
 }
@@ -70,7 +73,7 @@ function buildBookingCard(b, myRole) {
         </div>
         <div class="mt-3 d-flex flex-wrap gap-2">
           ${myRole === 'USER' ? `<button class="btn btn-danger btn-sm" type="button" data-action="cancel" data-id="${escapeHtml(id || '')}">Cancel</button>` : ''}
-          ${myRole === 'VENDOR' ? `<button class="btn btn-success btn-sm" type="button" data-action="complete" data-id="${escapeHtml(id || '')}">Mark complete</button>` : ''}
+          ${myRole === 'VENDOR' && !['COMPLETED', 'CANCELLED'].includes(String(bookingStatus || '').toUpperCase()) ? `<button class="btn btn-success btn-sm" type="button" data-action="complete" data-id="${escapeHtml(id || '')}">Submit completion report</button>` : ''}
           ${(() => {
             const bookingCompleted = (bookingStatus || '').toString().toUpperCase() === 'COMPLETED';
             const paymentCompleted = (paymentStatus || '').toString().toUpperCase() === 'COMPLETED';
@@ -362,8 +365,8 @@ export async function initBookingsPage({ me, role } = {}) {
               toast({ title: 'Canceled', message: 'Booking canceled.', variant: 'success' });
             }
             if (action === 'complete') {
-              await completeBooking(id);
-              toast({ title: 'Completed', message: 'Booking marked completed.', variant: 'success' });
+              window.location.href = `vendor-service-completion.html?bookingId=${encodeURIComponent(id)}`;
+              return;
             }
             await load();
           } catch (e) {
