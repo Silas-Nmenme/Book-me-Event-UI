@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Service Completion & Payouts - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <main class="section"><div class="container" style="max-width:1100px">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><div class="badge badge-glow mb-2">Administration</div><h1 class="h3 fw-bold mb-0">Service Completion & Payouts</h1></div>
+        <div class="d-flex gap-2"><a class="btn btn-soft" href="admin-payouts.html">Payout management</a><a class="btn btn-soft" href="admin-dashboard.html">Dashboard</a></div>
+      </div>
+      <div class="alert alert-warning">Payouts are not transferred through Flutterwave in this application. Approvals prepare a manual transfer; only a transfer reference and uploaded proof can reconcile a payout as paid.</div>
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-12 col-md-4"><label class="form-label" for="completionFilter">Filter</label><select id="completionFilter" class="form-select"><option value="">All reports</option><option value="AWAITING_CLIENT_CONFIRMATION">Awaiting client confirmation</option><option value="SATISFIED">Satisfied</option><option value="NOT_SATISFIED">Not satisfied</option><option value="PENDING_ADMIN_REVIEW">Pending admin review</option><option value="APPROVED_FOR_PAYOUT">Approved for payout</option><option value="PAYOUT_PENDING">Payout pending</option><option value="PAID">Paid</option><option value="DISPUTED">Disputed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
+        <div class="col"><div id="completionPageInfo" class="small text-muted-soft"></div></div>
+        <div class="col-auto d-flex gap-2"><button id="completionPrev" class="btn btn-soft btn-sm" type="button">Previous</button><button id="completionNext" class="btn btn-soft btn-sm" type="button">Next</button></div>
+      </div>
+      <div id="completionError" class="alert alert-danger d-none" role="alert"></div>
+      <div id="completionList" class="d-grid gap-3" aria-live="polite"></div>
+      <section id="completionEmpty" class="card card-glass p-4 d-none"><h2 class="h5 fw-bold">No completion reports found</h2><p class="text-muted-soft mb-0">Reports will appear after vendors submit service delivery evidence.</p></section>
+    </div></main>
+    <script type="module">
+      import { apiFetch, fetchMe, clearToken } from '../js/api.js';
+      const list = document.getElementById('completionList');
+      const error = document.getElementById('completionError');
+      const empty = document.getElementById('completionEmpty');
+      const filter = document.getElementById('completionFilter');
+      let page = 1;
+      let pages = 1;
+      function add(parent, tag, className, value) { const node = document.createElement(tag); node.className = className || ''; node.textContent = value || ''; parent.append(node); return node; }
+      async function load() {
+        error.classList.add('d-none');
+        try {
+          const params = new URLSearchParams({ page: String(page), limit: '30' });
+          if (filter.value) params.set('filter', filter.value);
+          const response = await apiFetch(`/api/v1/admin/service-completions?${params}`);
+          const rows = Array.isArray(response?.data) ? response.data : [];
+          pages = Math.max(1, Number(response?.pages) || 1);
+          document.getElementById('completionPageInfo').textContent = `${response?.total || 0} reports · Page ${page} of ${pages}`;
+          document.getElementById('completionPrev').disabled = page <= 1;
+          document.getElementById('completionNext').disabled = page >= pages;
+          list.replaceChildren();
+          empty.classList.toggle('d-none', rows.length > 0);
+          for (const report of rows) {
+            const booking = report.booking || {};
+            const service = report.service || {};
+            const user = report.user || {};
+            const vendor = report.vendor || {};
+            const card = document.createElement('article');
+            card.className = 'card card-glass p-3';
+            add(card, 'h2', 'h6 fw-bold', `${report.reportId || report._id} · ${service.serviceName || 'Service'}`);
+            add(card, 'div', 'small text-muted-soft', `Vendor: ${vendor.businessName || '—'} · Client: ${[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || '—'} · Request: ${report.request?._id || report.request}`);
+            add(card, 'div', 'small text-muted-soft mt-1', `Gross: ${booking.amountCurrency || 'NGN'} ${Number(booking.totalAmount || 0).toLocaleString()} · Payment: ${booking.paymentStatus || '—'} · Submitted: ${report.submittedAt ? new Date(report.submittedAt).toLocaleString() : '—'}`);
+            add(card, 'div', 'small fw-semibold mt-2', `Client: ${(report.satisfactionStatus || '').replaceAll('_', ' ')} · Review: ${(report.adminReviewStatus || '').replaceAll('_', ' ')} · Payout: ${(report.payoutStatus || '').replaceAll('_', ' ')}`);
+            const link = document.createElement('a');
+            link.className = 'btn btn-brand btn-sm mt-3 align-self-start';
+            link.href = `admin-completion-review.html?reportId=${encodeURIComponent(report._id)}`;
+            link.textContent = 'Review report';
+            card.append(link);
+            list.append(card);
+          }
+        } catch (e) {
+          if (e?.status === 401 || e?.status === 403) { clearToken(); window.location.replace('auth-login.html'); return; }
+          error.textContent = e?.message || 'Could not load completion reports.';
+          error.classList.remove('d-none');
+        }
+      }
+      filter.addEventListener('change', () => { page = 1; load(); });
+      document.getElementById('completionPrev').addEventListener('click', () => { if (page > 1) { page -= 1; load(); } });
+      document.getElementById('completionNext').addEventListener('click', () => { if (page < pages) { page += 1; load(); } });
+      try { const response = await fetchMe(); if ((response?.data?.role || response?.role) !== 'ADMIN') throw new Error('Admin access required'); await load(); }
+      catch { clearToken(); window.location.replace('auth-login.html'); }
+    </script>
+  </body>
+</html>

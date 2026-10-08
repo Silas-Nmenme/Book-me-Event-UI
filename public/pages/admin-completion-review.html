@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Review Completion Report - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+    <style>.review-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}.review-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}.review-gallery video{width:100%;border-radius:8px;background:#111827}</style>
+  </head>
+  <body>
+    <main class="section"><div class="container" style="max-width:1100px">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><div class="badge badge-glow mb-2">Admin review</div><h1 class="h3 fw-bold mb-0">Completion report review</h1></div><div class="d-flex gap-2"><a class="btn btn-soft" href="admin-service-completions.html">All reports</a><a class="btn btn-soft" href="admin-payouts.html">Payouts</a></div></div>
+      <div id="reviewError" class="alert alert-danger d-none" role="alert"></div>
+      <div id="reviewLoading" class="card card-glass p-4">Loading report...</div>
+      <div id="reviewContent" class="d-none">
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Report and agreement</h2><div class="row g-3"><div class="col-6 col-md-3"><span class="small text-muted-soft">Report</span><div id="reportId"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Request</span><div id="requestId"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Booking</span><div id="bookingId"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Status</span><div id="reportStatus"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Vendor</span><div id="vendorName"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Client</span><div id="clientName"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Service</span><div id="serviceName"></div></div><div class="col-6 col-md-3"><span class="small text-muted-soft">Agreed gross</span><div id="grossAmount"></div></div><div class="col-12"><span class="small text-muted-soft">Original request/agreement</span><div id="agreement" class="mt-1" style="white-space:pre-wrap"></div></div><div class="col-12"><span class="small text-muted-soft">Vendor delivery summary</span><div id="deliverySummary" class="mt-1" style="white-space:pre-wrap"></div></div><div class="col-12"><span class="small text-muted-soft">Additional notes</span><div id="additionalNotes" class="mt-1" style="white-space:pre-wrap"></div></div><div class="col-6"><span class="small text-muted-soft">Completion date</span><div id="completionDate"></div></div><div class="col-6"><span class="small text-muted-soft">Submitted</span><div id="submittedAt"></div></div></div></section>
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Evidence</h2><div id="reviewImages" class="review-gallery mt-3"></div><div id="reviewVideos" class="review-gallery mt-3"></div></section>
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Client response</h2><div id="clientDecision" class="fw-semibold"></div><div id="clientFeedback" class="mt-2" style="white-space:pre-wrap"></div><div id="clientEvidence" class="d-flex flex-wrap gap-2 mt-2"></div></section>
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Payment settlement history</h2><div class="table-responsive"><table class="table"><thead><tr><th>Reference</th><th>Status</th><th>Amount</th><th>Gateway</th><th>Confirmed</th></tr></thead><tbody id="paymentHistory"></tbody></table></div></section>
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Related messages</h2><div id="relatedMessages" class="d-grid gap-2"></div></section>
+        <section class="card card-glass p-4 mb-3"><h2 class="h5 fw-bold">Admin audit history</h2><div id="reviewHistory" class="d-grid gap-2"></div></section>
+        <form id="reviewForm" class="card card-glass p-4"><h2 class="h5 fw-bold">Record review action</h2><div class="row g-3"><div class="col-12 col-md-6"><label class="form-label" for="reviewAction">Action</label><select id="reviewAction" class="form-select"><option value="APPROVE">Approve report</option><option value="REQUEST_VENDOR_INFO">Request vendor information</option><option value="REQUEST_CLIENT_CLARIFICATION">Request client clarification</option><option value="INVESTIGATE">Place under investigation</option><option value="ESCALATE">Escalate</option><option value="HOLD">Keep payout on hold</option><option value="REJECT">Reject report</option><option value="RESOLVE_DISPUTE">Resolve dispute</option></select></div><div class="col-12 col-md-6 d-none" id="resolutionWrap"><label class="form-label" for="disputeOutcome">Dispute decision</label><select id="disputeOutcome" class="form-select"><option value="APPROVE_PAYOUT">Resolve in favor of payout review</option><option value="REJECT_PAYOUT">Reject payout</option></select></div><div class="col-12"><label class="form-label" for="reviewReason">Reason / instructions</label><textarea id="reviewReason" class="form-control" rows="4" maxlength="5000"></textarea></div><div class="col-12"><button id="submitReview" class="btn btn-brand" type="submit">Record admin action</button></div></div></form>
+      </div>
+    </div></main>
+    <script type="module">
+      import { initAdminCompletionReview } from '../js/pages/admin-completion-review.js';
+      initAdminCompletionReview();
+    </script>
+  </body>
+</html>

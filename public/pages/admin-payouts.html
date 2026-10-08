@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vendor Payout Management - Book Me Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/landing-professional.css" />
+  </head>
+  <body>
+    <main class="section"><div class="container" style="max-width:1100px">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><div class="badge badge-glow mb-2">Manual payout reconciliation</div><h1 class="h3 fw-bold mb-0">Vendor payouts</h1></div><a class="btn btn-soft" href="admin-service-completions.html">Completion reports</a></div>
+      <div class="alert alert-warning"><strong>No gateway transfer integration is configured.</strong> Approval does not move money. Record a transfer only after completing it through the approved external banking process; a transfer reference and proof are required before the payout can be marked paid. Commission/net values are not configured and must be explicitly reviewed by an administrator.</div>
+      <div class="row g-2 mb-3"><div class="col-auto"><label class="visually-hidden" for="payoutStatus">Filter payout status</label><select class="form-select" id="payoutStatus"><option value="">All payouts</option><option value="ON_HOLD">On hold</option><option value="ELIGIBLE">Eligible</option><option value="APPROVED">Approved</option><option value="PROCESSING">Processing</option><option value="PAID">Paid</option><option value="FAILED">Failed</option><option value="CANCELLED">Cancelled</option></select></div><div class="col"><div id="payoutCount" class="small text-muted-soft pt-2"></div></div></div>
+      <div id="payoutError" class="alert alert-danger d-none" role="alert"></div>
+      <div id="payoutList" class="d-grid gap-3" aria-live="polite"></div>
+      <section id="payoutEmpty" class="card card-glass p-4 d-none"><h2 class="h5 fw-bold">No payouts found</h2><p class="text-muted-soft mb-0">A payout record is created when an admin-approved completion report passes the satisfaction workflow.</p></section>
+    </div></main>
+    <script type="module">
+      import { apiFetch, fetchMe, clearToken } from '../js/api.js';
+      const list = document.getElementById('payoutList');
+      const error = document.getElementById('payoutError');
+      const empty = document.getElementById('payoutEmpty');
+      const statusFilter = document.getElementById('payoutStatus');
+      function add(parent, tag, className, value) { const node = document.createElement(tag); node.className = className || ''; node.textContent = value || ''; parent.append(node); return node; }
+      async function load() {
+        error.classList.add('d-none');
+        const params = new URLSearchParams({ limit: '50' });
+        if (statusFilter.value) params.set('status', statusFilter.value);
+        try {
+          const response = await apiFetch(`/api/v1/admin/payouts?${params}`);
+          const payouts = Array.isArray(response?.data) ? response.data : [];
+          document.getElementById('payoutCount').textContent = `${response?.total || 0} payout records`;
+          list.replaceChildren();
+          empty.classList.toggle('d-none', payouts.length > 0);
+          for (const payout of payouts) {
+            const card = document.createElement('article');
+            card.className = 'card card-glass p-3';
+            const vendor = payout.vendor || {};
+            const client = payout.user || {};
+            const booking = payout.booking || {};
+            const report = payout.report || {};
+            add(card, 'h2', 'h6 fw-bold', `${payout.payoutId} · ${vendor.businessName || 'Vendor'} · ${payout.payoutStatus.replaceAll('_', ' ')}`);
+            add(card, 'div', 'small text-muted-soft', `Report ${report.reportId || '—'} · Booking ${booking._id || payout.booking} · Client ${[client.firstName, client.lastName].filter(Boolean).join(' ') || client.email || '—'}`);
+            add(card, 'div', 'small text-muted-soft mt-1', `Gross ${payout.currency} ${Number(payout.grossAmount || 0).toLocaleString()} · Commission ${payout.commissionAmount == null ? 'Pending configuration' : `${payout.currency} ${Number(payout.commissionAmount).toLocaleString()}`} · Fees ${payout.feeAmount == null ? 'Pending' : `${payout.currency} ${Number(payout.feeAmount).toLocaleString()}`} · Net ${payout.netAmount == null ? 'Pending admin amount' : `${payout.currency} ${Number(payout.netAmount).toLocaleString()}`}`);
+            add(card, 'div', 'small text-muted-soft mt-1', `Payment ${booking.paymentStatus || '—'} · Client ${report.satisfactionStatus || '—'} · Admin review ${report.adminReviewStatus || '—'} · Photos ${report.images?.length || 0}`);
+            add(card, 'div', 'small mt-2', `Destination: account ${vendor.bankAccountNumber || 'Not provided'} · bank code ${vendor.bankCode || 'Not provided'}`);
+            if (payout.eligibility?.message) add(card, 'div', 'small text-danger mt-2', `Hold: ${payout.eligibility.message}`);
+            if (payout.transferReference) add(card, 'div', 'small text-success mt-2', `Manual reference ${payout.transferReference} · recorded ${payout.transferredAt ? new Date(payout.transferredAt).toLocaleString() : '—'}`);
+            const actions = document.createElement('div');
+            actions.className = 'd-flex flex-wrap gap-2 mt-3';
+            const reportLink = document.createElement('a');
+            reportLink.className = 'btn btn-soft btn-sm';
+            reportLink.href = `admin-completion-review.html?reportId=${encodeURIComponent(report._id || payout.report)}`;
+            reportLink.textContent = 'Review report';
+            actions.append(reportLink);
+            if (payout.payoutStatus === 'ON_HOLD') {
+              const recheck = document.createElement('button');
+              recheck.type = 'button'; recheck.className = 'btn btn-soft btn-sm'; recheck.textContent = 'Recheck eligibility';
+              recheck.addEventListener('click', async () => { recheck.disabled = true; try { await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/recheck`, { method: 'POST', body: {} }); await load(); } catch (e) { error.textContent = e?.message || 'Eligibility recheck failed.'; error.classList.remove('d-none'); recheck.disabled = false; } });
+              actions.append(recheck);
+            }
+            if (payout.payoutStatus === 'FAILED') {
+              const reopen = document.createElement('button');
+              reopen.type = 'button'; reopen.className = 'btn btn-outline-warning btn-sm'; reopen.textContent = 'Reopen failed payout';
+              reopen.addEventListener('click', async () => {
+                const reason = window.prompt('Confirm no transfer was completed and explain why this payout may be retried (at least 10 characters):');
+                if (!reason || reason.trim().length < 10) return;
+                if (!window.confirm('Reopen this payout for a fresh eligibility check?')) return;
+                reopen.disabled = true;
+                try { await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/reopen`, { method: 'POST', body: { transferNotSent: true, reason } }); await load(); }
+                catch (e) { error.textContent = e?.message || 'Could not reopen failed payout.'; error.classList.remove('d-none'); reopen.disabled = false; }
+              });
+              actions.append(reopen);
+            }
+            if (payout.payoutStatus === 'ELIGIBLE') {
+              const approval = document.createElement('form');
+              approval.className = 'row g-2 w-100 mt-2';
+              const field = (label, type, min) => { const wrap = document.createElement('div'); wrap.className = 'col-12 col-md-3'; add(wrap, 'label', 'form-label small', label); const input = document.createElement('input'); input.className = 'form-control form-control-sm'; input.type = type; if (type === 'number') { input.step = '0.01'; input.min = min || '0'; } wrap.append(input); return { wrap, input }; };
+              const net = field('Explicit net transfer amount', 'number', '0.01');
+              const commission = field('Commission (if configured)', 'number', '0');
+              const fees = field('Fees (if known)', 'number', '0');
+              const reason = field('Basis / calculation note', 'text');
+              reason.input.maxLength = 1000;
+              [net, commission, fees, reason].forEach(({ wrap }) => approval.append(wrap));
+              const actionWrap = document.createElement('div'); actionWrap.className = 'col-12';
+              const approve = document.createElement('button'); approve.type = 'submit'; approve.className = 'btn btn-brand btn-sm'; approve.textContent = 'Approve for manual transfer'; actionWrap.append(approve); approval.append(actionWrap);
+              approval.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const transferAmount = Number(net.input.value);
+                if (!Number.isFinite(transferAmount) || transferAmount <= 0 || transferAmount > Number(payout.grossAmount)) { error.textContent = 'Enter a valid net transfer amount no greater than the gross amount.'; error.classList.remove('d-none'); return; }
+                const destination = `account ${vendor.bankAccountNumber || 'Not provided'}, bank code ${vendor.bankCode || 'Not provided'}`;
+                if (!window.confirm(`Approve manual payout?\nVendor: ${vendor.businessName}\nAmount: ${payout.currency} ${transferAmount.toLocaleString()}\nDestination: ${destination}\nRequest: ${booking.request || payout.request}\nThis action will not transfer funds.`)) return;
+                approve.disabled = true;
+                try {
+                  await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/approve`, { method: 'POST', body: { netAmount: transferAmount, commissionAmount: commission.input.value || undefined, feeAmount: fees.input.value || undefined, reason: reason.input.value } });
+                  await load();
+                } catch (e) { error.textContent = e?.message || 'Could not approve payout.'; error.classList.remove('d-none'); approve.disabled = false; }
+              });
+              card.append(approval);
+            }
+            if (payout.payoutStatus === 'APPROVED') {
+              const beginForm = document.createElement('form'); beginForm.className = 'row g-2 w-100 mt-2';
+              const refWrap = document.createElement('div'); refWrap.className = 'col-12 col-md-5'; add(refWrap, 'label', 'form-label small', 'External transfer reference'); const ref = document.createElement('input'); ref.className = 'form-control form-control-sm'; ref.required = true; ref.minLength = 5; ref.maxLength = 120; refWrap.append(ref);
+              const noteWrap = document.createElement('div'); noteWrap.className = 'col-12 col-md-7'; add(noteWrap, 'label', 'form-label small', 'Transfer initiation note'); const note = document.createElement('input'); note.className = 'form-control form-control-sm'; note.required = true; note.minLength = 10; note.maxLength = 1000; noteWrap.append(note);
+              const submitWrap = document.createElement('div'); submitWrap.className = 'col-12'; const begin = document.createElement('button'); begin.className = 'btn btn-warning btn-sm'; begin.type = 'submit'; begin.textContent = 'Start manual transfer (not paid yet)'; submitWrap.append(begin);
+              beginForm.append(refWrap, noteWrap, submitWrap);
+              beginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!window.confirm(`Move payout into manual transfer processing?\nVendor: ${vendor.businessName}\nAmount: ${payout.currency} ${Number(payout.netAmount).toLocaleString()}\nDestination: account ${vendor.bankAccountNumber || 'Not provided'}, bank code ${vendor.bankCode || 'Not provided'}\nThis does not mark the payout paid.`)) return;
+                begin.disabled = true;
+                try { await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/begin-manual-transfer`, { method: 'POST', body: { transferReference: ref.value, reason: note.value } }); await load(); }
+                catch (e) { error.textContent = e?.message || 'Could not start manual transfer tracking.'; error.classList.remove('d-none'); begin.disabled = false; }
+              });
+              card.append(beginForm);
+            }
+            if (payout.payoutStatus === 'PROCESSING') {
+              const transferForm = document.createElement('form'); transferForm.className = 'row g-2 w-100 mt-2';
+              const refWrap = document.createElement('div'); refWrap.className = 'col-12 col-md-4'; add(refWrap, 'label', 'form-label small', 'Recorded transfer reference'); add(refWrap, 'div', 'form-control form-control-sm bg-transparent', payout.transferReference);
+              const noteWrap = document.createElement('div'); noteWrap.className = 'col-12 col-md-8'; add(noteWrap, 'label', 'form-label small', 'Reconciliation note'); const note = document.createElement('input'); note.className = 'form-control form-control-sm'; note.required = true; note.minLength = 10; note.maxLength = 2000; noteWrap.append(note);
+              const proofWrap = document.createElement('div'); proofWrap.className = 'col-12'; add(proofWrap, 'label', 'form-label small', 'Transfer proof (required)'); const proof = document.createElement('input'); proof.className = 'form-control form-control-sm'; proof.type = 'file'; proof.accept = 'image/png,image/jpeg,image/webp,image/gif,application/pdf'; proof.required = true; proofWrap.append(proof);
+              const confirmWrap = document.createElement('div'); confirmWrap.className = 'col-12 form-check ms-2'; const confirmed = document.createElement('input'); confirmed.className = 'form-check-input'; confirmed.type = 'checkbox'; confirmed.required = true; const confirmLabel = add(confirmWrap, 'label', 'form-check-label', 'I verified that this exact transfer reference was actually paid.'); confirmLabel.prepend(confirmed);
+              const submitWrap = document.createElement('div'); submitWrap.className = 'col-12 d-flex flex-wrap gap-2'; const record = document.createElement('button'); record.className = 'btn btn-success btn-sm'; record.type = 'submit'; record.textContent = 'Reconcile as paid'; const fail = document.createElement('button'); fail.className = 'btn btn-outline-danger btn-sm'; fail.type = 'button'; fail.textContent = 'Mark transfer failed';
+              fail.addEventListener('click', async () => { const reason = window.prompt('Confirm no payment was completed and describe the failure (at least 10 characters):'); if (!reason || reason.trim().length < 10) return; if (!window.confirm('Mark this transfer attempt failed? It will not be marked paid.')) return; fail.disabled = true; try { await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/failed`, { method: 'POST', body: { reason, confirmedNotPaid: true } }); await load(); } catch (e) { error.textContent = e?.message || 'Could not record failed transfer.'; error.classList.remove('d-none'); fail.disabled = false; } });
+              submitWrap.append(record, fail);
+              transferForm.append(refWrap, noteWrap, proofWrap, confirmWrap, submitWrap);
+              transferForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!window.confirm(`Confirm transfer reconciliation?\nVendor: ${vendor.businessName}\nAmount: ${payout.currency} ${Number(payout.netAmount).toLocaleString()}\nReference: ${payout.transferReference}\nOnly continue if this transfer has been verified.`)) return;
+                const formData = new FormData(); formData.append('transferReference', payout.transferReference); formData.append('reason', note.value); formData.append('confirmedSent', String(confirmed.checked)); formData.append('proof', proof.files[0]);
+                record.disabled = true;
+                try { await apiFetch(`/api/v1/admin/payouts/${encodeURIComponent(payout._id)}/record-manual`, { method: 'POST', body: formData }); await load(); }
+                catch (e) { error.textContent = e?.message || 'Could not record transfer.'; error.classList.remove('d-none'); record.disabled = false; }
+              });
+              card.append(transferForm);
+            }
+            list.append(card);
+          }
+        } catch (e) {
+          if (e?.status === 401 || e?.status === 403) { clearToken(); window.location.replace('auth-login.html'); return; }
+          error.textContent = e?.message || 'Could not load payouts.'; error.classList.remove('d-none');
+        }
+      }
+      statusFilter.addEventListener('change', load);
+      try { const response = await fetchMe(); if ((response?.data?.role || response?.role) !== 'ADMIN') throw new Error('Admin access required'); await load(); }
+      catch { clearToken(); window.location.replace('auth-login.html'); }
+    </script>
+  </body>
+</html>
